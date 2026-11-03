@@ -39,3 +39,19 @@ func TestStatuslineSubcommandAlwaysExitsZero(t *testing.T) {
 		t.Errorf("code=%d stdout=%q stderr=%q", code, out.String(), errOut.String())
 	}
 }
+
+func TestCodexSubcommandRunsTheCommandAfterDashes(t *testing.T) {
+	var out, errOut bytes.Buffer
+	if code := run([]string{"codex", "--", "sh", "-c", "exit 4"}, strings.NewReader(""), &out, &errOut); code != 4 {
+		t.Errorf("exit code %d, want the child's 4", code)
+	}
+}
+
+func TestCodexSubcommandNeedsACommand(t *testing.T) {
+	for _, args := range [][]string{{"codex"}, {"codex", "--"}} {
+		var out, errOut bytes.Buffer
+		if code := run(args, strings.NewReader(""), &out, &errOut); code != 2 {
+			t.Errorf("run(%q) = %d, want 2", args, code)
+		}
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"herdr-poke/internal/claude"
+	"herdr-poke/internal/codex"
 )
 
 const usageText = `usage: herdr-poke <command> [args]
@@ -32,7 +33,14 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "statusline":
 		return claude.Run(stdin, stdout)
-	case "codex", "usage", "assets":
+	case "codex":
+		// herdr-poke codex -- codex --yolo --no-daemon: what follows "--" is the command.
+		cmd := args[1:]
+		if len(cmd) > 0 && cmd[0] == "--" {
+			cmd = cmd[1:]
+		}
+		return codex.Wrap(cmd)
+	case "usage", "assets":
 		fmt.Fprintf(stderr, "herdr-poke %s: not implemented yet\n", args[0])
 		return 1
 	default:
