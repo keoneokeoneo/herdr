@@ -1,7 +1,7 @@
 // Sidebar: the pokeTokenBar partner Keno is raising right now (read-only).
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { theme, home, readTextFile, watchFolder, exec, shared } from "herdr";
+import { theme, home, appHome, readTextFile, watchFolder, exec, shared } from "herdr";
 import { pill, spritePath, C } from "./ui.js";
 import { progress } from "../lib/companion.js";
 import { tokensM } from "../lib/format.js";
@@ -15,8 +15,21 @@ async function json(path) {
 
 async function load(s) {
   const st = await json(`${DIR()}/companion-state.json`);
-  if (!st?.active) { s.missing = true; return; }
+  if (!st) { s.missing = true; return; }
   s.missing = false;
+  if (!st.active) {
+    // Between partners pokeTokenBar keeps an egg: active is null until it hatches.
+    if (!s.eggImg) {
+      const dst = `${appHome()}/mods/poke/assets`;
+      const r = await exec("sh", ["-c", `mkdir -p "$1" && cp -p "$2" "$1/companion-egg.png"`, "sh", dst, `${DIR()}/sprites/egg.png`]).catch(() => null);
+      s.eggImg = r?.code === 0;
+    }
+    const snap = await json(`${DIR()}/last-snapshot.json`);
+    s.c = null;
+    s.egg = { fed: st.eggUsage ?? 0, today: snap?.todayTotalTokens ?? null, dex: st.dex?.length ?? 0 };
+    return;
+  }
+  s.egg = null;
   const a = st.active;
   const id = a.pathIDs?.[a.pathIDs.length - 1] ?? a.baseID;
   const p = progress(a, s.difficulty ?? 1);
@@ -48,6 +61,7 @@ export function render(s) {
   const t = theme();
   const card = v_flex().size_full().gap(6).p(12).bg(t.chrome).border_t_1().border_color(t.border);
   if (s.missing) return card.child(div().text_size(11).text_color(t.dim).child("pokeTokenBar not found"));
+  if (s.egg) return egg(t, card, s);
   const c = s.c;
   if (!c) return card;
   const src = spritePath(`companion-${c.id}`) ?? spritePath(c.id);
@@ -78,4 +92,23 @@ export function render(s) {
       .child(div().child(c.fed != null ? `Fed today ${tokensM(c.fed)}` : ""))
       .child(div().flex_1())
       .child(div().child(`Dex ${c.dex} · Seen ${seen}`)));
+}
+
+function egg(t, card, s) {
+  const e = s.egg;
+  const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
+    .child(s.eggImg
+      ? image("mods/poke/assets/companion-egg.png").w(56).h(56).relative().top(0).loop("top", { from: 0, to: -2, period: 1600 })
+      : div().text_size(22).text_color(t.dim).child("◓"));
+  const info = v_flex().flex_1().min_w(0).gap(3)
+    .child(div().text_size(14).font_weight(700).text_color(t.foreground).child("Egg"))
+    .child(div().text_size(10).text_color(t.dim).child("Something is about to hatch…"))
+    .child(e.fed > 0 ? div().text_size(10).text_color(t.muted).child(`Warmed ${tokensM(e.fed)} so far`) : div());
+  const seen = (shared("poke.seen") ?? []).length;
+  return card
+    .child(h_flex().gap(10).items_center().child(face).child(info))
+    .child(h_flex().pt(4).text_size(10).text_color(t.dim)
+      .child(div().child(e.today != null ? `Fed today ${tokensM(e.today)}` : ""))
+      .child(div().flex_1())
+      .child(div().child(`Dex ${e.dex} · Seen ${seen}`)));
 }

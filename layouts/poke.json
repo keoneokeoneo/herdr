@@ -8,12 +8,12 @@
   ],
   "theme": "poke",
   "ui_font": "IBM Plex Sans KR",
-  "font": "IBM Plex Mono",
-  "font_size": 13,
+  "font": "Jetendard",
+  "font_size": 11,
   "background": "canvas",
   "terminal_padding": [
-    12,
-    10
+    4,
+    4
   ],
   "divider": {
     "width": 1,
