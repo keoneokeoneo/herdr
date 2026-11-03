@@ -27,7 +27,7 @@ The sections below are the v1 design. Where they differ from this list, this lis
 - **Spaces** have a + (new space). Spaces, tabs and agents have right-click menus (the
   shipped `menu` mod), rename on double-click, and drag to reorder. Agents can be pinned.
 - **Dex** Caught is a grid of sprite tiles, using pokeTokenBar's own art and ✦ for shiny.
-  Seen lists unique assigned partners from currently open agent sessions across spaces,
+  Active lists unique assigned partners from currently open agent sessions across spaces,
   including idle/waiting sessions. It refreshes every 2 seconds and removes partners
   when their last session disappears; it is not a cumulative encounter history.
 - **Right panel** tabs are Usage, Dex, Changes and Files. Changes and Files are Herdr's

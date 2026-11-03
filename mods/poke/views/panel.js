@@ -91,7 +91,7 @@ function dex(t, s) {
     for (const c of caught) g.child(tile(t, `dex-${c.id}`, c.id, c.name, c.shiny));
     box.child(g);
   } else box.child(div().text_size(11).text_color(t.dim).child("Nothing caught yet. Keep feeding your partner."));
-  box.child(div().pt(6).text_size(12).font_weight(700).text_color(t.foreground).child(`Seen · ${seen.length} active`));
+  box.child(div().pt(6).text_size(12).font_weight(700).text_color(t.foreground).child(`Active · ${seen.length}`));
   if (seen.length) {
     const g = grid();
     for (const id of seen) g.child(tile(t, id, id, names[id] ?? null, false));
