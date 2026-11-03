@@ -1,5 +1,5 @@
 // Status bar: both providers' limits, today's tokens, unread done, jump to waiting.
-import { div } from "gpui-kit";
+import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme } from "herdr";
 import { rows } from "./data.js";
@@ -20,9 +20,9 @@ export function command(s, c, cx) {
 
 const sep = (t) => div().w(1).h(14).bg(t.border);
 
-function prov(t, name, color, p, now) {
+function prov(t, name, icon, p, now) {
   return h_flex().gap(6).items_center()
-    .child(div().size(7).rounded_full().bg(color))
+    .child(image(icon).w(13).h(13).flex_none())
     .child(div().text_color(t.muted).child(name))
     .child(div().text_color(t.foreground).child(`5h ${pctOrDash(win(p, 300), now)} · wk ${pctOrDash(win(p, 10080), now)}`));
 }
@@ -36,8 +36,8 @@ export function render(s, cx) {
   const fresh = all.filter((r) => r.status === "done").length;
   const today = s.usage?.days?.at(-1);
   const bar = h_flex().size_full().items_center().gap(12).px(12).bg(t.chrome).border_t_1().border_color(t.border).text_size(11)
-    .child(prov(t, "Claude", t.done, L.claude, now)).child(sep(t))
-    .child(prov(t, "Codex", "#8ec5f5", L.codex, now)).child(sep(t))
+    .child(prov(t, "Claude", "icons/claude.svg", L.claude, now)).child(sep(t))
+    .child(prov(t, "Codex", "icons/codex.svg", L.codex, now)).child(sep(t))
     .child(h_flex().gap(6).child(div().text_color(t.muted).child("Today"))
       .child(div().text_color(t.foreground).child(today ? tokensM(today.claude + today.codex) : "–")));
   if (fresh) bar.child(sep(t)).child(div().text_color(t.accent).child(`✓ ${fresh} new`));

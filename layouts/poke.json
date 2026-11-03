@@ -9,7 +9,7 @@
   "theme": "poke",
   "ui_font": "IBM Plex Sans KR",
   "font": "Jetendard",
-  "font_size": 11,
+  "font_size": 10,
   "background": "canvas",
   "terminal_padding": [
     4,

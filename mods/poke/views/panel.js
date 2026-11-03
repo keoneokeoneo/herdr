@@ -69,9 +69,9 @@ function changes(t, s, cx) {
   return box.child(list);
 }
 
-function limitCard(t, name, prov, now, color) {
+function limitCard(t, name, prov, now, color, icon) {
   const c = card(t).child(h_flex().items_center().gap(6)
-    .child(div().size(8).rounded_full().bg(color))
+    .child(image(icon).w(14).h(14).flex_none())
     .child(div().text_size(12).font_weight(700).text_color(t.foreground).child(name))
     .child(div().flex_1())
     .child(div().text_size(10).text_color(t.dim).child(prov?.plan ?? "")));
@@ -95,8 +95,8 @@ function usage(t, s) {
   const now = Date.now();
   const L = s.limits ?? {};
   const box = v_flex().gap(10)
-    .child(limitCard(t, "Claude", L.claude, now, t.done))
-    .child(limitCard(t, "Codex", L.codex, now, "#8ec5f5"));
+    .child(limitCard(t, "Claude", L.claude, now, t.done, "icons/claude.svg"))
+    .child(limitCard(t, "Codex", L.codex, now, "#8ec5f5", "icons/codex.svg"));
   const days = s.usage?.days ?? [];
   const today = days.at(-1);
   const tc = card(t).child(div().text_size(12).font_weight(700).text_color(t.foreground).child("Today"));
