@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -53,5 +55,22 @@ func TestCodexSubcommandNeedsACommand(t *testing.T) {
 		if code := run(args, strings.NewReader(""), &out, &errOut); code != 2 {
 			t.Errorf("run(%q) = %d, want 2", args, code)
 		}
+	}
+}
+
+func TestUsageSubcommandWritesUsageJSON(t *testing.T) {
+	stateDir := t.TempDir()
+	t.Setenv("HERDR_POKE_STATE", stateDir)
+	t.Setenv("HOME", t.TempDir()) // no logs: 14 zero days
+	var out, errOut bytes.Buffer
+	if code := run([]string{"usage"}, strings.NewReader(""), &out, &errOut); code != 0 {
+		t.Fatalf("exit %d, stderr %q", code, errOut.String())
+	}
+	b, err := os.ReadFile(filepath.Join(stateDir, "usage.json"))
+	if err != nil || !strings.Contains(string(b), `"days"`) {
+		t.Errorf("usage.json: err=%v content=%q", err, b)
+	}
+	if out.Len() != 0 {
+		t.Errorf("usage printed to stdout: %q", out.String())
 	}
 }

@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"herdr-poke/internal/claude"
 	"herdr-poke/internal/codex"
+	"herdr-poke/internal/usage"
 )
 
 const usageText = `usage: herdr-poke <command> [args]
@@ -40,7 +42,13 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			cmd = cmd[1:]
 		}
 		return codex.Wrap(cmd)
-	case "usage", "assets":
+	case "usage":
+		if err := usage.Run(time.Now(), usage.DefaultRoots()); err != nil {
+			fmt.Fprintf(stderr, "herdr-poke usage: %v\n", err)
+			return 1
+		}
+		return 0
+	case "assets":
 		fmt.Fprintf(stderr, "herdr-poke %s: not implemented yet\n", args[0])
 		return 1
 	default:

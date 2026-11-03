@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"herdr-poke/internal/labels"
 	"herdr-poke/internal/state"
 )
 
@@ -158,6 +159,10 @@ func fakeHC(t *testing.T) (logPath string) {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	// A loaded machine can take longer than the production 300 ms to start a shell.
+	saved := labels.Timeout
+	labels.Timeout = 10 * time.Second
+	t.Cleanup(func() { labels.Timeout = saved })
 	return logPath
 }
 
@@ -231,10 +236,6 @@ func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 	resets := now.Add(24 * time.Hour).Unix()
 	sessions := t.TempDir()
 	cwd, _ := os.Getwd()
-	// A sibling session in the same folder, created just after the spawn: the
-	// scan picks it first because lsof sees nothing yet.
-	sibling := writeRollout(t, sessions, "bbbb", cwd, now.Add(100*time.Millisecond), "")
-	appendTo(t, sibling, turnContextLine+tokenCountLine(now, 12000, 10.0, resets))
 
 	own := filepath.Join(t.TempDir(), "rollout-2026-11-03T12-00-05-cccc.jsonl")
 	var mu sync.Mutex
@@ -248,7 +249,13 @@ func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 		return nil, nil
 	}
 	go func() {
-		time.Sleep(500 * time.Millisecond)
+		// A sibling session in the same folder appears just after the spawn: the
+		// scan picks it first, because lsof sees nothing yet.
+		time.Sleep(100 * time.Millisecond)
+		sibling := writeRollout(t, sessions, "bbbb", cwd, time.Now(), "")
+		appendTo(t, sibling, turnContextLine+tokenCountLine(now, 12000, 10.0, resets))
+		// Later this wrapper's own session writes its file, and lsof sees it.
+		time.Sleep(600 * time.Millisecond)
 		appendTo(t, own, `{"type":"turn_context","payload":{"model":"gpt-6-own","effort":"low"}}`+"\n"+tokenCountLine(time.Now(), 135200, 20.0, resets))
 		mu.Lock()
 		owned = true
@@ -256,7 +263,7 @@ func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 	}()
 
 	o := FindOpts{SessionsDir: sessions, Lsof: lsof, Poll: 20 * time.Millisecond}
-	wrap([]string{"sh", "-c", "sleep 1.2"}, o)
+	wrap([]string{"sh", "-c", "sleep 1.5"}, o)
 
 	log := readLog(hcLog)
 	if !strings.Contains(log, "poke.model=gpt-6-astra") || !strings.Contains(log, "poke.model=gpt-6-own") {
