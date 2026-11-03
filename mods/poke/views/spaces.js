@@ -35,7 +35,7 @@ export function render() {
     if (fresh) meta = meta.child(pill(`${fresh} new`, t.accent, { size: 9 }));
     list.child(
       h_flex().id(`space-${s.id}`).items_center().gap(8).px(6).py(6).rounded(8)
-        .bg(s.active ? t.selected : "transparent").hover((x) => x.bg(t.hover)).cursor_pointer()
+        .bg(s.active ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
         .on_click(() => run("space.select", { id: s.id }))
         .child(div().flex_none().size(22).rounded(6).bg(alpha(chipC, "2e")).text_color(chipC)
           .text_size(11).font_weight(700).flex().items_center().justify_center().child(letter))

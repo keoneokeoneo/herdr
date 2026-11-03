@@ -50,7 +50,7 @@ export function render(s) {
   if (s.missing) return card.child(div().text_size(11).text_color(t.dim).child("pokeTokenBar not found"));
   const c = s.c;
   if (!c) return card;
-  const src = spritePath(`c-${c.id}${c.shiny ? "-s" : ""}`) ?? spritePath(c.id);
+  const src = spritePath(`companion-${c.id}`) ?? spritePath(c.id);
   const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
     .child(src ? image(src).w(60).h(60) : div().text_color(t.dim).child(`#${c.id}`));
   const title = h_flex().items_center().gap(6)
@@ -70,9 +70,9 @@ export function render(s) {
   return card
     .child(h_flex().gap(10).items_center().child(face).child(info))
     .child(h_flex().text_size(10).text_color(t.muted)
-      .child(div().child(c.next ? `Next: ${c.next}` : "Final form"))
+      .child(div().child(c.next ? `Next: ${c.next}` : "Final form · to graduation"))
       .child(div().flex_1())
-      .child(div().child(c.next ? `${Math.floor(c.pct)}% · ${tokensM(c.toNext)} to go` : "")))
+      .child(div().child(`${Math.floor(c.pct)}% · ${tokensM(c.toNext)} to go`)))
     .child(meter)
     .child(h_flex().text_size(10).text_color(t.dim)
       .child(div().child(c.fed != null ? `Fed today ${tokensM(c.fed)}` : ""))

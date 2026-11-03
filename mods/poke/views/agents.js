@@ -30,7 +30,7 @@ function row(t, r, all, now) {
   head.child(div().flex_1()).child(div().flex_none().text_size(10).text_color(t.dim).child(ago(now - r.since)));
   const sub = subline(r, all);
   return h_flex().id(`ag-${r.address}`).items_center().gap(8).px(6).py(5).rounded(8)
-    .bg(r.focused ? t.selected : "transparent").hover((x) => x.bg(t.hover)).cursor_pointer()
+    .bg(r.focused ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
     .on_click(() => run("agent.focus", { terminal: r.address }))
     .child(avatar(r, { size: 26, key: "ag" }))
     .child(v_flex().flex_1().min_w(0).gap(1).child(head)
