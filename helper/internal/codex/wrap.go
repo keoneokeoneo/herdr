@@ -83,7 +83,14 @@ func wrap(args []string, opts FindOpts) int {
 	go func() {
 		defer wg.Done()
 		defer func() { _ = recover() }() // a bug in the mirror must never reach the child
-		monitor(ctx, cmd.Process.Pid, cwd, started, opts)
+		terminal := os.Getenv("HC_TERMINAL_ID")
+		// Hold the terminal's lock so a later `--attach` for it stays out.
+		if terminal != "" {
+			if release, ok := tryTerminalLock(terminal); ok {
+				defer release()
+			}
+		}
+		monitor(ctx, cmd.Process.Pid, cwd, started, terminal, opts)
 	}()
 
 	err := cmd.Wait()
@@ -109,7 +116,7 @@ func exitCode(err error) int {
 // monitor finds the child's rollout, then follows it until ctx is done,
 // publishing whenever the log says something new. A last read after ctx is
 // done picks up what Codex wrote on its way out.
-func monitor(ctx context.Context, pid int, cwd string, started time.Time, opts FindOpts) {
+func monitor(ctx context.Context, pid int, cwd string, started time.Time, terminal string, opts FindOpts) {
 	path, certain, err := FindRollout(ctx, pid, cwd, started, opts)
 	if err != nil {
 		return // the child ended before it logged anything
@@ -120,7 +127,7 @@ func monitor(ctx context.Context, pid int, cwd string, started time.Time, opts F
 		if changed, _ := t.poll(); changed {
 			pending = true
 		}
-		if pending && publish(t.snap, os.Getenv("HC_TERMINAL_ID"), time.Now()) == nil {
+		if pending && publish(t.snap, terminal, time.Now()) == nil {
 			pending = false
 		}
 	}

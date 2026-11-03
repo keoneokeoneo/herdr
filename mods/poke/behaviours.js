@@ -33,6 +33,7 @@ export function start(s, cx) {
   s.prev = new Map();      // address → last status
   s.pending = new Set();   // addresses being labelled
   s.tried = new Map();     // partner id → asset retry backoff
+  s.attachTried = new Map(); // codex terminal → attach retry backoff
   s.jumpAt = -1;
   s.onCommand = (c) => command(s, c);
 
@@ -54,6 +55,11 @@ export function start(s, cx) {
   cx.timer.every(30000, ptb);
 }
 
+function attach(t) {
+  const sh = `export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"; nohup "$0" codex --attach "$1" >/dev/null 2>&1 &`;
+  exec("sh", ["-c", sh, HP(), t]).catch(() => null);
+}
+
 async function step(s) {
   const all = rows();
   const sprites = shared("poke.sprites") ?? [];
@@ -66,6 +72,9 @@ async function step(s) {
     if (r.partnerSet && !(sprites.includes(`${r.partner}.gif`) || sprites.includes(`${r.partner}.png`)) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
+    // A Codex started without the wrapper (hc run, scripts) has no model/ctx: mirror it after the fact.
+    // The helper exits at once when the terminal is already mirrored, so a retry is cheap.
+    if (r.provider === "codex" && !r.model && retryDue(s.attachTried, r.address, Date.now())) attach(r.address);
     s.prev.set(r.address, r.status);
   }
   const live = new Set(all.map((r) => r.address));

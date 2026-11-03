@@ -19,6 +19,7 @@ const usageText = `usage: herdr-poke <command> [args]
 commands:
   statusline   Claude Code statusLine.command (reads stdin JSON, prints the line)
   codex        run Codex under herdr-poke: herdr-poke codex -- <codex args>
+               or mirror one started elsewhere: herdr-poke codex --attach <terminal>
   usage        aggregate 14-day token usage into usage.json
   assets       fetch Pokemon and companion assets: assets <id> | --companion | --list
 `
@@ -39,6 +40,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	case "codex":
 		// herdr-poke codex -- codex --yolo --no-daemon: what follows "--" is the command.
 		cmd := args[1:]
+		if len(cmd) == 2 && cmd[0] == "--attach" {
+			return codex.Attach(cmd[1])
+		}
 		if len(cmd) > 0 && cmd[0] == "--" {
 			cmd = cmd[1:]
 		}
