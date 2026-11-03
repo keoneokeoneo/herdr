@@ -48,3 +48,4 @@ update-notes-media/
 *.reset-*
 .DS_Store
 layouts/.state/
+.superpowers/
