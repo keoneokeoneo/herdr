@@ -1,9 +1,16 @@
 import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { theme, run, shared, spaces, openOverlay } from "herdr";
+import { theme, run, shared, spaces, openOverlay, layout } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, tone, C, alpha } from "./ui.js";
 import { byUrgency, tabPill, typeOf } from "../lib/model.js";
+
+function findNode(node, id) {
+  if (!node || typeof node !== "object") return null;
+  if (node.id === id) return node;
+  for (const c of node.children ?? []) { const f = findNode(c, id); if (f) return f; }
+  return null;
+}
 
 export const isWorktree = (cwd) => !!cwd && cwd.includes("/worktrees/");
 
@@ -47,8 +54,17 @@ export function render(st, _cx) {
     return div().flex_none().flex().flex_col().gap(2).child(el)
       .child(div().h(2).mx(10).rounded_full().bg(ty ? alpha(C[ty], "66") : "#00000000"));
   });
+  const panelShown = !findNode(layout(), "poke-panel")?.hidden;
   return h_flex().size_full().items_center().gap(4).px(10).bg(t.chrome)
     .children(items)
     .child(div().id("tab-new").px(8).text_size(16).text_color(t.dim).cursor_pointer()
-      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child("+"));
+      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child("+"))
+    .child(div().flex_1())
+    // Show/hide the right panel (also ⌘K).
+    .child(div().id("panel-toggle").size(26).flex_none().flex().items_center().justify_center().rounded(6).cursor_pointer()
+      .bg(panelShown ? t.selected : "#00000000").text_color(panelShown ? t.foreground : t.muted)
+      .hover((x) => x.bg(t.hover).text_color(t.foreground))
+      .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+      .on_click(() => run("layout.toggle", { id: "poke-panel" }))
+      .child(svg("mods/workspace-chrome/panel-right.svg").size(15)));
 }

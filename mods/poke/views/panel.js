@@ -2,14 +2,17 @@
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, shared, setShared, props } from "herdr";
-import { pill, spritePath, C, alpha } from "./ui.js";
+import { pill, sprite, C, alpha } from "./ui.js";
 import { keepFresh, loadUsage, readJSON, STATE_DIR, PTB_DIR, WIN_LABEL, win } from "./store.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
 
 
 async function loadDex(s) {
   const st = await readJSON(`${PTB_DIR()}/companion-state.json`);
-  s.dex = (st?.dex ?? []).map((d) => ({ id: d.finalID ?? d.chainOrder?.at(-1) ?? d.baseID, shiny: !!d.isShiny, name: d.names?.[String(d.finalID)]?.en ?? `#${d.finalID}` }));
+  s.dex = (st?.dex ?? []).map((d) => {
+    const id = d.finalID ?? d.chainOrder?.at(-1) ?? d.baseID;
+    return { id, shiny: !!d.isShiny, name: d.names?.[String(id)]?.en ?? `#${id}` };
+  });
 }
 
 export function init(s, cx) {
@@ -67,27 +70,33 @@ function usage(t, s) {
   return box.child(tc);
 }
 
+function tile(t, key, fallbackId, label, shiny) {
+  const face = sprite(key, 40) ?? (fallbackId != null ? sprite(fallbackId, 40) : null);
+  return v_flex().w(56).items_center().gap(2)
+    .child(div().relative().size(48).rounded(10).bg(t.surface).flex().items_center().justify_center()
+      .child(face ?? div().text_size(9).text_color(t.dim).child(`#${fallbackId ?? "?"}`))
+      .child(shiny ? div().absolute().top(2).right(4).text_size(10).text_color(t.accent).child("✦") : div()))
+    .child(label ? div().w_full().text_center().truncate().text_size(9).text_color(t.muted).child(label) : div());
+}
+
 function dex(t, s) {
   const caught = s.dex ?? [];
   const seen = shared("poke.seen") ?? [];
-  const grid = (ids) => {
-    const g = h_flex().flex_wrap().gap(6);
-    for (const it of ids) {
-      const src = spritePath(it.id);
-      g.child(div().size(40).rounded(8).bg(t.surface).flex().items_center().justify_center()
-        .child(src ? image(src).w(36).h(36) : div().text_size(9).text_color(t.dim).child(`#${it.id}`)));
-    }
-    return g;
-  };
+  const names = shared("poke.names") ?? {};
+  const grid = () => h_flex().flex_wrap().gap(6);
   const box = v_flex().gap(10)
     .child(div().text_size(12).font_weight(700).text_color(t.foreground).child(`Caught · ${caught.length}`));
   if (caught.length) {
-    const list = v_flex().gap(4);
-    for (const c of caught) list.child(h_flex().gap(6).text_size(11).child(div().text_color(t.foreground).child(c.name)).child(c.shiny ? div().text_color(t.accent).child("✦") : div()));
-    box.child(list);
+    const g = grid();
+    for (const c of caught) g.child(tile(t, `dex-${c.id}`, c.id, c.name, c.shiny));
+    box.child(g);
   } else box.child(div().text_size(11).text_color(t.dim).child("Nothing caught yet. Keep feeding your partner."));
   box.child(div().pt(6).text_size(12).font_weight(700).text_color(t.foreground).child(`Seen · ${seen.length}`));
-  box.child(seen.length ? grid(seen.map((id) => ({ id }))) : div().text_size(11).text_color(t.dim).child("Session partners you meet show up here."));
+  if (seen.length) {
+    const g = grid();
+    for (const id of seen) g.child(tile(t, id, id, names[id] ?? null, false));
+    box.child(g);
+  } else box.child(div().text_size(11).text_color(t.dim).child("Session partners you meet show up here."));
   const mode = shared("poke.typeMode") ?? "random";
   box.child(h_flex().pt(10).gap(8).text_size(10).text_color(t.dim)
     .child(div().child(`Tab types: ${mode}`))

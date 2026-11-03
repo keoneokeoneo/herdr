@@ -2,7 +2,7 @@
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, home, appHome, readTextFile, watchFolder, exec, shared } from "herdr";
-import { pill, spritePath, C } from "./ui.js";
+import { pill, spritePath, alive, C } from "./ui.js";
 import { progress } from "../lib/companion.js";
 import { tokensM } from "../lib/format.js";
 
@@ -72,7 +72,7 @@ export function render(s) {
   if (!c) return card;
   const src = spritePath(`companion-${c.id}`) ?? spritePath(c.id);
   const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
-    .child(src ? image(src).w(60).h(60) : div().text_color(t.dim).child(`#${c.id}`));
+    .child(src ? alive(image(src).w(60).h(60)) : div().text_color(t.dim).child(`#${c.id}`));
   const title = h_flex().items_center().gap(6)
     .child(div().text_size(14).font_weight(700).text_color(t.foreground).child(c.name))
     .child(c.shiny ? div().text_color(t.accent).child("✦") : div())

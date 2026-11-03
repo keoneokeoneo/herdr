@@ -1,5 +1,5 @@
 // Things that happen, not things drawn. Runs once, in the status bar's copy.
-import { hc, exec, home, run, shared, setShared, playSound, notify } from "herdr";
+import { hc, exec, home, appHome, run, shared, setShared, playSound, notify } from "herdr";
 import { rows } from "./views/data.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
 import { excluded, pickPartner } from "./lib/partner.js";
@@ -39,6 +39,9 @@ export function start(s, cx) {
   const assets = (cx) => cx.spawn(async () => { await exec(HP(), ["assets", "--companion"]).catch(() => null); await refreshAssets(); });
   assets(cx);
   cx.timer.every(30000, assets);
+  const dexSync = (cx) => cx.spawn(async () => { await syncDex(); await refreshNames(); });
+  dexSync(cx);
+  cx.timer.every(60000, dexSync);
 
   const tick = (cx) => cx.spawn(async (cx) => { await step(s); cx.notify(); });
   tick(cx);
@@ -111,4 +114,25 @@ function command(s, c) {
   } else if (c === "reroll") {
     setShared("poke.typeSeed", ((Number(shared("poke.typeSeed") ?? 7)) * 7 + 13) % 9973);
   }
+}
+
+// Caught Pokémon: copy pokeTokenBar's own sprite (shiny when caught shiny) as dex-<id>.gif|png.
+async function syncDex() {
+  const st = await readJSON(`${PTB_DIR()}/companion-state.json`);
+  const list = (st?.dex ?? []).map((d) => `${d.finalID ?? d.chainOrder?.at(-1) ?? d.baseID}:${d.isShiny ? 1 : 0}`);
+  if (!list.length) return;
+  const script = `src="$1"; dst="$2"; shift 2; mkdir -p "$dst"
+for e in "$@"; do id=\${e%%:*}; sh=\${e##*:}
+  { [ -f "$dst/dex-$id.gif" ] || [ -f "$dst/dex-$id.png" ]; } && continue
+  if [ "$sh" = 1 ]; then c="sha.gif a.gif shs.png s.png"; else c="a.gif s.png"; fi
+  for x in $c; do [ -f "$src/$id-$x" ] && { cp -p "$src/$id-$x" "$dst/dex-$id.\${x##*.}"; break; }; done
+done`;
+  await exec("sh", ["-c", script, "sh", `${PTB_DIR()}/sprites`, `${appHome()}/poke-assets`, ...list]).catch(() => null);
+  await refreshAssets();
+}
+
+// Partner names for the Dex grid, from the helper's names.json.
+async function refreshNames() {
+  const n = await readJSON(`${appHome()}/poke-assets/names.json`);
+  if (n && JSON.stringify(n) !== JSON.stringify(shared("poke.names") ?? {})) setShared("poke.names", n);
 }

@@ -39,7 +39,10 @@
           },
           "window_drag": true,
           "content": {
-            "mod": "workspace-chrome"
+            "mod": "poke",
+            "props": {
+              "view": "brand"
+            }
           }
         },
         {

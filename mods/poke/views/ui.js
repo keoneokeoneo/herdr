@@ -27,6 +27,18 @@ export function spritePath(id) {
 
 const ICON = { claude: "icons/claude.svg", codex: "icons/codex.svg" };
 
+// GIF frames only advance when the window redraws. A sub-pixel native loop keeps
+// redrawing while the sprite is shown (no script timer; it stops when hidden).
+export function alive(el) {
+  return div().relative().left(0).loop("left", { from: 0, to: 0.01, period: 1000 }).child(el);
+}
+
+// A sprite for a species id (or asset key like "dex-6"), animated; null when not on disk.
+export function sprite(key, size) {
+  const src = spritePath(key);
+  return src ? alive(image(src).w(size).h(size).flex_none()) : null;
+}
+
 export function avatar(r, opts = {}) {
   const t = theme();
   const size = opts.size ?? 30;
@@ -34,7 +46,7 @@ export function avatar(r, opts = {}) {
   const ring = st === "blocked" ? t.blocked : st === "working" ? t.working : st === "done" ? t.done : t.idle;
   const src = spritePath(r.partner);
   let sprite = src
-    ? image(src).w(size * 1.25).h(size * 1.25).flex_none()
+    ? alive(image(src).w(size * 1.25).h(size * 1.25).flex_none())
     : div().text_size(size * 0.42).font_weight(700).text_color(ring).child(r.provider === "codex" ? "X" : "C");
   const eve = shared("poke.evening") === true;
   if (st === "idle") sprite = sprite.opacity(eve ? 0.35 : 0.45);
