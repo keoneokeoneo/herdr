@@ -18,7 +18,7 @@ function stack(list) {
   return row;
 }
 
-export function render() {
+export function render(st) {
   const t = theme();
   const all = rows();
   const list = v_flex().size_full().gap(2).px(8).py(8).bg(t.chrome).overflow_y_scroll();
@@ -27,7 +27,8 @@ export function render() {
     .child(div().id("space-new").size(22).flex_none().flex().items_center().justify_center().rounded(6)
       .text_color(t.muted).cursor_pointer().hover((x) => x.bg(t.hover).text_color(t.foreground))
       .on_click(() => run("space.new")).child(svg("mods/workspace-chrome/plus.svg").size(13))));
-  for (const s of spaces()) {
+  const all_ = spaces();
+  all_.forEach((s, i) => {
     const mine = all.filter((r) => r.space === s.id);
     const wait = waiting(mine).length;
     const fresh = mine.filter((r) => r.status === "done").length;
@@ -40,7 +41,11 @@ export function render() {
     list.child(
       h_flex().id(`space-${s.id}`).items_center().gap(8).px(6).py(6).rounded(8)
         .bg(s.active ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
-        .on_mouse_down("left", (e, cx) => { if (e.click_count === 2) { cx.stop_propagation(); run("space.rename", { id: s.id }); } })
+        .on_mouse_down("left", (e, cx) => { st.pressed = i; if (e.click_count === 2) { cx.stop_propagation(); run("space.rename", { id: s.id }); } })
+        .on_mouse_up("left", () => {
+          const from = st.pressed; st.pressed = null;
+          if (from != null && from !== i) run("space.move", { id: all_[from].id, index: i + 1 });
+        })
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, height: 260, props: { tab: "space", target: { id: s.id } } }); })
         .on_click(() => run("space.select", { id: s.id }))
         .child(div().flex_none().size(22).rounded(6).bg(alpha(chipC, "2e")).text_color(chipC)
@@ -52,6 +57,6 @@ export function render() {
           .child(meta))
         .child(stack(mine)),
     );
-  }
+  });
   return list;
 }

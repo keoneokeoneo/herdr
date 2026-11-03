@@ -11,11 +11,11 @@ export function tabType(branch, repoType) {
   return typeOf(branch ?? "", shared("poke.typeSeed") ?? 7, shared("poke.typeMode") ?? "random", repoType);
 }
 
-export function render(_s, _cx) {
+export function render(st, _cx) {
   const t = theme();
   const sp = spaces().find((s) => s.active);
   const all = rows();
-  const items = (sp?.tabs ?? []).map((tab) => {
+  const items = (sp?.tabs ?? []).map((tab, i) => {
     const list = all.filter((r) => r.tab === tab.id);
     const top = byUrgency(list)[0];
     const p = tabPill(list);
@@ -24,12 +24,17 @@ export function render(_s, _cx) {
     const wt = list.some((r) => isWorktree(r.cwd));
     let el = h_flex().id(`tab-${tab.id}`).flex_none().items_center().gap(7).h(32).px(10).rounded(9)
       .cursor_pointer().hover((s) => s.bg(t.hover))
-      .on_mouse_down("left", (e, cx) => { if (e.click_count === 2) { cx.stop_propagation(); run("tab.rename", { id: tab.id }); } })
+      // Press on one tab and release on another to move it there (like the shipped tabs bar).
+      .on_mouse_down("left", (e, cx) => { st.pressed = i; if (e.click_count === 2) { cx.stop_propagation(); run("tab.rename", { id: tab.id }); } })
+      .on_mouse_up("left", () => {
+        const from = st.pressed; st.pressed = null;
+        if (from != null && from !== i) run("tab.move", { id: sp.tabs[from].id, index: i + 1 });
+      })
       .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, props: { tab: "tab", target: { id: tab.id, space: sp.id } } }); })
       .on_click(() => run("tab.select", { id: tab.id }));
     if (tab.active) el = el.bg(t.raised);
     if (top) el = el.child(avatar(top, { size: 22, key: "tab", noBadge: true }));
-    el = el.child(div().text_size(13).font_weight(500).text_color(tab.active ? t.foreground : t.muted).child(tab.name));
+    el = el.child(div().max_w(170).truncate().text_size(13).font_weight(500).text_color(tab.active ? t.foreground : t.muted).child(tab.zoomed ? `${tab.name} Z` : tab.name));
     if (wt) el = el.child(div().text_size(11).text_color(t.dim).child("⎇"));
     if (p.text) el = el.child(p.tone === "dim" ? div().text_size(11).text_color(t.dim).child(p.text) : pill(p.text, tone(t, p.tone)));
     if (tab.active) {
@@ -45,5 +50,5 @@ export function render(_s, _cx) {
   return h_flex().size_full().items_center().gap(4).px(10).bg(t.chrome)
     .children(items)
     .child(div().id("tab-new").px(8).text_size(16).text_color(t.dim).cursor_pointer()
-      .on_click(() => run("tab.new", {})).child("+"));
+      .on_click(() => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })).child("+"));
 }

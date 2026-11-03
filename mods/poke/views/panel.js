@@ -1,33 +1,11 @@
-// Right panel: Changes (git of the focused pane), Usage (limits + 14 days), Dex.
+// Right panel bodies: Usage (limits + 14 days) and Dex. Changes/Files are the shipped mods.
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { theme, focused, exec, shared, setShared } from "herdr";
+import { theme, shared, setShared, props } from "herdr";
 import { pill, spritePath, C, alpha } from "./ui.js";
 import { keepFresh, loadUsage, readJSON, STATE_DIR, PTB_DIR, WIN_LABEL, win } from "./store.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
-import { isWorktree } from "./tabs.js";
 
-const TABS = [["changes", "Changes"], ["usage", "Usage"], ["dex", "Dex"]];
-const READ = ["--no-optional-locks", "-c", "core.fsmonitor=false"];
-
-async function loadGit(s, cwd) {
-  if (!cwd) { s.git = null; return; }
-  const git = (a) => exec("git", [...READ, ...a], { cwd });
-  const st = await git(["status", "--porcelain=v2", "--branch"]).catch(() => null);
-  if (!st || st.code !== 0) { s.git = { none: true, cwd }; return; }
-  const lines = st.stdout.split("\n");
-  const branch = lines.find((l) => l.startsWith("# branch.head "))?.slice(14) ?? "";
-  const ab = lines.find((l) => l.startsWith("# branch.ab "))?.split(" ") ?? [];
-  const files = lines.filter((l) => /^[12u?] /.test(l)).map((l) => (l[0] === "?" ? l.slice(2) : l.split(" ").slice(l[0] === "2" ? 9 : 8).join(" ").split("\t")[0]));
-  const num = await git(["diff", "HEAD", "--numstat"]).catch(() => null);
-  const stat = {};
-  for (const l of (num?.stdout ?? "").split("\n")) {
-    const [a, d, p] = l.split("\t");
-    if (p) stat[p] = { add: Number(a) || 0, del: Number(d) || 0 };
-  }
-  s.git = { cwd, branch, ahead: Number(ab[2]?.slice(1)) || 0, behind: Number(ab[3]?.slice(1)) || 0,
-    files: files.map((p) => ({ path: p, ...(stat[p] ?? { add: 0, del: 0, fresh: true }) })) };
-}
 
 async function loadDex(s) {
   const st = await readJSON(`${PTB_DIR()}/companion-state.json`);
@@ -35,39 +13,12 @@ async function loadDex(s) {
 }
 
 export function init(s, cx) {
-  s.tab = "usage";
   keepFresh(s, cx, STATE_DIR, async (s) => { await loadUsage(s); await loadDex(s); });
-  const refresh = (cx) => cx.spawn(async (cx) => { await loadGit(s, focused()?.cwd ?? null); cx.notify(); });
-  refresh(cx);
-  cx.timer.every(10000, refresh);
-  s.refresh = refresh;
 }
 
 const kv = (t, k, v, color) => h_flex().text_size(11).child(div().text_color(t.muted).child(k)).child(div().flex_1())
   .child(div().font_family("IBM Plex Mono").text_color(color ?? t.foreground).truncate().child(v));
 const card = (t) => v_flex().gap(4).p(10).rounded(10).bg(t.surface).border_1().border_color(t.border);
-
-function changes(t, s, cx) {
-  const g = s.git;
-  if (focused()?.cwd && g?.cwd !== focused().cwd) s.refresh?.(cx);
-  if (!g) return div().text_size(11).text_color(t.dim).child("Focus a pane to see its changes.");
-  if (g.none) return div().text_size(11).text_color(t.dim).child("Not a git repository");
-  const wt = isWorktree(g.cwd);
-  const dirty = g.files.length;
-  const box = v_flex().gap(10)
-    .child(card(t)
-      .child(kv(t, "Worktree", wt ? g.cwd.replace(/^.*\/worktrees\//, "") : "main checkout", wt ? "#8ec5f5" : t.muted))
-      .child(kv(t, "Branch", g.branch))
-      .child(kv(t, "Status", `${dirty ? `${dirty} changed` : "clean"}${g.ahead ? ` · ↑${g.ahead}` : ""}${g.behind ? ` · ↓${g.behind}` : ""}`, dirty ? t.accent : t.muted)));
-  const list = v_flex().gap(5).font_family("IBM Plex Mono").text_size(11);
-  for (const f of g.files.slice(0, 40)) {
-    list.child(h_flex().gap(6).child(div().flex_1().min_w(0).truncate().text_color(t.foreground).child(f.path))
-      .child(div().flex_none().text_color(t.working).child(f.fresh ? "new" : f.add ? `+${f.add}` : ""))
-      .child(div().flex_none().text_color(t.blocked).child(f.del ? `−${f.del}` : "")));
-  }
-  if (g.files.length > 40) list.child(div().text_color(t.dim).child(`+${g.files.length - 40} more`));
-  return box.child(list);
-}
 
 function limitCard(t, name, prov, now, color, icon) {
   const c = card(t).child(h_flex().items_center().gap(6)
@@ -149,16 +100,8 @@ function dex(t, s) {
 
 export function render(s, cx) {
   const t = theme();
-  const head = h_flex().gap(4).p(3).rounded(8).bg(t.surface);
-  for (const [k, label] of TABS) {
-    const on = s.tab === k;
-    head.child(div().id(`ptab-${k}`).flex_1().py(4).rounded(6).text_center().text_size(11).font_weight(600)
-      .bg(on ? t.raised : "#00000000").text_color(on ? t.foreground : t.muted).cursor_pointer()
-      .hover((x) => x.text_color(t.foreground))
-      .on_click((_e, cx) => { s.tab = k; cx.notify(); })
-      .child(label));
-  }
-  const body = s.tab === "changes" ? changes(t, s, cx) : s.tab === "dex" ? dex(t, s) : usage(t, s);
-  return v_flex().size_full().gap(12).p(12).bg(t.chrome).border_l_1().border_color(t.border).overflow_y_scroll()
-    .child(head).child(body);
+  // Each copy is one child of the poke-panel-body stack (props.tab); paneltabs picks which shows.
+  const body = props()?.tab === "dex" ? dex(t, s) : usage(t, s);
+  return v_flex().size_full().gap(12).px(12).pt(4).pb(12).bg(t.chrome).border_l_1().border_color(t.border).overflow_y_scroll()
+    .child(body);
 }

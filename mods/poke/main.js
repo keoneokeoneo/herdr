@@ -8,8 +8,9 @@ import * as companion from "./views/companion.js";
 import * as pane from "./views/pane.js";
 import * as panel from "./views/panel.js";
 import * as status from "./views/status.js";
+import * as paneltabs from "./views/paneltabs.js";
 
-const VIEWS = { tabs, spaces, agents: agentsView, companion, pane, panel, status };
+const VIEWS = { tabs, spaces, agents: agentsView, companion, pane, panel, paneltabs, status };
 
 export default class Poke extends View {
   init(_props, cx) {

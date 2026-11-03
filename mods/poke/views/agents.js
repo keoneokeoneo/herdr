@@ -1,7 +1,7 @@
 // Sidebar: every agent, grouped by what it needs from Keno.
-import { div } from "gpui-kit";
+import { div, svg } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { theme, run } from "herdr";
+import { theme, run, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, C, alpha } from "./ui.js";
 import { groups, chips } from "../lib/model.js";
@@ -27,11 +27,17 @@ function row(t, r, all, now) {
       .child((r.spaceName || "?").charAt(0).toUpperCase()))
     .child(div().truncate().text_size(12).font_weight(600).text_color(t.foreground).child(r.tabName || r.address));
   for (const c of chips(r, now)) head.child(pill(c.text, C[c.color] ?? t.accent, { size: 9 }));
-  head.child(div().flex_1()).child(div().flex_none().text_size(10).text_color(t.dim).child(ago(now - r.since)));
+  head.child(div().flex_1())
+    .child(div().id(`pin-${r.address}`).flex_none().p(2).rounded(4).cursor_pointer()
+      .text_color(r.pinned ? t.muted : t.chrome).hover((x) => x.bg(t.hover).text_color(t.foreground))
+      .on_click((_e, cx) => { cx.stop_propagation(); run("terminal.pin", { terminal: r.address, pinned: !r.pinned }); })
+      .child(svg(`mods/workspace-chrome/${r.pinned ? "pin-off" : "pin"}.svg`).size(11)))
+    .child(div().flex_none().text_size(10).text_color(t.dim).child(ago(now - r.since)));
   const sub = subline(r, all);
   return h_flex().id(`ag-${r.address}`).items_center().gap(8).px(6).py(5).rounded(8)
     .bg(r.focused ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
     .on_click(() => run("agent.focus", { terminal: r.address }))
+    .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 220, props: { tab: "pane", target: { pane: r.pane, terminal: r.address } } }); })
     .child(avatar(r, { size: 26, key: "ag" }))
     .child(v_flex().flex_1().min_w(0).gap(1).child(head)
       .child(div().truncate().text_size(10).text_color(r.status === "blocked" ? t.blocked : t.dim).child(sub || " ")));
@@ -52,7 +58,8 @@ export function render() {
     if (!items.length) continue;
     list.child(h_flex().px(6).pt(6).gap(6).items_center().text_size(10).font_weight(700).text_color(t[tone] ?? t.dim)
       .child(title).child(div().text_color(t.dim).child(String(items.length))));
-    for (const r of [...items].sort((a, b) => a.since - b.since)) list.child(row(t, r, all, now));
+    // Pinned first, then oldest first.
+    for (const r of [...items].sort((a, b) => (b.pinned - a.pinned) || (a.since - b.since))) list.child(row(t, r, all, now));
   }
   return list;
 }

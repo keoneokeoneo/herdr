@@ -1,7 +1,7 @@
 // Status bar: both providers' limits, today's tokens, unread done, jump to waiting.
 import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { theme } from "herdr";
+import { theme, run } from "herdr";
 import { rows } from "./data.js";
 import { keepFresh, loadUsage, STATE_DIR, win } from "./store.js";
 import { pctOrDash, tokensM } from "../lib/format.js";
@@ -47,5 +47,7 @@ export function render(s, cx) {
       .on_click(() => s.onCommand?.("jump"))
       .child(`Jump to waiting · ${wait}  ⌘J`));
   }
+  bar.child(div().id("palette").flex_none().text_color(t.dim).cursor_pointer().hover((x) => x.text_color(t.foreground))
+    .on_click(() => run("app.palette")).child("⌘⇧P"));
   return bar;
 }

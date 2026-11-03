@@ -82,6 +82,19 @@
               "view": "companion"
             }
           }
+        },
+        {
+          "id": "poke-footer",
+          "type": "block",
+          "size": {
+            "px": 69
+          },
+          "content": {
+            "mod": "workspace-chrome",
+            "props": {
+              "footer": true
+            }
+          }
         }
       ]
     },
@@ -144,18 +157,70 @@
             },
             {
               "id": "poke-panel",
-              "type": "block",
+              "type": "column",
               "size": {
                 "px": 290
               },
-              "min": 240,
-              "max": 480,
-              "content": {
-                "mod": "poke",
-                "props": {
-                  "view": "panel"
+              "min": 260,
+              "max": 900,
+              "children": [
+                {
+                  "id": "poke-panel-tabs",
+                  "type": "block",
+                  "size": {
+                    "px": 44
+                  },
+                  "content": {
+                    "mod": "poke",
+                    "props": {
+                      "view": "paneltabs"
+                    }
+                  }
+                },
+                {
+                  "id": "poke-panel-body",
+                  "type": "stack",
+                  "active": "poke-usage",
+                  "children": [
+                    {
+                      "id": "poke-usage",
+                      "type": "block",
+                      "content": {
+                        "mod": "poke",
+                        "props": {
+                          "view": "panel",
+                          "tab": "usage"
+                        }
+                      }
+                    },
+                    {
+                      "id": "poke-dex",
+                      "type": "block",
+                      "content": {
+                        "mod": "poke",
+                        "props": {
+                          "view": "panel",
+                          "tab": "dex"
+                        }
+                      }
+                    },
+                    {
+                      "id": "poke-changes",
+                      "type": "block",
+                      "content": {
+                        "mod": "changes"
+                      }
+                    },
+                    {
+                      "id": "poke-files",
+                      "type": "block",
+                      "content": {
+                        "mod": "files"
+                      }
+                    }
+                  ]
                 }
-              }
+              ]
             }
           ]
         },
