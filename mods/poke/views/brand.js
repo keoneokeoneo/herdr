@@ -9,10 +9,10 @@ function find(node, id) {
   for (const c of node.children ?? []) { const f = find(c, id); if (f) return f; }
   return null;
 }
-const narrow = () => (find(layout(), "sidebar")?.size?.px ?? 262) < 120;
+export const narrow = () => (find(layout(), "sidebar")?.size?.px ?? 262) < 120;
 
 // Same behaviour as the shipped workspace-chrome toggle: fold to a rail and back.
-function toggleSidebar() {
+export function toggleSidebar() {
   const width = find(layout(), "sidebar")?.size?.px;
   if (!narrow()) setShared("sidebar.width", width);
   setShared("sidebar.collapsed", !narrow());

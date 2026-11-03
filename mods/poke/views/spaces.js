@@ -1,3 +1,4 @@
+import { narrow, toggleSidebar } from "./brand.js";
 // Sidebar: one row per space, with the faces of the agents working in it.
 import { div, svg } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
@@ -22,7 +23,11 @@ export function render(st) {
   const t = theme();
   const all = rows();
   const list = v_flex().size_full().gap(2).px(8).py(8).bg(t.chrome).overflow_y_scroll();
-  list.child(h_flex().items_center().px(6).pb(4)
+  if (narrow()) list.child(h_flex().justify_center().pb(4)
+    .child(div().id("sidebar-expand").size(26).flex_none().flex().items_center().justify_center().rounded(6)
+      .text_color(t.muted).cursor_pointer().hover((x) => x.bg(t.hover).text_color(t.foreground))
+      .on_click(toggleSidebar).child(svg("mods/workspace-chrome/chevron-right.svg").size(14))));
+  else list.child(h_flex().items_center().px(6).pb(4)
     .child(div().flex_1().text_size(10).font_weight(700).text_color(t.dim).child("SPACES"))
     .child(div().id("space-new").size(22).flex_none().flex().items_center().justify_center().rounded(6)
       .text_color(t.muted).cursor_pointer().hover((x) => x.bg(t.hover).text_color(t.foreground))
