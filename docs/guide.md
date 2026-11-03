@@ -16,6 +16,7 @@ Herdr writes, so `git status` shows only our files.
 |---|---|
 | Window structure (blocks, sizes, which view goes where, fonts, traffic lights) | `layouts/poke.json` |
 | Colours | `themes/poke.json` (terminal ANSI), `mods/poke/views/ui.js` `C` (UI palette) |
+| Codex menu launch command | `programs.json` (`programs.codex.run`) |
 | Keys | `keys.json` (`cmd-j` → `poke.jump`, `cmd-k` → right panel, `cmd-b` → sidebar) |
 | Which view a block shows | `mods/poke/main.js` (`props.view` → module) |
 | Sidebar top: logo, search, fold button | `views/brand.js` (`narrow()`, `toggleSidebar()` are shared with the other sidebar views) |

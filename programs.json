@@ -1,0 +1,14 @@
+{
+  "programs": {
+    "codex": {
+      "run": [
+        "herdr-poke",
+        "codex",
+        "--",
+        "codex",
+        "--yolo",
+        "--no-daemon"
+      ]
+    }
+  }
+}
