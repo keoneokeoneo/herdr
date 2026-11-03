@@ -1,0 +1,178 @@
+{
+  "id": "root",
+  "type": "row",
+  "titlebar": "none",
+  "traffic_lights": [
+    12,
+    16
+  ],
+  "theme": "poke",
+  "ui_font": "IBM Plex Sans KR",
+  "font": "IBM Plex Mono",
+  "font_size": 13,
+  "background": "canvas",
+  "terminal_padding": [
+    12,
+    10
+  ],
+  "divider": {
+    "width": 1,
+    "color": "border"
+  },
+  "children": [
+    {
+      "id": "sidebar",
+      "type": "column",
+      "size": {
+        "px": 262
+      },
+      "min": 44,
+      "max": 420,
+      "background": "chrome",
+      "resizable": false,
+      "children": [
+        {
+          "id": "poke-brand",
+          "type": "block",
+          "size": {
+            "px": 46
+          },
+          "window_drag": true,
+          "content": {
+            "mod": "workspace-chrome"
+          }
+        },
+        {
+          "id": "poke-spaces",
+          "type": "block",
+          "size": {
+            "weight": 1
+          },
+          "min": 90,
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "spaces"
+            }
+          }
+        },
+        {
+          "id": "poke-agents",
+          "type": "block",
+          "size": {
+            "weight": 1
+          },
+          "min": 90,
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "agents"
+            }
+          }
+        },
+        {
+          "id": "poke-companion",
+          "type": "block",
+          "size": {
+            "px": 176
+          },
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "companion"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "type": "column",
+      "resizable": false,
+      "children": [
+        {
+          "id": "poke-tabs",
+          "type": "block",
+          "size": {
+            "px": 42
+          },
+          "window_drag": true,
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "tabs"
+            }
+          }
+        },
+        {
+          "id": "work-body",
+          "type": "row",
+          "padding": 8,
+          "gap": 8,
+          "children": [
+            {
+              "id": "main",
+              "type": "block",
+              "content": {
+                "tab": "active",
+                "pane": {
+                  "gap": 8,
+                  "radius": 12,
+                  "background": "background",
+                  "lone": true,
+                  "border": {
+                    "width": 1,
+                    "color": "border"
+                  },
+                  "focus": {
+                    "width": 1,
+                    "color": "accent"
+                  },
+                  "header": {
+                    "content": {
+                      "mod": "poke",
+                      "props": {
+                        "view": "pane"
+                      }
+                    },
+                    "height": 40,
+                    "position": "top",
+                    "reveal": "always"
+                  }
+                }
+              }
+            },
+            {
+              "id": "poke-panel",
+              "type": "block",
+              "size": {
+                "px": 290
+              },
+              "min": 240,
+              "max": 480,
+              "content": {
+                "mod": "poke",
+                "props": {
+                  "view": "panel"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "poke-status",
+          "type": "block",
+          "size": {
+            "px": 32
+          },
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "status"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
