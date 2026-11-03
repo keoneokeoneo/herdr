@@ -37,4 +37,5 @@ export function rows() {
 }
 
 export const spaceList = () => spaces();
-export const SPRITE_DIR = "mods/poke/assets";
+// Outside mods/: Herdr reloads a mod on any write inside its folder.
+export const SPRITE_DIR = "poke-assets";

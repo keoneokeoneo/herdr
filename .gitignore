@@ -52,3 +52,4 @@ layouts/.state/
 
 # install.sh backups
 *.herdr-poke-backup-*
+poke-assets/

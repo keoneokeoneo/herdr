@@ -52,7 +52,7 @@ async function step(s) {
     else if (!s.pending.has(r.address)) assign(s, r);
     const was = s.prev.get(r.address);
     if (r.status === "blocked" && was && was !== "blocked" && r.partnerSet && sprites.includes(`${r.partner}.mp3`)) {
-      playSound(`mods/poke/assets/${r.partner}.mp3`);
+      playSound(`poke-assets/${r.partner}.mp3`);
     }
     s.prev.set(r.address, r.status);
   }
