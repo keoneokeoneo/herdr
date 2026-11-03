@@ -5,6 +5,46 @@ Readable version: https://claude.ai/artifact/6FnMqh5cpHSRHKiWziVrmb · Visual sp
 
 Where the prototype and this document disagree, this document wins.
 
+## Current state (updated 2026-11-03, after v1 shipped)
+
+The sections below are the v1 design. Where they differ from this list, this list wins.
+`docs/guide.md` maps each item to files.
+
+- **Assets** live in `~/.config/herdr-app/poke-assets/`, not inside the mod. A write
+  inside `mods/poke/` reloads the mod. The helper squares every sprite GIF so all frames
+  fill one square canvas, because Herdr stretches each frame to its box. Avatars fit the
+  sprite into the circle; no crop, no zoom.
+- **Animation:** every sprite animates (companion, all agents, Dex), not only working
+  agents. Each sprite is wrapped in a sub-pixel native loop so GIF frames keep advancing.
+- **Sidebar:**
+  - The brand row is a pokeball and "Herdr", with search and a fold button.
+  - Folded, the sidebar becomes a 92px rail:
+    - Spaces show as letter chips with a waiting/new dot.
+    - Agents show as faces only, grouped by short rules.
+    - The companion shows as sprite, level and a thin bar.
+    - A › button unfolds it.
+  - Traffic lights are centred on the brand row (`traffic_lights: [12, 10]`).
+- **Spaces** have a + (new space). Spaces, tabs and agents have right-click menus (the
+  shipped `menu` mod), rename on double-click, and drag to reorder. Agents can be pinned.
+- **Dex** Caught is a grid of sprite tiles, using pokeTokenBar's own art and ✦ for shiny.
+  Seen uses partner names.
+- **Right panel** tabs are Usage, Dex, Changes and Files. Changes and Files are Herdr's
+  shipped mods. The panel toggle is at the right end of the tab bar, with `⌘K`.
+- **Usage labels** are "Session" (5h) and "Weekly". A window a provider never reports is
+  hidden, not shown as "–". Keno's Codex plan reports weekly only.
+- **Codex labels without the wrapper:** a Codex started by `hc run` or a script gets
+  `herdr-poke codex --attach <t>`, spawned by the mod when a Codex row has no model.
+  It finds the rollout via `lsof` and holds a per-terminal lock, so it never doubles up
+  with the wrapper.
+- **Terminals started by the hc server:**
+  - There are no permission prompts. The global defaults are Codex
+    `approval_policy="never"` with `sandbox_mode="danger-full-access"`, and Claude
+    `permissions.defaultMode="bypassPermissions"`. Keno approved this on 2026-11-03.
+  - Node comes from the `~/.local/bin` nvm shims.
+- **Fonts:** terminal `Jetendard` at 10, UI `IBM Plex Sans KR`. The theme uses the One
+  Double Dark ANSI palette.
+- The egg state (no active companion) has its own static card.
+
 ## Intent
 
 Keno works in the Herdr 2 desktop app (`herdr-app`, on top of herdr-core `hc`) with 2–3 Claude Code sessions, plus extra Claude or Codex sessions opened mid-task for review. What Keno mostly does in the window is **check how far each session has got and which one needs them**. Keno also raises a Pokémon in **pokeTokenBar** (menu-bar app that turns token usage into a companion).

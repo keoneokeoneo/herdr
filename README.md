@@ -5,6 +5,13 @@ Codex session at a glance — who needs you, who is working, how much of the 5h 
 limits are left — with a random Pokémon partner on each session and your pokeTokenBar
 companion in the sidebar. Only the Pokémon are pixel art.
 
+## Changing it
+
+Start with `docs/guide.md`: a map from each part of the window to its files, the gotchas,
+how to verify, and what lives outside the repo. Claude Code loads it through `CLAUDE.md`.
+Codex loads it through `AGENTS.override.md`; Herdr's generated `AGENTS.md` stays as the
+API reference. Both tools get the `herdr-poke-dev` skill from `.agents/skills/`.
+
 ## Prerequisites
 
 - Herdr: `brew install --cask herdr-app`
@@ -37,7 +44,7 @@ Keys: `⌘J` next session waiting for you (oldest first), `⌘K` show/hide the r
 ## Undo
 
 `scripts/uninstall.sh` restores the newest `*.herdr-poke-backup-*` of each edited file,
-removes the launchd job and the binary, and switches Herdr back to `main`. The repo stays.
+removes the launchd job, the binary and the node shims, and switches Herdr back to `main`. The repo stays.
 
 ## Troubleshooting
 

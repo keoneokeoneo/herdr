@@ -15,4 +15,8 @@ if [ "$dry" != 1 ]; then
   herdr-app do layout.switch --name main >/dev/null 2>&1 || true
 fi
 rm -f "$HOME/.local/bin/herdr-poke"
+for n in node npm npx; do
+  [ "$(readlink "$HOME/.local/bin/$n" 2>/dev/null)" = "../libexec/nvm-shim" ] && rm -f "$HOME/.local/bin/$n"
+done
+rm -f "$HOME/.local/libexec/nvm-shim"
 echo "done. Backups (*.herdr-poke-backup-*) are kept next to each file."

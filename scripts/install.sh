@@ -32,6 +32,24 @@ python3 "$root/scripts/settings_edit.py" install "$bin"
 
 "$bin" assets --companion || echo "warn    companion sprite not copied"
 
+# node/npm/npx for programs the hc server starts: it has no login shell, so no nvm PATH
+# (Claude hooks would fail with "node: command not found"). Only links that are missing
+# or already ours are touched.
+if [ -d "${NVM_DIR:-$HOME/.nvm}/versions/node" ]; then
+  shim="$HOME/.local/libexec/nvm-shim"
+  mkdir -p "$(dirname "$shim")" "$HOME/.local/bin"
+  install -m 755 "$root/scripts/nvm-shim" "$shim"
+  for n in node npm npx; do
+    l="$HOME/.local/bin/$n"
+    if [ ! -e "$l" ] && [ ! -L "$l" ] || [ "$(readlink "$l")" = "../libexec/nvm-shim" ]; then
+      ln -sfn ../libexec/nvm-shim "$l"
+    else
+      echo "warn    $l exists and is not ours; left as is"
+    fi
+  done
+  echo "shims   ~/.local/bin/{node,npm,npx} → nvm default"
+fi
+
 if [ "$dry" != 1 ]; then
   mkdir -p "$state"
   plist="$HOME/Library/LaunchAgents/dev.keno.herdr-poke.usage.plist"

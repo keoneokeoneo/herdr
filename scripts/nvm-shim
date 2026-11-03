@@ -1,0 +1,16 @@
+#!/bin/sh
+# node/npm/npx for programs started without the login shell (hc run, launchd):
+# they miss the PATH nvm sets in .zshrc. Runs nvm's default version. In an
+# interactive shell nvm's bin comes first, so these shims are never used there.
+d="${NVM_DIR:-$HOME/.nvm}"
+v=$(cat "$d/alias/default" 2>/dev/null)
+bin=""
+if [ -n "$v" ]; then
+  for c in "$d/versions/node/$v" "$d/versions/node/v$v" "$d/versions/node/v$v".*; do
+    [ -x "$c/bin/node" ] && bin="$c/bin"
+  done
+fi
+[ -n "$bin" ] || bin=$(ls -d "$d"/versions/node/v*/bin 2>/dev/null | sort -V | tail -1)
+name=$(basename "$0")
+[ -n "$bin" ] && [ -x "$bin/$name" ] || { echo "$name: no nvm node found in $d" >&2; exit 127; }
+exec "$bin/$name" "$@"
