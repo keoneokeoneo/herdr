@@ -1,6 +1,6 @@
 import { div } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { theme, props, panes, run } from "herdr";
+import { theme, props, panes, run, home } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, SYMBOL, alpha, C } from "./ui.js";
 import { chips } from "../lib/model.js";
@@ -28,7 +28,7 @@ export function render(_s, _cx) {
   const r = all.find((x) => x.address === term);
   const bar = h_flex().size_full().items_center().gap(8).px(10).bg(t.chrome).text_size(12).overflow_hidden();
   if (!r) {
-    return bar.child(div().text_color(t.muted).truncate().child(p.title || p.cwd || "terminal"))
+    return bar.child(div().text_color(t.muted).truncate().child((p.cwd ?? "").replace(home(), "~") || "Terminal"))
       .child(div().flex_1())
       .child(div().text_color(t.dim).font_family("IBM Plex Mono").text_size(11).child(p.branch ?? ""));
   }

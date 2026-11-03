@@ -74,7 +74,7 @@
           "id": "poke-companion",
           "type": "block",
           "size": {
-            "px": 176
+            "px": 140
           },
           "content": {
             "mod": "poke",

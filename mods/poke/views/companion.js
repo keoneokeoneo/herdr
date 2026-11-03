@@ -59,7 +59,7 @@ const TYPE_C = { fire: C.fire, water: C.water, grass: C.grass, electric: C.elect
 
 export function render(s) {
   const t = theme();
-  const card = v_flex().size_full().gap(6).p(12).bg(t.chrome).border_t_1().border_color(t.border);
+  const card = v_flex().size_full().justify_center().gap(6).px(12).py(10).bg(t.chrome).border_t_1().border_color(t.border);
   if (s.missing) return card.child(div().text_size(11).text_color(t.dim).child("pokeTokenBar not found"));
   if (s.egg) return egg(t, card, s);
   const c = s.c;
