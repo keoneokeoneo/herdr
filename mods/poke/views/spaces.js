@@ -1,7 +1,7 @@
 // Sidebar: one row per space, with the faces of the agents working in it.
 import { div, svg } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { theme, spaces, run } from "herdr";
+import { theme, spaces, run, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, alpha } from "./ui.js";
 import { byUrgency, waiting } from "../lib/model.js";
@@ -40,6 +40,8 @@ export function render() {
     list.child(
       h_flex().id(`space-${s.id}`).items_center().gap(8).px(6).py(6).rounded(8)
         .bg(s.active ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
+        .on_mouse_down("left", (e, cx) => { if (e.click_count === 2) { cx.stop_propagation(); run("space.rename", { id: s.id }); } })
+        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, height: 260, props: { tab: "space", target: { id: s.id } } }); })
         .on_click(() => run("space.select", { id: s.id }))
         .child(div().flex_none().size(22).rounded(6).bg(alpha(chipC, "2e")).text_color(chipC)
           .text_size(11).font_weight(700).flex().items_center().justify_center().child(letter))

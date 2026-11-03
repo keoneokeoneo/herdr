@@ -1,4 +1,4 @@
-import { div } from "gpui-kit";
+import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme, props, panes, run, home } from "herdr";
 import { rows } from "./data.js";
@@ -8,6 +8,21 @@ import { ago } from "../lib/format.js";
 import { isWorktree } from "./tabs.js";
 
 const LABEL = { working: "Working", blocked: "Needs you", done: "Done", idle: "Idle" };
+
+function btn(t, id, icon, command, args) {
+  return div().id(id).flex_none().p(3).rounded(4).text_color(t.dim).cursor_pointer()
+    .hover((x) => x.bg(t.hover).text_color(t.foreground))
+    .on_click((_e, cx) => { cx.stop_propagation(); run(command, args); })
+    .child(svg(`mods/pane/${icon}.svg`).size(13));
+}
+
+function actions(t, pane, zoomed) {
+  return h_flex().flex_none().items_center().gap(1).pl(4)
+    .child(btn(t, `pa-r-${pane}`, "split-right", "pane.split", { direction: "right", pane }))
+    .child(btn(t, `pa-d-${pane}`, "split-down", "pane.split", { direction: "down", pane }))
+    .child(btn(t, `pa-z-${pane}`, zoomed ? "unzoom" : "zoom", "pane.zoom", { pane }))
+    .child(btn(t, `pa-x-${pane}`, "close", "pane.close", { pane }));
+}
 
 export function init(_s, cx) {
   // Elapsed times only change by the minute.
@@ -30,7 +45,8 @@ export function render(_s, _cx) {
   if (!r) {
     return bar.child(div().text_color(t.muted).truncate().child((p.cwd ?? "").replace(home(), "~") || "Terminal"))
       .child(div().flex_1())
-      .child(div().text_color(t.dim).font_family("IBM Plex Mono").text_size(11).child(p.branch ?? ""));
+      .child(div().text_color(t.dim).font_family("IBM Plex Mono").text_size(11).child(p.branch ?? ""))
+      .child(actions(t, props()?.pane, p.zoomed));
   }
   const col = t[r.status] ?? t.dim;
   let left = bar.child(avatar(r, { size: 24, key: "pane" }))
@@ -52,5 +68,5 @@ export function render(_s, _cx) {
   if (r.model) right.child(div().child(r.model));
   if (r.effort) right.child(pill(r.effort, r.provider === "claude" ? t.done : "#8ec5f5", { size: 10 }));
   if (r.ctx != null) right.child(div().text_color(t.dim).child("ctx")).child(meter(t, r.ctx)).child(div().child(`${r.ctx}%`));
-  return left.child(right);
+  return left.child(right).child(actions(t, props()?.pane, p.zoomed));
 }

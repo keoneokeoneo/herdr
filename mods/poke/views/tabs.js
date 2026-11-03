@@ -1,6 +1,6 @@
-import { div } from "gpui-kit";
+import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { theme, run, shared, spaces } from "herdr";
+import { theme, run, shared, spaces, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, tone, C, alpha } from "./ui.js";
 import { byUrgency, tabPill, typeOf } from "../lib/model.js";
@@ -24,12 +24,20 @@ export function render(_s, _cx) {
     const wt = list.some((r) => isWorktree(r.cwd));
     let el = h_flex().id(`tab-${tab.id}`).flex_none().items_center().gap(7).h(32).px(10).rounded(9)
       .cursor_pointer().hover((s) => s.bg(t.hover))
+      .on_mouse_down("left", (e, cx) => { if (e.click_count === 2) { cx.stop_propagation(); run("tab.rename", { id: tab.id }); } })
+      .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, props: { tab: "tab", target: { id: tab.id, space: sp.id } } }); })
       .on_click(() => run("tab.select", { id: tab.id }));
     if (tab.active) el = el.bg(t.raised);
     if (top) el = el.child(avatar(top, { size: 22, key: "tab", noBadge: true }));
     el = el.child(div().text_size(13).font_weight(500).text_color(tab.active ? t.foreground : t.muted).child(tab.name));
     if (wt) el = el.child(div().text_size(11).text_color(t.dim).child("⎇"));
     if (p.text) el = el.child(p.tone === "dim" ? div().text_size(11).text_color(t.dim).child(p.text) : pill(p.text, tone(t, p.tone)));
+    if (tab.active) {
+      el = el.child(div().id(`tab-close-${tab.id}`).p(2).rounded(4).text_color(t.dim).hover((x) => x.bg(t.hover).text_color(t.foreground))
+        .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+        .on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: tab.id }); })
+        .child(svg("mods/pane/close.svg").size(11)));
+    }
     // Type colour as a soft underline.
     return div().flex_none().flex().flex_col().gap(2).child(el)
       .child(div().h(2).mx(10).rounded_full().bg(ty ? alpha(C[ty], "66") : "#00000000"));
