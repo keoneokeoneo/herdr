@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"herdr-poke/internal/assets"
 	"herdr-poke/internal/claude"
 	"herdr-poke/internal/codex"
 	"herdr-poke/internal/usage"
@@ -19,7 +20,7 @@ commands:
   statusline   Claude Code statusLine.command (reads stdin JSON, prints the line)
   codex        run Codex under herdr-poke: herdr-poke codex -- <codex args>
   usage        aggregate 14-day token usage into usage.json
-  assets       fetch Pokemon and companion assets
+  assets       fetch Pokemon and companion assets: assets <id> | --companion | --list
 `
 
 func main() {
@@ -49,8 +50,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return 0
 	case "assets":
-		fmt.Fprintf(stderr, "herdr-poke %s: not implemented yet\n", args[0])
-		return 1
+		return assets.Run(args[1:], assets.ConfigFromEnv(), stdout, stderr)
 	default:
 		fmt.Fprint(stderr, usageText)
 		return 2

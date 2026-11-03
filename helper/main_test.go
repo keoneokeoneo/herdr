@@ -74,3 +74,33 @@ func TestUsageSubcommandWritesUsageJSON(t *testing.T) {
 		t.Errorf("usage printed to stdout: %q", out.String())
 	}
 }
+
+func TestAssetsSubcommandListsTheAssetFolder(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HERDR_APP_HOME", home)
+	var out, errOut bytes.Buffer
+	if code := run([]string{"assets", "--list"}, strings.NewReader(""), &out, &errOut); code != 0 || out.String() != "[]\n" {
+		t.Errorf("empty: code %d out %q err %q", code, out.String(), errOut.String())
+	}
+	dir := filepath.Join(home, "poke-assets")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "25.gif"), []byte("GIF89a"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out.Reset()
+	if code := run([]string{"assets", "--list"}, strings.NewReader(""), &out, &errOut); code != 0 || out.String() != "[\"25.gif\"]\n" {
+		t.Errorf("one file: code %d out %q", code, out.String())
+	}
+	if _, err := os.Stat(filepath.Join(home, "mods")); err == nil {
+		t.Error("assets touched mods/")
+	}
+}
+
+func TestAssetsSubcommandWithoutArgsIsUsage(t *testing.T) {
+	var out, errOut bytes.Buffer
+	if code := run([]string{"assets"}, strings.NewReader(""), &out, &errOut); code != 2 || !strings.Contains(errOut.String(), "usage") {
+		t.Errorf("code %d stderr %q", code, errOut.String())
+	}
+}
