@@ -32,6 +32,7 @@ The sections below are the v1 design. Where they differ from this list, this lis
   shipped mods. The panel toggle is at the right end of the tab bar, with `⌘K`.
 - **Usage labels** are "Session" (5h) and "Weekly". A window a provider never reports is
   hidden, not shown as "–". Keno's Codex plan reports weekly only.
+  Both provider cards omit plan names; internal identifiers such as `prolite` are not displayed.
 - **Codex labels without the wrapper:** a Codex started by `hc run` or a script gets
   `herdr-poke codex --attach <t>`, spawned by the mod when a Codex row has no model.
   It finds the rollout via `lsof` and holds a per-terminal lock, so it never doubles up

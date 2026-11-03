@@ -26,9 +26,7 @@ const card = (t) => v_flex().gap(4).p(10).rounded(10).bg(t.surface).border_1().b
 function limitCard(t, name, prov, now, color, icon) {
   const c = card(t).child(h_flex().items_center().gap(6)
     .child(image(icon).w(14).h(14).flex_none())
-    .child(div().text_size(12).font_weight(700).text_color(t.foreground).child(name))
-    .child(div().flex_1())
-    .child(div().text_size(10).text_color(t.dim).child(prov?.plan ?? "")));
+    .child(div().text_size(12).font_weight(700).text_color(t.foreground).child(name)));
   for (const m of [300, 10080]) {
     const w = win(prov, m);
     // A window the provider never reports (Codex on some plans has no 5h limit) is left out.
