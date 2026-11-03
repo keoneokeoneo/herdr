@@ -31,6 +31,8 @@ function limitCard(t, name, prov, now, color, icon) {
     .child(div().text_size(10).text_color(t.dim).child(prov?.plan ?? "")));
   for (const m of [300, 10080]) {
     const w = win(prov, m);
+    // A window the provider never reports (Codex on some plans has no 5h limit) is left out.
+    if (prov && !w) continue;
     const ok = live(w, now);
     const pct = ok ? Math.min(100, w.used) : 0;
     const barC = pct >= 80 ? t.blocked : pct >= 60 ? t.accent : color;
@@ -40,7 +42,7 @@ function limitCard(t, name, prov, now, color, icon) {
         .child(div().flex_1())
         .child(div().font_weight(600).text_color(ok ? t.foreground : t.dim).child(pctOrDash(w, now))))
       .child(div().w_full().h(5).rounded_full().bg(t.raised).overflow_hidden().child(div().h(5).rounded_full().bg(barC).w(`${Math.max(ok ? 2 : 0, Math.round(pct))}%`)))
-      .child(div().text_size(10).text_color(t.dim).child(ok ? `resets in ${resetsIn(w.resets_at, now)}` : w ? "no current data" : prov ? `not on ${prov.plan || "this plan"}` : "no data yet")));
+      .child(div().text_size(10).text_color(t.dim).child(ok ? `resets in ${resetsIn(w.resets_at, now)}` : w ? "no current data" : "no data yet")));
   }
   return c;
 }
