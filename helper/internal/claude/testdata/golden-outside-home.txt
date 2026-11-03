@@ -1,0 +1,1 @@
+[90mdev@example.com[0m[2m · [0m[34mExample Org[0m[2m | [0m[96m[1m/opt/other/project[0m[2m | [0m[90m1s[0m

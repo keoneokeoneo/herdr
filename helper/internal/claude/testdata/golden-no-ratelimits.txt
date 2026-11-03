@@ -1,0 +1,1 @@
+[90mdev@example.com[0m[2m · [0m[34mExample Org[0m[2m | [0m[96m[1m~/repos/clean[0m[2m | [0m[32mmain[0m[2m | [0m[35m[1mOpus 4.7[0m[35m:medium[0m[2m | [0m[32mctx 10%[0m[2m | [0m[90m45s[0m

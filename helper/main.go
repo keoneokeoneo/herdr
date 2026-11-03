@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"herdr-poke/internal/claude"
 )
 
 const usageText = `usage: herdr-poke <command> [args]
@@ -28,7 +30,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 2
 	}
 	switch args[0] {
-	case "statusline", "codex", "usage", "assets":
+	case "statusline":
+		return claude.Run(stdin, stdout)
+	case "codex", "usage", "assets":
 		fmt.Fprintf(stderr, "herdr-poke %s: not implemented yet\n", args[0])
 		return 1
 	default:

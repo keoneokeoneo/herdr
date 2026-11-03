@@ -31,3 +31,11 @@ func TestUsageListsEverySubcommand(t *testing.T) {
 		}
 	}
 }
+
+func TestStatuslineSubcommandAlwaysExitsZero(t *testing.T) {
+	var out, errOut bytes.Buffer
+	code := run([]string{"statusline"}, strings.NewReader("garbage"), &out, &errOut)
+	if code != 0 || out.String() != "\n" || errOut.Len() != 0 {
+		t.Errorf("code=%d stdout=%q stderr=%q", code, out.String(), errOut.String())
+	}
+}
