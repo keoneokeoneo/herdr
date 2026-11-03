@@ -16,7 +16,7 @@ export function toggleSidebar() {
   const width = find(layout(), "sidebar")?.size?.px;
   if (!narrow()) setShared("sidebar.width", width);
   setShared("sidebar.collapsed", !narrow());
-  run("layout.resize", { id: "sidebar", px: narrow() ? (shared("sidebar.width") ?? 262) : window()?.platform === "macos" ? 76 : 44 });
+  run("layout.resize", { id: "sidebar", px: narrow() ? (shared("sidebar.width") ?? 262) : window()?.platform === "macos" ? 92 : 52 });
 }
 
 function button(t, id, icon, action) {
@@ -30,7 +30,7 @@ export function render() {
   const t = theme();
   const w = window();
   const mac = w?.platform === "macos" && !w?.fullscreen;
-  const row = h_flex().size_full().items_center().gap(4).pr(10).bg(t.chrome).pl(narrow() ? 6 : mac ? 84 : 14);
+  const row = h_flex().size_full().items_center().gap(4).pr(10).bg(t.chrome).pl(narrow() ? 6 : mac ? 96 : 14);
   if (narrow()) return mac ? row : row.child(button(t, "sidebar-toggle", "sidebar", toggleSidebar));
   return row
     .child(h_flex().flex_1().gap(8).items_center()

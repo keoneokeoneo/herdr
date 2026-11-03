@@ -5,6 +5,7 @@ import { theme, home, appHome, readTextFile, watchFolder, exec, shared } from "h
 import { pill, spritePath, alive, C } from "./ui.js";
 import { progress } from "../lib/companion.js";
 import { tokensM } from "../lib/format.js";
+import { narrow } from "./brand.js";
 
 const DIR = () => `${home()}/Library/Application Support/PokeTokenBar`;
 const cap = (s) => (s ? s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "");
@@ -71,6 +72,10 @@ export function render(s) {
   const c = s.c;
   if (!c) return card;
   const src = spritePath(`companion-${c.id}`) ?? spritePath(c.id);
+  if (narrow()) return card.px(0).items_center().gap(4)
+    .child(src ? alive(image(src).w(52).h(52)) : div().text_color(t.dim).child(`#${c.id}`))
+    .child(div().text_size(10).text_color(t.muted).child(`Lv.${c.level ?? "?"}`))
+    .child(div().w(48).h(4).rounded_full().bg(t.raised).overflow_hidden().child(div().h(4).rounded_full().bg(t.accent).w(`${Math.max(2, Math.round(c.pct))}%`)));
   const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
     .child(src ? alive(image(src).w(60).h(60)) : div().text_color(t.dim).child(`#${c.id}`));
   const title = h_flex().items_center().gap(6)
@@ -102,6 +107,8 @@ export function render(s) {
 
 function egg(t, card, s) {
   const e = s.egg;
+  if (narrow()) return card.px(0).items_center()
+    .child(s.eggImg ? image("poke-assets/companion-egg.png").w(44).h(44) : div().text_size(22).text_color(t.dim).child("◓"));
   const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
     .child(s.eggImg
       ? image("poke-assets/companion-egg.png").w(56).h(56)

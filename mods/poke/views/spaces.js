@@ -33,6 +33,7 @@ export function render(st) {
       .text_color(t.muted).cursor_pointer().hover((x) => x.bg(t.hover).text_color(t.foreground))
       .on_click(() => run("space.new")).child(svg("mods/workspace-chrome/plus.svg").size(13))));
   const all_ = spaces();
+  if (narrow()) return rail(st, t, list, all, all_);
   all_.forEach((s, i) => {
     const mine = all.filter((r) => r.space === s.id);
     const wait = waiting(mine).length;
@@ -62,6 +63,23 @@ export function render(st) {
           .child(meta))
         .child(stack(mine)),
     );
+  });
+  return list;
+}
+
+// Folded sidebar: one letter chip per space, a dot when something there needs a look.
+function rail(st, t, list, all, all_) {
+  list.px(0).items_center();
+  all_.forEach((s, i) => {
+    const mine = all.filter((r) => r.space === s.id);
+    const dot = waiting(mine).length ? t.blocked : mine.some((r) => r.status === "done") ? t.accent : null;
+    const chipC = s.active ? t.accent : t.muted;
+    const chip = div().relative().flex_none().size(30).rounded(8).bg(alpha(chipC, s.active ? "33" : "1f")).text_color(chipC)
+      .text_size(12).font_weight(700).flex().items_center().justify_center().child((s.name || "?").trim().charAt(0).toUpperCase());
+    if (dot) chip.child(div().absolute().top(-2).right(-2).size(8).rounded_full().bg(dot));
+    list.child(div().id(`space-${s.id}`).p(3).rounded(10).bg(s.active ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
+      .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, height: 260, props: { tab: "space", target: { id: s.id } } }); })
+      .on_click(() => run("space.select", { id: s.id })).child(chip));
   });
   return list;
 }
