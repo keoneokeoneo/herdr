@@ -49,3 +49,6 @@ update-notes-media/
 .DS_Store
 layouts/.state/
 .superpowers/
+
+# install.sh backups
+*.herdr-poke-backup-*
