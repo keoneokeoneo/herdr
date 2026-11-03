@@ -39,6 +39,9 @@ Herdr writes, so `git status` shows only our files.
 | State files and locks | `helper/internal/state` (`~/.local/state/herdr-poke/`) |
 | Install and undo | `scripts/install.sh`, `scripts/uninstall.sh`, `scripts/settings_edit.py` (manifest-based edits) |
 
+Seen is a deduplicated snapshot of partners on open agent sessions across spaces.
+The existing 2-second behaviour tick replaces it only when membership changes.
+
 ## Data flow in one paragraph
 
 Herdr gives the mod `agents()`, `spaces()`, `terminals()` (status, labels, focus). The Go

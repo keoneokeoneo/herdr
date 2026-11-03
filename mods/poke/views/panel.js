@@ -91,12 +91,12 @@ function dex(t, s) {
     for (const c of caught) g.child(tile(t, `dex-${c.id}`, c.id, c.name, c.shiny));
     box.child(g);
   } else box.child(div().text_size(11).text_color(t.dim).child("Nothing caught yet. Keep feeding your partner."));
-  box.child(div().pt(6).text_size(12).font_weight(700).text_color(t.foreground).child(`Seen · ${seen.length}`));
+  box.child(div().pt(6).text_size(12).font_weight(700).text_color(t.foreground).child(`Seen · ${seen.length} active`));
   if (seen.length) {
     const g = grid();
     for (const id of seen) g.child(tile(t, id, id, names[id] ?? null, false));
     box.child(g);
-  } else box.child(div().text_size(11).text_color(t.dim).child("Session partners you meet show up here."));
+  } else box.child(div().text_size(11).text_color(t.dim).child("Partners from open agent sessions appear here."));
   const mode = shared("poke.typeMode") ?? "random";
   box.child(h_flex().pt(10).gap(8).text_size(10).text_color(t.dim)
     .child(div().child(`Tab types: ${mode}`))

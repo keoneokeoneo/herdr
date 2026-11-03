@@ -2,7 +2,7 @@
 import { hc, exec, home, appHome, run, shared, setShared, playSound, notify } from "herdr";
 import { rows } from "./views/data.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
-import { excluded, pickPartner } from "./lib/partner.js";
+import { excluded, pickPartner, activePartners } from "./lib/partner.js";
 import { waiting, cryFor, retryDue } from "./lib/model.js";
 import { say } from "./lib/voice.js";
 
@@ -19,9 +19,9 @@ async function refreshAssets() {
   } catch {}
 }
 
-function addSeen(id) {
-  const seen = shared("poke.seen") ?? [];
-  if (!seen.includes(id)) setShared("poke.seen", [...seen, id]);
+function syncSeen(all) {
+  const seen = activePartners(all);
+  if (JSON.stringify(seen) !== JSON.stringify(shared("poke.seen") ?? [])) setShared("poke.seen", seen);
 }
 
 async function speciesName(id) {
@@ -62,10 +62,10 @@ function attach(t) {
 
 async function step(s) {
   const all = rows();
+  syncSeen(all);
   const sprites = shared("poke.sprites") ?? [];
   for (const r of all) {
-    if (r.partnerSet) addSeen(r.partner);
-    else if (!s.pending.has(r.address)) assign(s, r);
+    if (!r.partnerSet && !s.pending.has(r.address)) assign(s, r);
     const was = s.prev.get(r.address);
     if (r.status === "blocked" && was && was !== "blocked") playSound(cryFor(r.partnerSet ? r.partner : null, sprites));
     // A partner whose sprite or cry never arrived (offline, API hiccup) is fetched again, with backoff.
@@ -89,7 +89,6 @@ async function assign(s, r) {
     const id = pickPartner(Math.random, excluded(st));
     const res = await hc(["label", r.address, `poke.partner=${id}`]);
     if (res.code !== 0) { s.pending.delete(r.address); return; }
-    addSeen(id);
     await exec(HP(), ["assets", String(id)]).catch(() => null);
     await refreshAssets();
   } catch { s.pending.delete(r.address); }
