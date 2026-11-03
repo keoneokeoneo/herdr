@@ -98,7 +98,7 @@ function egg(t, card, s) {
   const e = s.egg;
   const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
     .child(s.eggImg
-      ? image("mods/poke/assets/companion-egg.png").w(56).h(56).relative().top(0).loop("top", { from: 0, to: -2, period: 1600 })
+      ? image("mods/poke/assets/companion-egg.png").w(56).h(56)
       : div().text_size(22).text_color(t.dim).child("◓"));
   const info = v_flex().flex_1().min_w(0).gap(3)
     .child(div().text_size(14).font_weight(700).text_color(t.foreground).child("Egg"))
