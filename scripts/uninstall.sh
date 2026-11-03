@@ -1,21 +1,13 @@
 #!/usr/bin/env bash
-# Undo scripts/install.sh: restore the newest backup of each edited file,
-# remove the launchd job and the helper binary, switch Herdr back to main.
-# The repo itself stays. HERDR_POKE_DRY=1 skips launchd and Herdr.
+# Undo scripts/install.sh: put back only the values install recorded as changed
+# (other edits made since are kept), remove the launchd job and the binary, and
+# switch Herdr back to main. The repo and the backups stay. HERDR_POKE_DRY=1 skips launchd and Herdr.
 set -euo pipefail
 
-app="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 dry="${HERDR_POKE_DRY:-0}"
 
-restore() {
-  local newest
-  newest="$(ls -1 "$1".herdr-poke-backup-* 2>/dev/null | sort | tail -1 || true)"
-  if [ -n "$newest" ]; then cp -p "$newest" "$1"; echo "restored $1 ← $newest"; fi
-}
-
-restore "$HOME/.claude/settings.json"
-restore "$HOME/.zshrc"
-restore "$app/settings.json"
+python3 "$root/scripts/settings_edit.py" uninstall
 
 if [ "$dry" != 1 ]; then
   launchctl bootout "gui/$(id -u)/dev.keno.herdr-poke.usage" 2>/dev/null || true
@@ -23,4 +15,4 @@ if [ "$dry" != 1 ]; then
   herdr-app do layout.switch --name main >/dev/null 2>&1 || true
 fi
 rm -f "$HOME/.local/bin/herdr-poke"
-echo "done. Backups are kept next to each file."
+echo "done. Backups (*.herdr-poke-backup-*) are kept next to each file."
