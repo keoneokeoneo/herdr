@@ -138,3 +138,56 @@ func UpdateLimits(provider string, l ProviderLimits) error {
 		return WriteJSON(limitsFile, all)
 	})
 }
+
+// MergeLimits is UpdateLimits for a provider reported by several processes at
+// once (one Claude statusline per session). For a window with the same reset
+// time it keeps the larger used %, so an older session can't move it back,
+// and it skips the write entirely when no window changed: every rewrite wakes
+// the mod's folder watch. wrote reports whether limits.json was written.
+func MergeLimits(provider string, l ProviderLimits) (wrote bool, err error) {
+	err = WithLock("limits.lock", func() error {
+		all := map[string]json.RawMessage{}
+		if b, e := os.ReadFile(filepath.Join(Dir(), limitsFile)); e == nil {
+			if json.Unmarshal(b, &all) != nil || all == nil {
+				all = map[string]json.RawMessage{}
+			}
+		}
+		var old ProviderLimits
+		if raw, ok := all[provider]; ok {
+			_ = json.Unmarshal(raw, &old)
+		}
+		merged := make([]Window, 0, len(l.Windows))
+		for _, w := range l.Windows {
+			for _, o := range old.Windows {
+				if o.Minutes == w.Minutes && o.ResetsAt == w.ResetsAt && o.Used > w.Used {
+					w.Used = o.Used
+				}
+			}
+			merged = append(merged, w)
+		}
+		if sameWindows(old.Windows, merged) && old.Plan == l.Plan {
+			return nil
+		}
+		l.Windows = merged
+		entry, e := json.Marshal(l)
+		if e != nil {
+			return e
+		}
+		all[provider] = entry
+		wrote = true
+		return WriteJSON(limitsFile, all)
+	})
+	return wrote, err
+}
+
+func sameWindows(a, b []Window) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

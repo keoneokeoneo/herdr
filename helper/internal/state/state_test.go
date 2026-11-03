@@ -261,3 +261,42 @@ func TestUpdateLimitsRecoversFromCorruptFile(t *testing.T) {
 		t.Fatalf("not rewritten: %+v", got)
 	}
 }
+
+func TestMergeLimitsSkipsUnchanged(t *testing.T) {
+	dir := useTempState(t)
+	l := ProviderLimits{Windows: []Window{{Minutes: 300, Used: 42, ResetsAt: 1793705100}}, Updated: 1}
+	if wrote, err := MergeLimits("claude", l); err != nil || !wrote {
+		t.Fatalf("first merge: wrote=%v err=%v", wrote, err)
+	}
+	before, _ := os.ReadFile(filepath.Join(dir, "limits.json"))
+	l.Updated = 2 // only the timestamp moved
+	if wrote, err := MergeLimits("claude", l); err != nil || wrote {
+		t.Fatalf("unchanged windows must not rewrite: wrote=%v err=%v", wrote, err)
+	}
+	after, _ := os.ReadFile(filepath.Join(dir, "limits.json"))
+	if string(before) != string(after) {
+		t.Fatal("limits.json changed although windows did not")
+	}
+}
+
+func TestMergeLimitsKeepsLargerUsedForSameReset(t *testing.T) {
+	dir := useTempState(t)
+	newer := ProviderLimits{Windows: []Window{{Minutes: 300, Used: 50, ResetsAt: 1793705100}}, Updated: 2}
+	older := ProviderLimits{Windows: []Window{{Minutes: 300, Used: 40, ResetsAt: 1793705100}}, Updated: 3}
+	if _, err := MergeLimits("claude", newer); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := MergeLimits("claude", older); err != nil {
+		t.Fatal(err)
+	}
+	if g := readLimitsFile(t, dir)["claude"]; g.Windows[0].Used != 50 {
+		t.Fatalf("stale session lowered used: %+v", g)
+	}
+	next := ProviderLimits{Windows: []Window{{Minutes: 300, Used: 3, ResetsAt: 1793723100}}, Updated: 4}
+	if _, err := MergeLimits("claude", next); err != nil {
+		t.Fatal(err)
+	}
+	if g := readLimitsFile(t, dir)["claude"]; g.Windows[0].Used != 3 || g.Windows[0].ResetsAt != 1793723100 {
+		t.Fatalf("new window not taken: %+v", g)
+	}
+}

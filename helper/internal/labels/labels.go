@@ -15,6 +15,12 @@ import (
 // Timeout caps one `hc label` call, so a hung hc can never block a statusline.
 var Timeout = 300 * time.Millisecond
 
+// FailBackoff is how long a terminal's label writes are skipped after hc
+// failed, so a broken or slow hc costs one Timeout per window, not per call.
+var FailBackoff = 30 * time.Second
+
+const failKey = "__failed_until"
+
 var unsafeName = regexp.MustCompile(`[^A-Za-z0-9._-]`)
 
 func cacheName(terminal string) string {
@@ -34,6 +40,9 @@ func Set(terminal string, kv map[string]string) error {
 	}
 	cache := map[string]string{}
 	_ = state.ReadJSON(cacheName(terminal), &cache) // missing or corrupt: nothing cached
+	if until, err := time.Parse(time.RFC3339Nano, cache[failKey]); err == nil && time.Now().Before(until) {
+		return nil
+	}
 
 	var args []string
 	var changed []string
@@ -58,6 +67,14 @@ func Set(terminal string, kv map[string]string) error {
 	// Stdout/Stderr stay nil (/dev/null): no pipes to wait on after a kill.
 	cmd := exec.CommandContext(ctx, "hc", append([]string{"label", terminal}, args...)...)
 	if err := cmd.Run(); err != nil {
+		if FailBackoff > 0 {
+			_ = state.WithLock(cacheName(terminal)+".lock", func() error {
+				fresh := map[string]string{}
+				_ = state.ReadJSON(cacheName(terminal), &fresh)
+				fresh[failKey] = time.Now().Add(FailBackoff).Format(time.RFC3339Nano)
+				return state.WriteJSON(cacheName(terminal), fresh)
+			})
+		}
 		return fmt.Errorf("hc label %s: %w", terminal, err)
 	}
 
@@ -69,6 +86,7 @@ func Set(terminal string, kv map[string]string) error {
 		for _, k := range changed {
 			fresh[k] = kv[k]
 		}
+		delete(fresh, failKey)
 		return state.WriteJSON(cacheName(terminal), fresh)
 	})
 }

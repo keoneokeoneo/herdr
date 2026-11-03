@@ -46,12 +46,18 @@ async function load(s) {
 
 export function init(s, cx) {
   s.difficulty = 1;
+  cx.timer.every(30000, (cx) => cx.spawn(async (cx) => { await load(s); cx.notify(); }));
   cx.spawn(async (cx) => {
     const r = await exec("defaults", ["read", "io.github.chattymin.poketokenbar", "growthDifficulty"]).catch(() => null);
     const d = Number(r?.stdout?.trim());
     if (r?.code === 0 && d > 0) s.difficulty = d;
     await load(s); cx.notify();
-    for (;;) { await watchFolder(DIR()).catch(() => null); await load(s); cx.notify(); }
+    // A rejected watch (folder missing, watch refused) must not spin: fall back to the timer.
+    for (;;) {
+      const ok = await watchFolder(DIR()).then(() => true, () => false);
+      if (!ok) return;
+      await load(s); cx.notify();
+    }
   });
 }
 

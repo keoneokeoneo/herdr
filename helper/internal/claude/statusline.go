@@ -452,7 +452,7 @@ func sideEffects(in Input, env Env) {
 		_ = labels.Set(os.Getenv("HC_TERMINAL_ID"), kv)
 	}
 	if l, ok := limitsFrom(in, env.Now); ok {
-		_ = state.UpdateLimits("claude", l)
+		_, _ = state.MergeLimits("claude", l)
 	}
 }
 

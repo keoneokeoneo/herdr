@@ -129,6 +129,9 @@ func TestLabelsEmptyValueRemovesOnce(t *testing.T) {
 
 func TestLabelsFailureIsRetried(t *testing.T) {
 	logPath, failPath := fakeHC(t, "")
+	old := FailBackoff
+	FailBackoff = 0
+	t.Cleanup(func() { FailBackoff = old })
 	if err := os.WriteFile(failPath, nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -168,5 +171,18 @@ func TestLabelsMissingHCReturnsError(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", filepath.Join(t.TempDir(), "state"))
 	if err := Set("t7", map[string]string{"poke.ctx": "1"}); err == nil {
 		t.Fatal("want error when hc is not on PATH")
+	}
+}
+
+func TestLabelsFailureBacksOff(t *testing.T) {
+	logPath, failPath := fakeHC(t, "")
+	if err := os.WriteFile(failPath, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_ = Set("t8", map[string]string{"poke.ctx": "9"})
+	_ = Set("t8", map[string]string{"poke.ctx": "10"})
+	_ = Set("t8", map[string]string{"poke.ctx": "11"})
+	if got := calls(t, logPath); len(got) != 1 {
+		t.Fatalf("a failing hc must not be called again within FailBackoff; calls = %q", got)
 	}
 }

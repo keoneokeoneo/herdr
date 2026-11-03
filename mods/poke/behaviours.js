@@ -3,7 +3,7 @@ import { hc, exec, home, run, shared, setShared, playSound, notify } from "herdr
 import { rows } from "./views/data.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
 import { excluded, pickPartner } from "./lib/partner.js";
-import { waiting } from "./lib/model.js";
+import { waiting, cryFor, retryDue } from "./lib/model.js";
 import { say } from "./lib/voice.js";
 
 const HP = () => `${home()}/.local/bin/herdr-poke`;
@@ -32,6 +32,7 @@ async function speciesName(id) {
 export function start(s, cx) {
   s.prev = new Map();      // address → last status
   s.pending = new Set();   // addresses being labelled
+  s.tried = new Map();     // partner id → asset retry backoff
   s.jumpAt = -1;
   s.onCommand = (c) => command(s, c);
 
@@ -57,13 +58,16 @@ async function step(s) {
     if (r.partnerSet) addSeen(r.partner);
     else if (!s.pending.has(r.address)) assign(s, r);
     const was = s.prev.get(r.address);
-    if (r.status === "blocked" && was && was !== "blocked" && r.partnerSet && sprites.includes(`${r.partner}.mp3`)) {
-      playSound(`poke-assets/${r.partner}.mp3`);
+    if (r.status === "blocked" && was && was !== "blocked") playSound(cryFor(r.partnerSet ? r.partner : null, sprites));
+    // A partner whose sprite or cry never arrived (offline, API hiccup) is fetched again, with backoff.
+    if (r.partnerSet && !(sprites.includes(`${r.partner}.gif`) || sprites.includes(`${r.partner}.png`)) && retryDue(s.tried, r.partner, Date.now())) {
+      exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
     s.prev.set(r.address, r.status);
   }
   const live = new Set(all.map((r) => r.address));
   for (const k of s.prev.keys()) if (!live.has(k)) s.prev.delete(k);
+  for (const k of s.pending) if (!live.has(k)) s.pending.delete(k);
 }
 
 async function assign(s, r) {
