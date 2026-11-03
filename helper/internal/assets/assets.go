@@ -125,6 +125,7 @@ func ensureSprite(c Config, id int) (string, error) {
 		url := fmt.Sprintf("%s/versions/generation-v/black-white/animated/%d.gif", c.SpriteBase, id)
 		err := download(c, url, filepath.Join(c.Dir(), gif), isGIF)
 		if err == nil {
+			normalizeFile(filepath.Join(c.Dir(), gif))
 			return gif, nil
 		}
 		if !errors.Is(err, errNotFound) {
@@ -300,6 +301,9 @@ func Companion(c Config) (string, error) {
 		if err := os.MkdirAll(c.Dir(), 0o755); err != nil {
 			return "", err
 		}
+		if out, changed, err := normalizeGIF(src); err == nil && changed {
+			src = out
+		}
 		dst := filepath.Join(c.Dir(), "companion-"+n+filepath.Ext(name))
 		if _, err := writeIfChanged(dst, src); err != nil {
 			return "", fmt.Errorf("companion: %w", err)
@@ -334,13 +338,14 @@ func List(c Config) ([]string, error) {
 
 // ---- command line ----
 
-const usageText = "usage: herdr-poke assets <pokemon id> | --companion | --list\n"
+const usageText = "usage: herdr-poke assets <pokemon id> | --companion | --list | --normalize\n"
 
 // Run is `herdr-poke assets ...`.
 //
 //	assets <id>        fetch sprite, cry and name; print the sprite path
 //	assets --companion copy the active companion's sprite; print its path
 //	assets --list      print the asset file names as a JSON array
+//	assets --normalize square every GIF in the folder; print how many changed
 func Run(args []string, c Config, stdout, stderr io.Writer) int {
 	if len(args) != 1 {
 		fmt.Fprint(stderr, usageText)
@@ -355,6 +360,14 @@ func Run(args []string, c Config, stdout, stderr io.Writer) int {
 		}
 		b, _ := json.Marshal(names)
 		fmt.Fprintf(stdout, "%s\n", b)
+		return 0
+	case arg == "--normalize":
+		n, err := NormalizeDir(c)
+		if err != nil {
+			fmt.Fprintf(stderr, "herdr-poke assets: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "%d\n", n)
 		return 0
 	case arg == "--companion":
 		return report(stdout, stderr)(Companion(c))

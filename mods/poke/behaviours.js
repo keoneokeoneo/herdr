@@ -128,6 +128,8 @@ for e in "$@"; do id=\${e%%:*}; sh=\${e##*:}
   for x in $c; do [ -f "$src/$id-$x" ] && { cp -p "$src/$id-$x" "$dst/dex-$id.\${x##*.}"; break; }; done
 done`;
   await exec("sh", ["-c", script, "sh", `${PTB_DIR()}/sprites`, `${appHome()}/poke-assets`, ...list]).catch(() => null);
+  // Copied GIFs keep pokeTokenBar's uneven frames: square them so the box never stretches one.
+  await exec(HP(), ["assets", "--normalize"]).catch(() => null);
   await refreshAssets();
 }
 
