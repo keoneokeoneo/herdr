@@ -12,7 +12,11 @@ const cap = (s) => (s ? s.split("-").map((w) => w[0].toUpperCase() + w.slice(1))
 async function refreshAssets() {
   const r = await exec(HP(), ["assets", "--list"]).catch(() => null);
   if (r?.code !== 0) return;
-  try { const list = JSON.parse(r.stdout); if (Array.isArray(list)) setShared("poke.sprites", list); } catch {}
+  try {
+    const list = JSON.parse(r.stdout);
+    // setShared re-renders every view, so only when the list really changed.
+    if (Array.isArray(list) && JSON.stringify(list) !== JSON.stringify(shared("poke.sprites") ?? [])) setShared("poke.sprites", list);
+  } catch {}
 }
 
 function addSeen(id) {
@@ -31,7 +35,9 @@ export function start(s, cx) {
   s.jumpAt = -1;
   s.onCommand = (c) => command(s, c);
 
-  cx.spawn(async () => { await exec(HP(), ["assets", "--companion"]).catch(() => null); await refreshAssets(); });
+  const assets = (cx) => cx.spawn(async () => { await exec(HP(), ["assets", "--companion"]).catch(() => null); await refreshAssets(); });
+  assets(cx);
+  cx.timer.every(30000, assets);
 
   const tick = (cx) => cx.spawn(async (cx) => { await step(s); cx.notify(); });
   tick(cx);
