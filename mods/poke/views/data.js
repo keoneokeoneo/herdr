@@ -24,7 +24,7 @@ export function rows() {
     const num = (v) => (v == null || v === "" ? null : Number(v));
     return {
       address: a.address, pane: a.pane, space: a.space, spaceName: a.space_name,
-      tab: a.tab, tabName: a.tab_name, status: a.status, focused: a.focused,
+      tab: a.tab, tabName: a.tab_name, status: a.status, focused: a.focused, title: a.title ?? "",
       provider: providerOf(a), program: a.program,
       since: t.status_ms ?? t.created_ms ?? Date.now(), turn: t.turn ?? 0,
       partner: num(l["poke.partner"]) ?? fallbackPartner(a.address),

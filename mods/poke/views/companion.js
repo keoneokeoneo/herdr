@@ -1,7 +1,81 @@
-import { div } from "gpui-kit";
-import { theme } from "herdr";
+// Sidebar: the pokeTokenBar partner Keno is raising right now (read-only).
+import { div, image } from "gpui-kit";
+import { h_flex, v_flex } from "gpui-base";
+import { theme, home, readTextFile, watchFolder, exec, shared } from "herdr";
+import { pill, spritePath, C } from "./ui.js";
+import { progress } from "../lib/companion.js";
+import { tokensM } from "../lib/format.js";
 
-export function render(_state, _cx) {
+const DIR = () => `${home()}/Library/Application Support/PokeTokenBar`;
+const cap = (s) => (s ? s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "");
+
+async function json(path) {
+  try { const t = await readTextFile(path); return t ? JSON.parse(t) : null; } catch { return null; }
+}
+
+async function load(s) {
+  const st = await json(`${DIR()}/companion-state.json`);
+  if (!st?.active) { s.missing = true; return; }
+  s.missing = false;
+  const a = st.active;
+  const id = a.pathIDs?.[a.pathIDs.length - 1] ?? a.baseID;
+  const p = progress(a, s.difficulty ?? 1);
+  const det = await json(`${DIR()}/pokemon-details-v1/${id}.json`);
+  const next = p.nextId ? await json(`${DIR()}/pokemon-details-v1/${p.nextId}.json`) : null;
+  const snap = await json(`${DIR()}/last-snapshot.json`);
+  s.c = {
+    id, shiny: !!a.isShiny, level: a.profile?.level, nature: a.nature, ability: a.profile?.abilityName,
+    name: cap(det?.details?.name) || `#${id}`, types: det?.details?.types ?? [],
+    next: p.nextId ? cap(next?.details?.name) || `#${p.nextId}` : null, pct: p.pct, toNext: p.toNext,
+    fed: snap?.todayTotalTokens ?? null, dex: st.dex?.length ?? 0,
+  };
+}
+
+export function init(s, cx) {
+  s.difficulty = 1;
+  cx.spawn(async (cx) => {
+    const r = await exec("defaults", ["read", "io.github.chattymin.poketokenbar", "growthDifficulty"]).catch(() => null);
+    const d = Number(r?.stdout?.trim());
+    if (r?.code === 0 && d > 0) s.difficulty = d;
+    await load(s); cx.notify();
+    for (;;) { await watchFolder(DIR()).catch(() => null); await load(s); cx.notify(); }
+  });
+}
+
+const TYPE_C = { fire: C.fire, water: C.water, grass: C.grass, electric: C.electric, psychic: C.psychic, fairy: C.psychic };
+
+export function render(s) {
   const t = theme();
-  return div().size_full().bg(t.chrome).text_color(t.muted).text_size(12).p(8).child("companion");
+  const card = v_flex().size_full().gap(6).p(12).bg(t.chrome).border_t_1().border_color(t.border);
+  if (s.missing) return card.child(div().text_size(11).text_color(t.dim).child("pokeTokenBar not found"));
+  const c = s.c;
+  if (!c) return card;
+  const src = spritePath(`c-${c.id}${c.shiny ? "-s" : ""}`) ?? spritePath(c.id);
+  const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
+    .child(src ? image(src).w(60).h(60) : div().text_color(t.dim).child(`#${c.id}`));
+  const title = h_flex().items_center().gap(6)
+    .child(div().text_size(14).font_weight(700).text_color(t.foreground).child(c.name))
+    .child(c.shiny ? div().text_color(t.accent).child("✦") : div())
+    .child(div().flex_1())
+    .child(div().text_size(11).text_color(t.muted).child(`Lv.${c.level ?? "?"}`));
+  const types = h_flex().gap(4);
+  for (const ty of c.types) types.child(pill(cap(ty), TYPE_C[ty] ?? C.normal, { size: 9 }));
+  const info = v_flex().flex_1().min_w(0).gap(3).child(title)
+    .child(div().truncate().text_size(10).text_color(t.dim).child(`${cap(c.nature)} · ${cap(c.ability)}`))
+    .child(types);
+  const fill = Math.max(2, Math.round(c.pct));
+  const meter = div().w_full().h(6).rounded_full().bg(t.raised).overflow_hidden()
+    .child(div().h(6).rounded_full().bg(t.accent).w(`${fill}%`));
+  const seen = (shared("poke.seen") ?? []).length;
+  return card
+    .child(h_flex().gap(10).items_center().child(face).child(info))
+    .child(h_flex().text_size(10).text_color(t.muted)
+      .child(div().child(c.next ? `Next: ${c.next}` : "Final form"))
+      .child(div().flex_1())
+      .child(div().child(c.next ? `${Math.floor(c.pct)}% · ${tokensM(c.toNext)} to go` : "")))
+    .child(meter)
+    .child(h_flex().text_size(10).text_color(t.dim)
+      .child(div().child(c.fed != null ? `Fed today ${tokensM(c.fed)}` : ""))
+      .child(div().flex_1())
+      .child(div().child(`Dex ${c.dex} · Seen ${seen}`)));
 }
