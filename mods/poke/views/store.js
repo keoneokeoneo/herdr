@@ -27,5 +27,5 @@ export async function loadUsage(s) {
   s.usage = (await readJSON(`${STATE_DIR()}/usage.json`)) ?? null;
 }
 
-export const WIN_LABEL = (m) => (m === 300 ? "5h window" : m === 10080 ? "Weekly" : `${Math.round(m / 60)}h window`);
+export const WIN_LABEL = (m) => (m === 300 ? "Session" : m === 10080 ? "Weekly" : `${Math.round(m / 60)}h window`);
 export const win = (prov, minutes) => prov?.windows?.find((w) => w.minutes === minutes) ?? null;
