@@ -36,7 +36,9 @@ export function avatar(r, opts = {}) {
   let sprite = src
     ? image(src).w(size * 1.25).h(size * 1.25).flex_none()
     : div().text_size(size * 0.42).font_weight(700).text_color(ring).child(r.provider === "codex" ? "X" : "C");
-  if (st === "idle") sprite = sprite.opacity(0.45);
+  const eve = shared("poke.evening") === true;
+  if (st === "idle") sprite = sprite.opacity(eve ? 0.35 : 0.45);
+  else if (st === "done" && eve) sprite = sprite.opacity(0.7);
   let face = div().id(`av-${r.address}-${opts.key ?? ""}`).size(size).rounded_full().overflow_hidden()
     .flex().items_center().justify_center().bg(alpha(ring, "33")).child(sprite);
   if (st === "working" && !opts.still) face = face.relative().top(0).loop("top", { from: 0, to: -2, period: 1100 });

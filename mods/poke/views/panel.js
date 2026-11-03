@@ -1,7 +1,7 @@
 // Right panel: Changes (git of the focused pane), Usage (limits + 14 days), Dex.
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { theme, focused, exec, shared } from "herdr";
+import { theme, focused, exec, shared, setShared } from "herdr";
 import { pill, spritePath, C, alpha } from "./ui.js";
 import { keepFresh, loadUsage, readJSON, STATE_DIR, PTB_DIR, WIN_LABEL, win } from "./store.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
@@ -137,6 +137,13 @@ function dex(t, s) {
   } else box.child(div().text_size(11).text_color(t.dim).child("Nothing caught yet. Keep feeding your partner."));
   box.child(div().pt(6).text_size(12).font_weight(700).text_color(t.foreground).child(`Seen · ${seen.length}`));
   box.child(seen.length ? grid(seen.map((id) => ({ id }))) : div().text_size(11).text_color(t.dim).child("Session partners you meet show up here."));
+  const mode = shared("poke.typeMode") ?? "random";
+  box.child(h_flex().pt(10).gap(8).text_size(10).text_color(t.dim)
+    .child(div().child(`Tab types: ${mode}`))
+    .child(div().id("reroll").text_color(t.muted).cursor_pointer().hover((x) => x.text_color(t.foreground))
+      .on_click(() => setShared("poke.typeSeed", (Number(shared("poke.typeSeed") ?? 7) * 7 + 13) % 9973)).child("↻ reroll"))
+    .child(div().id("tmode").text_color(t.muted).cursor_pointer().hover((x) => x.text_color(t.foreground))
+      .on_click(() => setShared("poke.typeMode", mode === "random" ? "off" : "random")).child(mode === "random" ? "turn off" : "turn on")));
   return box;
 }
 
