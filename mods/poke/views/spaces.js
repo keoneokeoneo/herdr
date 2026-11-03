@@ -1,5 +1,5 @@
 // Sidebar: one row per space, with the faces of the agents working in it.
-import { div } from "gpui-kit";
+import { div, svg } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, spaces, run } from "herdr";
 import { rows } from "./data.js";
@@ -22,7 +22,11 @@ export function render() {
   const t = theme();
   const all = rows();
   const list = v_flex().size_full().gap(2).px(8).py(8).bg(t.chrome).overflow_y_scroll();
-  list.child(div().px(6).pb(4).text_size(10).font_weight(700).text_color(t.dim).child("SPACES"));
+  list.child(h_flex().items_center().px(6).pb(4)
+    .child(div().flex_1().text_size(10).font_weight(700).text_color(t.dim).child("SPACES"))
+    .child(div().id("space-new").size(22).flex_none().flex().items_center().justify_center().rounded(6)
+      .text_color(t.muted).cursor_pointer().hover((x) => x.bg(t.hover).text_color(t.foreground))
+      .on_click(() => run("space.new")).child(svg("mods/workspace-chrome/plus.svg").size(13))));
   for (const s of spaces()) {
     const mine = all.filter((r) => r.space === s.id);
     const wait = waiting(mine).length;
