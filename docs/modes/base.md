@@ -96,6 +96,8 @@ Base는 agent 아바타와 탭 타입 pill을 그리며, 무언가 제공하면 
 - `base.review`(`cmd-shift-j`)는 가장 오래된 끝난 agent를 연다.
 - 현재 속도 예측은 창의 10%가 지난 뒤에만 보이며, 리셋 전에 100%에 닿을 때만 "limit in …"으로 경고한다.
 - 14일 평균은 사용량이 있는 날만으로 계산한다.
+- `windows`나 `days`가 목록이 아닌 파일은 "데이터 없음"으로 취급한다(`lib/contract.js`). usage 폴더가 아직 없어도
+  15초 타이머가 폴더 감시를 다시 시작한다(`views/store.js`).
 - 기본 번호 이름("1", "2")의 탭과 agent 행은 세션 제목, 없으면 스페이스 이름과 다른 폴더 이름으로 표시한다.
 - Idle agent 그룹은 기본으로 접혀 있다.
 - provider 색은 아이콘을 따른다(Claude `#d97757`, Codex `#7a9dff`, `mods/base/views/ui.js`의 `PROV`).
