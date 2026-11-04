@@ -2,7 +2,6 @@
 # Install herdr-poke into Keno's setup. Each edited file is backed up first, and the value
 # each edit replaced is recorded in ~/.local/state/herdr-poke/install.json so
 # scripts/poke/uninstall.sh can undo exactly that. Safe to run twice.
-# Close Claude Code sessions first: Claude rewrites ~/.claude/settings.json itself.
 # HERDR_POKE_DRY=1 skips launchd and the running Herdr app (for testing with a fake HOME).
 set -euo pipefail
 
@@ -35,7 +34,7 @@ for probe in "codex -- true" "usage"; do
   fi
 done
 
-for f in "$HOME/.claude/settings.json" "$HOME/.zshrc" "$app/settings.json"; do
+for f in "$HOME/.zshrc" "$app/settings.json"; do
   [ -f "$f" ] && cp -p "$f" "$f.herdr-poke-backup-$stamp"
 done
 python3 "$root/scripts/poke/settings_edit.py" install "$bin"

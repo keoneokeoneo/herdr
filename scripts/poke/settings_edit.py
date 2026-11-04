@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Surgical, reversible edits for install.sh / uninstall.sh.
+"""Surgical, reversible edits for install.sh / uninstall.sh (the codex alias, PATH line and Herdr's sounds setting).
 
 install:   apply each edit only if needed; record the value it replaced in the manifest.
 uninstall: put back only what the manifest says this project changed, leaving every
            other change (Claude Code rewrites its settings.json often) as it is.
 Writes are atomic (temp file + os.replace) and abort if the file changed under us.
 """
-import json, os, re, sys, tempfile, shlex, fcntl
+import json, os, re, sys, tempfile, fcntl
 
 HOME = os.path.expanduser("~")
 APP = os.environ.get("HERDR_APP_HOME") or os.path.join(HOME, ".config", "herdr-app")
@@ -71,22 +71,16 @@ def save_manifest(m):
 def install(binary):
     m = manifest()
     # Validate every input before writing any configuration.
-    raw_c, c = load_json(CLAUDE) if os.path.exists(CLAUDE) else (None, {})
     raw_h, h = load_json(HERDR) if os.path.exists(HERDR) else (None, {})
     raw_z = read(ZSHRC) if os.path.exists(ZSHRC) else None
-    for obj, key in [(c, "statusLine"), (h, "sounds")]:
-        if not isinstance(obj, dict) or (obj.get(key) is not None and not isinstance(obj[key], dict)):
-            sys.exit(f"abort: invalid {key} settings")
+    if not isinstance(h, dict) or (h.get("sounds") is not None and not isinstance(h["sounds"], dict)):
+        sys.exit("abort: invalid sounds settings")
     z = raw_z or ""
     aliases = re.findall(r"^[ \t]*alias[ \t]+codex=.*$", z, re.M)
     if any(a not in (OLD_ALIAS, NEW_ALIAS) for a in aliases) or len(aliases) > 1:
         sys.exit("abort: custom or duplicate codex alias; resolve it before installation")
-    want = f"{shlex.quote(binary)} statusline"
+    # The global Claude statusLine is Keno's own and is never edited here (Poke no longer needs it).
     edits = []
-    if (c.get("statusLine") or {}).get("command") != want or (c.get("statusLine") or {}).get("type") != "command":
-        m.setdefault("claude_statusLine", c.get("statusLine"))
-        c["statusLine"] = {**(c.get("statusLine") or {}), "type": "command", "command": want}
-        edits.append((CLAUDE, dump(c), raw_c))
     if NEW_ALIAS not in aliases:
         if OLD_ALIAS in aliases:
             z = z.replace(OLD_ALIAS, NEW_ALIAS, 1)
@@ -114,6 +108,8 @@ def install(binary):
 
 def uninstall():
     m = manifest()
+    # Legacy: older installs replaced Claude's statusLine with `herdr-poke statusline`. Undo that only
+    # if it is still ours; a statusLine the user has since replaced is left alone. The key is dropped either way.
     if "claude_statusLine" in m and os.path.exists(CLAUDE):
         raw, s = load_json(CLAUDE)
         if (s.get("statusLine") or {}).get("command", "").replace("\'", "").endswith("herdr-poke statusline"):
