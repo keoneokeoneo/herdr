@@ -25,6 +25,7 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | 오른쪽 패널 Poke 탭 (Dex 그리드, 탭 타입 컨트롤) | `mods/poke/views/dex.js` |
 | 일어나는 일: 파트너 배정, 울음소리, Dex 동기화, 레벨/진화 토스트, 저녁 어둡게 | `mods/poke/behaviours.js`, 보이지 않는 `poke-host` 블록(`mods/poke/views/host.js`)이 시작 |
 | 페르소나가 읽는 agent 행 (상태와 파트너 label) | `mods/poke/views/rows.js` |
+| Active의 Open Garden 창 (하나의 정원과 세션 파트너) | `mods/poke/views/camp.js`, `mods/poke/lib/camp.js` |
 | 스프라이트, pill, GIF 다시 그리기 | `mods/poke/views/ui.js` (`sprite`, `alive`, `pill`) |
 | 순수 로직 (파트너 선택, 성장 공식, 울음소리, 기본값) | `mods/poke/lib/`, 테스트는 `tests/poke/mod-lib/` |
 | 사이드바, 탭, pane 헤더, 하단 바, Usage 탭, 패널 탭, 아바타 | **base**: `docs/modes/base.md` |
@@ -180,3 +181,19 @@ launchd plist에는 독립된 소유권 journal이 있다. 제거는 설치된 �
 Dex다. 패널 버튼 또는 Cmd-K로 패널 전체를 숨기거나 표시하고, Cmd-Shift-O(`base.notes`, 하단 바가 처리)로
 Obsidian을 연다. 별도의 Notes 패널은 없다. Obsidian 리더는 접을 수 있는 폴더 트리를 가지며 vault/노트 이름을
 전체 경로 없이 보여 준다. [리더 가이드](obsidian.md)를 참고한다.
+
+## Poké Garden
+
+Poke 하단에 실시간 미니맵이 표시된다. 미니맵 / Expand / Active 옆 Open Garden은 큰 창을
+열며, 닫으면 미니맵은 그대로 남는다. 모든 space의 agent를
+세션당 한 마리씩 하나의 잔디 정원에 표시한다. 상태별 구역은 없으며 Working은 밝기가 바뀌는
+점 말풍선, Needs you는 !, Done은 체크, Idle은 z로 표현한다. 상태 변경 시 위치는 유지하며,
+세션 추가/종료 시 주소 순서에 따라 재배치될 수 있다. hover는 세션 상세, 클릭은 세션 이동이다.
+기존 Active는 종별 중복 제거지만 정원은 같은 종도 세션별로 유지한다. 미배정/에셋 누락은 ?,
+알 수 없는 상태는 Unknown으로 표시한다. Herdr live 데이터를 사용하며 타이머를 추가하지 않는다.
+`herdr-app do poke.camp`로도 연다. `Close ×`로 닫고 헤더를 드래그해서 옮긴다.
+같은 버튼을 다시 눌러도 중복되지 않는다. 많은 세션과 작은 창에서는 정원을 스크롤한다.
+
+큰 창은 96px 스프라이트, 14px 세션 이름, 13px 상태명을 사용한다. 숫자 기본 탭 이름은
+세션 제목으로 대체한다. Done은 보지 않은 완료, Idle은 다음 작업 대기, Blocked는 입력 대기로
+설명하며 실제 작업 내용을 추측하지 않는다. 포켓몬 위치의 미세 애니메이션은 사용하지 않는다.

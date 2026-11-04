@@ -7,6 +7,13 @@ Where the prototype and this document disagree, this document wins.
 
 ## Current state (updated 2026-11-04, after v1 shipped)
 
+- **Poké Garden:** Poke has a live garden minimap. Clicking it or Open Garden expands one
+  continuous garden in a movable window; closing it leaves the minimap available. Each agent
+  session has its own partner; bubbles and readable labels show Working / Needs you / Done / Idle.
+  Hover for details, click to focus. Status
+  changes preserve placement. Unknown states and missing partners have explicit fallbacks.
+  Live reads add no polling timer.
+
 - The right panel now has peer tabs Usage / Changes / Files / Poke / Obsidian,
   displaying one view at a time. Cmd-K toggles the panel; Cmd-Shift-O opens Obsidian.
   The reader displays a collapsible vault folder tree and names without full paths.

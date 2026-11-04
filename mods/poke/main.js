@@ -1,11 +1,12 @@
-// Poke persona: one mod, three views chosen by props.view (companion, dex, host).
+// Poke persona: one mod, four views chosen by props.view (companion, dex, host, camp).
 import { View, div } from "gpui-kit";
 import { props } from "herdr";
 import * as companion from "./views/companion.js";
 import * as dex from "./views/dex.js";
 import * as host from "./views/host.js";
+import * as camp from "./views/camp.js";
 
-const VIEWS = { companion, dex, host };
+const VIEWS = { companion, dex, host, camp };
 
 export default class Poke extends View {
   init(_props, cx) {
