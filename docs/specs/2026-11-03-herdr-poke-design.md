@@ -13,6 +13,8 @@ Where the prototype and this document disagree, this document wins.
   Hover for details, click to focus. Status
   changes preserve placement. Unknown states and missing partners have explicit fallbacks.
   Live reads add no polling timer.
+  Garden: On/Off persists minimap visibility; the expanded window stays independent.
+  Window size is capped at 1000×700 logical px and shrinks for smaller app windows.
 
 - The right panel now has peer tabs Usage / Changes / Files / Poke / Obsidian,
   displaying one view at a time. Cmd-K toggles the panel; Cmd-Shift-O opens Obsidian.
@@ -112,7 +114,8 @@ This project turns Herdr into a calm, cute workspace that makes "who needs me / 
 
 ## Non-goals (v1)
 
-- Garden; extra gamification (quests, badges, combos, eggs, wild encounters, trainer card); review battle (HP/VS); messenger, evolution forecast, token weather.
+- Garden was deferred in v1 and is now implemented as described in Current state above.
+- Extra gamification (quests, badges, combos, eggs, wild encounters, trainer card); review battle (HP/VS); messenger, evolution forecast, token weather.
 - Partner evolution — partners are random and never evolve.
 - An "error / tests failed" state. Herdr's app `Status` is `working | blocked | done | idle`; v1 uses exactly those. ⌘J targets `blocked`.
 - Writing to pokeTokenBar files. Read-only, always. Never read/decrypt its `usage-cache.json`.

@@ -20,7 +20,7 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | 색 | `themes/poke.json`, `mods/poke/views/ui.js` `C` (타입/chip 강조색) |
 | Codex 메뉴 실행 명령 | `programs.json` (`programs.codex.run`) |
 | 키 | `keys.json`, 섹션 `layout:poke` (`cmd-j`, `cmd-k`, `cmd-shift-o`는 base command) |
-| 블록이 보여 주는 view | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`) |
+| 블록이 보여 주는 view | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`, `camp`) |
 | 사이드바: pokeTokenBar 동료 카드 / 알 | `mods/poke/views/companion.js` |
 | 오른쪽 패널 Poke 탭 (Dex 그리드, 탭 타입 컨트롤) | `mods/poke/views/dex.js` |
 | 일어나는 일: 파트너 배정, 울음소리, Dex 동기화, 레벨/진화 토스트, 저녁 어둡게 | `mods/poke/behaviours.js`, 보이지 않는 `poke-host` 블록(`mods/poke/views/host.js`)이 시작 |
@@ -184,8 +184,8 @@ Obsidian을 연다. 별도의 Notes 패널은 없다. Obsidian 리더는 접을 
 
 ## Poké Garden
 
-Poke 하단에 실시간 미니맵이 표시된다. 미니맵 / Expand은 큰 창을
-열며, 닫으면 미니맵은 그대로 남는다. 모든 space의 agent를
+Poke 하단에 실시간 미니맵이 표시된다. 미니맵이나 `Expand`를 누르면 큰 창이
+열리며, 닫으면 미니맵은 그대로 남는다. 모든 space의 agent를
 세션당 한 마리씩 하나의 잔디 정원에 표시한다. 상태별 구역은 없으며 Working은 밝기가 바뀌는
 점 말풍선, Needs you는 !, Done은 체크, Idle은 z로 표현한다. 상태 변경 시 위치는 유지하며,
 세션 추가/종료 시 주소 순서에 따라 재배치될 수 있다. hover는 세션 상세, 클릭은 세션 이동이다.
@@ -193,6 +193,8 @@ Poke 하단에 실시간 미니맵이 표시된다. 미니맵 / Expand은 큰 �
 알 수 없는 상태는 Unknown으로 표시한다. Herdr live 데이터를 사용하며 타이머를 추가하지 않는다.
 `herdr-app do poke.camp`로도 연다. `Close ×`로 닫고 헤더를 드래그해서 옮긴다.
 같은 버튼을 다시 눌러도 중복되지 않는다. 많은 세션과 작은 창에서는 정원을 스크롤한다.
+창 크기는 최대 1,000×700 논리 px이며 작은 앱에서는 너비 88% / 높이 80% 이내로 줄어든다.
+앱의 확대 배율은 다른 UI와 동일하게 적용된다.
 
 큰 창은 96px 스프라이트, 14px 세션 이름, 13px 상태명을 사용한다. 숫자 기본 탭 이름은
 세션 제목으로 대체한다. Done은 보지 않은 완료, Idle은 다음 작업 대기, Blocked는 입력 대기로
