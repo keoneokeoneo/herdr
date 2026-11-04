@@ -240,9 +240,7 @@ func runEnv(t *testing.T) (stateDir string) {
 func liveInput(t *testing.T, resetPast bool) string {
 	t.Helper()
 	now := time.Now().Unix()
-	// Resets sit mid-minute so the countdown text ("1h 25m") stays the same for 30 s:
-	// two Runs a second apart must render identically even on a loaded machine.
-	five := now + 5100 + 30
+	five := now + 5100
 	if resetPast {
 		five = now - 60
 	}
@@ -250,7 +248,26 @@ func liveInput(t *testing.T, resetPast bool) string {
 "cwd":%q,
 "context_window":{"context_window_size":200000,"current_usage":{"input_tokens":10,"cache_creation_input_tokens":20000,"cache_read_input_tokens":70000}},
 "rate_limits":{"five_hour":{"used_percentage":42.4,"resets_at":%d},"seven_day":{"used_percentage":81.6,"resets_at":%d}}}`,
-		t.TempDir(), five, now+183840+30)
+		t.TempDir(), five, now+183840)
+}
+
+func TestRenderCountdownCrossesMinuteBoundary(t *testing.T) {
+	in, env := loadFixture(t, "full")
+	pct := 42.4
+	in.RateLimits = &RateLimits{FiveHour: &RateLimit{
+		UsedPercentage: &pct, ResetsAt: float64(env.Now.Unix() + 5100),
+	}}
+	first := Render(in, env)
+	if !strings.Contains(first, "(1h 25m)") {
+		t.Fatalf("initial countdown: %q", first)
+	}
+	if got := Render(in, env); got != first {
+		t.Fatalf("fixed-time rendering changed: %q vs %q", got, first)
+	}
+	env.Now = env.Now.Add(time.Second)
+	if got := Render(in, env); !strings.Contains(got, "(1h 24m)") {
+		t.Fatalf("countdown after one second: %q", got)
+	}
 }
 
 func TestRunWritesLabelsAndLimits(t *testing.T) {
@@ -258,6 +275,7 @@ func TestRunWritesLabelsAndLimits(t *testing.T) {
 	logPath := fakeHC(t, "")
 	input := liveInput(t, false)
 
+	started := time.Now().Unix()
 	var out bytes.Buffer
 	if code := Run(strings.NewReader(input), &out); code != 0 {
 		t.Fatalf("exit %d", code)
@@ -289,18 +307,26 @@ func TestRunWritesLabelsAndLimits(t *testing.T) {
 		c.Windows[1].Minutes != 10080 || c.Windows[1].Used != 81.6 {
 		t.Errorf("claude limits = %+v", c)
 	}
-	if d := time.Now().Unix() - c.Updated; d < 0 || d > 5 {
-		t.Errorf("updated = %d, not ~now", c.Updated)
+	if c.Updated < started || c.Updated > time.Now().Unix() {
+		t.Errorf("updated = %d, outside this run", c.Updated)
 	}
 
-	// Same input again: output is stable and no label call is made.
+	// Run uses the wall clock, so its countdown may legitimately change. Check
+	// repeated publication here; fixed-time rendering is covered separately.
 	var out2 bytes.Buffer
-	Run(strings.NewReader(input), &out2)
-	if out2.String() != out.String() {
-		t.Errorf("second run differs: %q vs %q", out2.String(), out.String())
+	if code := Run(strings.NewReader(input), &out2); code != 0 {
+		t.Fatalf("second exit %d", code)
+	}
+	for _, want := range []string{"Opus 4.7", ":high", "ctx 45%", "5h ", "7d "} {
+		if !strings.Contains(out2.String(), want) {
+			t.Errorf("second output lacks %q: %q", want, out2.String())
+		}
 	}
 	if got := hcCalls(t, logPath); len(got) != 1 {
 		t.Errorf("unchanged labels still called hc: %q", got)
+	}
+	if after, err := os.ReadFile(filepath.Join(stateDir, "limits.json")); err != nil || !bytes.Equal(after, b) {
+		t.Errorf("unchanged limits were replaced: err=%v\n got: %s\nwant: %s", err, after, b)
 	}
 }
 
