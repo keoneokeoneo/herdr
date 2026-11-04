@@ -230,14 +230,11 @@ func TestWrapTailsRolloutIntoLabelsAndLimits(t *testing.T) {
 		t.Errorf("unchanged model was written again:\n%s", log)
 	}
 
-	var all map[string]state.ProviderLimits
-	if err := state.ReadJSON("limits.json", &all); err != nil {
-		t.Fatal(err)
-	}
-	l, ok := all["codex"]
+	var l state.ProviderLimits
+	ok := state.ReadUsageJSON("codex.json", &l) == nil
 	if !ok || l.Plan != "prolite" || len(l.Windows) != 1 || l.Windows[0].Minutes != 10080 || l.Windows[0].Used != 39.0 || l.Windows[0].ResetsAt != resets {
-		b, _ := json.Marshal(all)
-		t.Errorf("limits.json = %s, want codex weekly 39%%", b)
+		b, _ := json.Marshal(l)
+		t.Errorf("codex.json = %s, want codex weekly 39%%", b)
 	}
 }
 
@@ -338,11 +335,11 @@ func TestPublishLimitsSkipsStaleAndOlder(t *testing.T) {
 	newer := state.ProviderLimits{Plan: "p", Updated: now.Unix() - 10, Windows: []state.Window{{Minutes: 10080, Used: 50, ResetsAt: now.Unix() + 3600}}}
 	publishLimits(newer, now)
 	read := func() state.ProviderLimits {
-		var all map[string]state.ProviderLimits
-		if err := state.ReadJSON("limits.json", &all); err != nil {
+		var l state.ProviderLimits
+		if err := state.ReadUsageJSON("codex.json", &l); err != nil {
 			t.Fatal(err)
 		}
-		return all["codex"]
+		return l
 	}
 	if got := read(); got.Windows[0].Used != 50 {
 		t.Fatalf("first publish not written: %+v", got)

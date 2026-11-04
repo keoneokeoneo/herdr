@@ -205,7 +205,7 @@ func (t *tailer) poll() (changed bool, err error) {
 	return !reflect.DeepEqual(before, t.snap), nil
 }
 
-// publishOwned mirrors a snapshot into the terminal's labels and limits.json. It
+// publishOwned mirrors a snapshot into the terminal's labels and the usage contract (codex.json). It
 // returns an error if a write failed, so the caller can try again.
 func publishOwned(s Snapshot, terminal string, now time.Time, owner int, session string) error {
 	var errs []error
@@ -229,9 +229,9 @@ func publishOwned(s Snapshot, terminal string, now time.Time, owner int, session
 	return errors.Join(errs...)
 }
 
-// publishLimits sets limits.json[codex]. Windows whose reset time has passed
+// publishLimits sets codex.json in the usage contract folder. Windows whose reset time has passed
 // are left out (their percentage is stale), and nothing is written when no
-// window is left or when limits.json already holds newer data: a resumed old
+// window is left or when codex.json already holds newer data: a resumed old
 // session replays its last event, which must not hide what another session
 // reported since.
 func publishLimits(l state.ProviderLimits, now time.Time) error {

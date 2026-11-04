@@ -47,17 +47,42 @@ func Dir() string {
 	return dir
 }
 
+// UsageDir is the neutral usage data contract folder that the base mod reads:
+// $HERDR_USAGE_STATE, else $HERDR_POKE_STATE/usage when that override is set (so tests
+// and sandboxes that relocate the state dir never touch the real home), else
+// ~/.local/state/herdr-app/usage. It is created (0700) if missing.
+func UsageDir() string {
+	dir := os.Getenv("HERDR_USAGE_STATE")
+	if dir == "" {
+		if poke := os.Getenv("HERDR_POKE_STATE"); poke != "" {
+			dir = filepath.Join(poke, "usage")
+		} else {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				home = os.TempDir()
+			}
+			dir = filepath.Join(home, ".local", "state", "herdr-app", "usage")
+		}
+	}
+	_ = os.MkdirAll(dir, 0o700)
+	return dir
+}
+
 // WriteJSON atomically replaces Dir()/name with the JSON encoding of v: it
 // writes a temp file in the same directory and renames it over the target, so
 // readers see either the old or the new file, never a partial one.
-func WriteJSON(name string, v any) error {
+func WriteJSON(name string, v any) error { return writeJSONIn(Dir(), name, v) }
+
+// WriteUsageJSON is WriteJSON for the neutral usage data contract folder (UsageDir()).
+func WriteUsageJSON(name string, v any) error { return writeJSONIn(UsageDir(), name, v) }
+
+func writeJSONIn(dir, name string, v any) error {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
 	}
 	b = append(b, '\n')
 
-	dir := Dir()
 	tmp, err := os.CreateTemp(dir, "."+name+".tmp-*")
 	if err != nil {
 		return err
@@ -89,10 +114,21 @@ func ReadJSON(name string, v any) error {
 	return json.Unmarshal(b, v)
 }
 
+// ReadUsageJSON decodes UsageDir()/name into v.
+func ReadUsageJSON(name string, v any) error {
+	b, err := os.ReadFile(filepath.Join(UsageDir(), name))
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
+}
+
 // WithLock runs fn while holding an exclusive flock on Dir()/lockName. It
 // gives up with an error if the lock is not free within a second.
-func WithLock(lockName string, fn func() error) error {
-	f, err := os.OpenFile(filepath.Join(Dir(), lockName), os.O_CREATE|os.O_RDWR, 0o600)
+func WithLock(lockName string, fn func() error) error { return withLockIn(Dir(), lockName, fn) }
+
+func withLockIn(dir, lockName string, fn func() error) error {
+	f, err := os.OpenFile(filepath.Join(dir, lockName), os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return err
 	}
@@ -192,15 +228,17 @@ func sameWindows(a, b []Window) bool {
 	return true
 }
 
-// UpdateLimitsLatest compares and writes under one lock, including concurrent sessions.
+// UpdateLimitsLatest writes UsageDir()/<provider>.json (the provider's limits
+// object itself) unless the file already holds newer or identical data. Compare and
+// write run under one lock, including concurrent sessions.
 func UpdateLimitsLatest(provider string, l ProviderLimits) error {
-	return WithLock("limits.lock", func() error {
-		all := map[string]ProviderLimits{}
-		_ = ReadJSON(limitsFile, &all)
-		if all == nil {
-			all = map[string]ProviderLimits{}
-		}
-		if old, ok := all[provider]; ok {
+	if l.Windows == nil {
+		l.Windows = []Window{}
+	}
+	name := provider + ".json"
+	return withLockIn(UsageDir(), provider+".lock", func() error {
+		var old ProviderLimits
+		if ReadUsageJSON(name, &old) == nil {
 			if old.Updated > l.Updated {
 				return nil
 			}
@@ -208,7 +246,6 @@ func UpdateLimitsLatest(provider string, l ProviderLimits) error {
 				return nil
 			}
 		}
-		all[provider] = l
-		return WriteJSON(limitsFile, all)
+		return WriteUsageJSON(name, l)
 	})
 }

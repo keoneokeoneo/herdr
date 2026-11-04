@@ -87,7 +87,7 @@ type out struct {
 func readUsage(t *testing.T) out {
 	t.Helper()
 	var o out
-	if err := state.ReadJSON("usage.json", &o); err != nil {
+	if err := state.ReadUsageJSON("daily.json", &o); err != nil {
 		t.Fatal(err)
 	}
 	return o
@@ -358,8 +358,9 @@ func TestStateFilesAreValidJSON(t *testing.T) {
 	e := newEnv(t)
 	e.write(e.claude, "p/s.jsonl", claudeLine("a", noon.Add(-time.Hour), 1, 0, 0, 0))
 	e.run(noon)
-	for _, name := range []string{"usage.json", "usage-offsets.json"} {
-		b, err := os.ReadFile(filepath.Join(state.Dir(), name))
+	for _, p := range []string{filepath.Join(state.UsageDir(), "daily.json"), filepath.Join(state.Dir(), "usage-offsets.json")} {
+		name := filepath.Base(p)
+		b, err := os.ReadFile(p)
 		if err != nil || !json.Valid(b) {
 			t.Errorf("%s: err=%v valid=%v", name, err, json.Valid(b))
 		}

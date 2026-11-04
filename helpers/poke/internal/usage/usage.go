@@ -3,7 +3,7 @@
 //
 // Three state files live in state.Dir():
 //
-//	usage.json          what the poke UI reads: 14 days, oldest first
+//	daily.json          (in state.UsageDir()) what the UI reads: 14 days, oldest first
 //	usage-offsets.json  per log file: how far it has been read
 //	usage-ledger.json   per message/response id: its day and token count
 //
@@ -27,11 +27,11 @@ import (
 	"herdr-poke/internal/state"
 )
 
-// Days is how many days usage.json covers, today included.
+// Days is how many days daily.json covers, today included.
 const Days = 14
 
 const (
-	usageFile   = "usage.json"
+	dailyFile   = "daily.json" // in state.UsageDir(): the neutral data contract
 	offsetsFile = "usage-offsets.json"
 	ledgerFile  = "usage-ledger.json"
 	lockFile    = "usage.lock"
@@ -55,14 +55,14 @@ func DefaultRoots() Roots {
 	}
 }
 
-// Day is one entry of usage.json.
+// Day is one entry of daily.json.
 type Day struct {
 	Date   string `json:"date"` // YYYY-MM-DD
 	Claude int    `json:"claude"`
 	Codex  int    `json:"codex"`
 }
 
-// Output is the content of usage.json.
+// Output is the content of daily.json.
 type Output struct {
 	Days    []Day `json:"days"`
 	Updated int64 `json:"updated"`
@@ -106,7 +106,7 @@ func add(m map[string]entry, id, day string, tokens int) bool {
 	return true
 }
 
-// Run brings usage.json up to date as of now. Days are local days in now's
+// Run brings daily.json up to date as of now. Days are local days in now's
 // location. Only what the logs gained since the last run is read.
 func Run(now time.Time, roots Roots) error {
 	return state.WithLock(lockFile, func() error { return run(now, roots) })
@@ -204,7 +204,7 @@ func run(now time.Time, roots Roots) error {
 			out.Days[i].Codex += e.Tokens
 		}
 	}
-	return state.WriteJSON(usageFile, out)
+	return state.WriteUsageJSON(dailyFile, out)
 }
 
 // logFiles lists the *.jsonl files under root (subagents/ included) modified

@@ -314,11 +314,66 @@ func TestUpdateLimitsLatestConcurrent(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	var all map[string]ProviderLimits
-	if err := ReadJSON("limits.json", &all); err != nil {
+	var got ProviderLimits
+	if err := ReadUsageJSON("codex.json", &got); err != nil {
 		t.Fatal(err)
 	}
-	if all["codex"].Updated != 30 {
-		t.Fatalf("latest lost: %+v", all)
+	if got.Updated != 30 {
+		t.Fatalf("latest lost: %+v", got)
+	}
+}
+
+func TestUsageDirEnvOverride(t *testing.T) {
+	want := filepath.Join(t.TempDir(), "usage")
+	t.Setenv("HERDR_USAGE_STATE", want)
+	t.Setenv("HERDR_POKE_STATE", filepath.Join(t.TempDir(), "other"))
+	if got := UsageDir(); got != want {
+		t.Fatalf("UsageDir() = %q, want %q", got, want)
+	}
+	if info, err := os.Stat(want); err != nil || info.Mode().Perm() != 0o700 {
+		t.Fatalf("usage dir not created private: %v", err)
+	}
+}
+
+func TestUsageDirFollowsPokeStateOverrideThenHome(t *testing.T) {
+	dir := useTempState(t)
+	t.Setenv("HERDR_USAGE_STATE", "")
+	if got, want := UsageDir(), filepath.Join(dir, "usage"); got != want {
+		t.Fatalf("UsageDir() = %q, want %q", got, want)
+	}
+	home := t.TempDir()
+	t.Setenv("HERDR_POKE_STATE", "")
+	t.Setenv("HOME", home)
+	if got, want := UsageDir(), filepath.Join(home, ".local", "state", "herdr-app", "usage"); got != want {
+		t.Fatalf("UsageDir() = %q, want %q", got, want)
+	}
+}
+
+func TestUpdateLimitsLatestWritesProviderFile(t *testing.T) {
+	dir := useTempState(t)
+	t.Setenv("HERDR_USAGE_STATE", "")
+	l := ProviderLimits{Plan: "p", Updated: 10, Windows: []Window{{Minutes: 10080, Used: 5, ResetsAt: 99}}}
+	if err := UpdateLimitsLatest("codex", l); err != nil {
+		t.Fatal(err)
+	}
+	var got ProviderLimits
+	if err := ReadUsageJSON("codex.json", &got); err != nil || got.Plan != "p" || len(got.Windows) != 1 {
+		t.Fatalf("codex.json = %+v err=%v", got, err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "limits.json")); !os.IsNotExist(err) {
+		t.Fatalf("limits.json must not be written (err=%v)", err)
+	}
+}
+
+func TestOlderSnapshotDoesNotReplaceNewer(t *testing.T) {
+	useTempState(t)
+	t.Setenv("HERDR_USAGE_STATE", "")
+	newer := ProviderLimits{Updated: 20, Windows: []Window{{Minutes: 300, Used: 50, ResetsAt: 99}}}
+	older := ProviderLimits{Updated: 10, Windows: []Window{{Minutes: 300, Used: 1, ResetsAt: 99}}}
+	_ = UpdateLimitsLatest("codex", newer)
+	_ = UpdateLimitsLatest("codex", older)
+	var got ProviderLimits
+	if err := ReadUsageJSON("codex.json", &got); err != nil || got.Windows[0].Used != 50 {
+		t.Fatalf("older replaced newer: %+v err=%v", got, err)
 	}
 }
