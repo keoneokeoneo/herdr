@@ -92,6 +92,7 @@ npm run setup:list                               # setup 목록, 필요한 것, 
 npm run setup:install -- base obsidian           # 이것들만 (필요한 것과 함께) 설치
 npm run setup:install -- base --select base      # 설치 후 Herdr를 해당 레이아웃으로 전환
 npm run setup:update                             # 이미 설치한 setup을 지금 체크아웃으로 다시 복사 (git pull 뒤)
+                                                 # 설치 뒤 바깥에서 바뀐 파일은 건너뛰고 알림 (--force로 교체)
 npm run setup:status                             # 설치된 setup과 파일 변경 여부
 ```
 
