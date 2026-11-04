@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ago, resetsIn, pctOrDash, tokensM } from '../../../mods/poke/lib/format.js';
+import { ago, resetsIn, pctOrDash, tokensM } from '../../../mods/base/lib/format.js';
 
 test('ago', () => { assert.equal(ago(43e3), '43s'); assert.equal(ago(6 * 60e3), '6m'); assert.equal(ago(65 * 60e3), '1h 5m'); });
 test('resetsIn', () => {

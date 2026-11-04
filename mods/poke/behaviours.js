@@ -1,9 +1,11 @@
-// Things that happen, not things drawn. Runs once, in the status bar's copy.
-import { hc, exec, home, appHome, run, shared, setShared, playSound, notify, watchFolder } from "herdr";
-import { rows } from "./views/data.js";
+// Poke's behaviours: partner assignment, cries, pokeTokenBar sync, evening flag, level/evolution toasts.
+// Things that happen, not things drawn. Runs once, in the persona host's copy.
+import { hc, exec, home, appHome, shared, setShared, playSound, notify, watchFolder } from "herdr";
+import { personaRows } from "./views/rows.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
+import { typeModeInit } from "./lib/defaults.js";
 import { excluded, pickPartner, activePartners } from "./lib/partner.js";
-import { waiting, cryFor, retryDue, assetsMissing } from "./lib/model.js";
+import { cryFor, retryDue, assetsMissing } from "./lib/cry.js";
 import { say } from "./lib/voice.js";
 import { ptbChanged, coalesce } from "./lib/sync.js";
 
@@ -35,9 +37,6 @@ export function start(s, cx) {
   s.prev = new Map();      // address → last status
   s.pending = new Set();   // addresses being labelled
   s.tried = new Map();     // partner id → asset retry backoff
-  s.attachTried = new Map(); // codex terminal → next health probe
-  s.jumpAt = -1;
-  s.onCommand = (c) => command(s, c);
 
   // Companion sprite, Dex copies and evolution/level toasts follow pokeTokenBar's
   // folder as it changes. The slow timer only covers a missed or refused watch.
@@ -57,6 +56,8 @@ export function start(s, cx) {
     }
   });
 
+  const initial = typeModeInit(shared("poke.typeMode"));
+  if (initial) setShared("poke.typeMode", initial);
   const tick = (cx) => cx.spawn(async () => { await step(s); });
   tick(cx);
   cx.timer.every(2000, tick);
@@ -65,13 +66,8 @@ export function start(s, cx) {
   cx.timer.every(60000, evening);
 }
 
-function attach(t) {
-  const sh = `export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"; nohup "$0" codex --attach "$1" >/dev/null 2>&1 &`;
-  exec("sh", ["-c", sh, HP(), t]).catch(() => null);
-}
-
 async function step(s) {
-  const all = rows();
+  const all = personaRows();
   syncSeen(all);
   const sprites = shared("poke.sprites") ?? [];
   for (const r of all) {
@@ -82,18 +78,11 @@ async function step(s) {
     if (r.partnerSet && assetsMissing(r.partner, sprites, shared("poke.names")) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
-    // Probe every Codex periodically, including one with stale labels after a mirror crash.
-    // The helper exits at once when the terminal is already mirrored, so a retry is cheap.
-    if (r.provider === "codex" && Date.now() >= (s.attachTried.get(r.address) ?? 0)) {
-      s.attachTried.set(r.address, Date.now() + 60000);
-      attach(r.address);
-    }
     s.prev.set(r.address, r.status);
   }
   const live = new Set(all.map((r) => r.address));
   for (const k of s.prev.keys()) if (!live.has(k)) s.prev.delete(k);
   for (const k of s.pending) if (!live.has(k)) s.pending.delete(k);
-  for (const k of s.attachTried.keys()) if (!live.has(k)) s.attachTried.delete(k);
 }
 
 async function assign(s, r) {
@@ -125,13 +114,8 @@ async function companionDiff(s) {
   }
 }
 
-function command(s, c) {
-  if (c === "jump") {
-    const list = waiting(rows());
-    if (!list.length) return;
-    s.jumpAt = (s.jumpAt + 1) % list.length;
-    run("agent.focus", { terminal: list[s.jumpAt].address });
-  } else if (c === "reroll") {
+export function command(s, c) {
+  if (c === "reroll") {
     setShared("poke.typeSeed", ((Number(shared("poke.typeSeed") ?? 7)) * 7 + 13) % 9973);
   }
 }

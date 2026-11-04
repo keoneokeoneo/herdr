@@ -10,3 +10,10 @@ export function telemetry(labels, pid, provider) {
   const ctx = Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
   return { model, effort, ctx, note: !model ? 'Waiting for session data' : ctx == null ? 'Waiting for context' : null };
 }
+
+// Claude no longer publishes telemetry labels (its statusline only records limits), so its
+// rows show no model/effort/context and no "unavailable" note. Other providers (Codex) do.
+export function telemetryFor(labels, pid, provider) {
+  if (provider === 'claude') return { model: null, effort: null, ctx: null, note: null };
+  return telemetry(labels, pid, provider);
+}

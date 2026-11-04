@@ -4,22 +4,12 @@ import { h_flex, v_flex } from "gpui-base";
 import { theme, run, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, C, alpha } from "./ui.js";
-import { groups, chips } from "../lib/model.js";
+import { groups, chips, agentSubline } from "../lib/model.js";
 import { ago } from "../lib/format.js";
 import { narrow } from "./brand.js";
 
 export function init(_s, cx) {
   cx.timer.every(20000, (cx) => cx.notify());
-}
-
-function subline(r, all) {
-  if (r.reviewOf) {
-    const tg = all.find((x) => x.address === r.reviewOf);
-    return `↳ reviewing ${tg?.tabName ?? "a session"}${r.findings != null ? ` · ${r.findings} found` : ""}`;
-  }
-  if (r.status === "blocked") return r.title || "Waiting for you";
-  if (r.status === "done") return "New · not checked yet";
-  return [r.model, r.effort, r.ctx != null ? `ctx ${r.ctx}%` : null, r.telemetryNote].filter(Boolean).join(" · ");
 }
 
 function row(t, r, all, now) {
@@ -34,7 +24,7 @@ function row(t, r, all, now) {
       .on_click((_e, cx) => { cx.stop_propagation(); run("terminal.pin", { terminal: r.address, pinned: !r.pinned }); })
       .child(svg(`mods/workspace-chrome/${r.pinned ? "pin-off" : "pin"}.svg`).size(11)))
     .child(div().flex_none().text_size(10).text_color(t.dim).child(ago(now - r.since)));
-  const sub = subline(r, all);
+  const sub = agentSubline(r, all);
   return h_flex().id(`ag-${r.address}`).items_center().gap(8).px(6).py(5).rounded(8)
     .bg(r.focused ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
     .on_click(() => run("agent.focus", { terminal: r.address }))

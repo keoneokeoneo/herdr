@@ -1,7 +1,7 @@
 // One place that turns Herdr's live data into rows the views draw.
 import { agents, terminals, panes, spaces } from "herdr";
 
-import { telemetry } from "../lib/telemetry.js";
+import { telemetryFor } from "../lib/telemetry.js";
 
 const PROVIDER = { "claude-code": "claude", claude: "claude", codex: "codex" };
 
@@ -22,7 +22,7 @@ export function rows() {
   return agents().map((a) => {
     const t = byAddr.get(a.address) ?? {};
     const l = t.labels ?? {};
-    const info = telemetry(l, t.foreground?.pid, providerOf(a));
+    const info = telemetryFor(l, t.foreground?.pid, providerOf(a));
     const p = paneBy.get(a.pane) ?? {};
     const num = (v) => (v == null || v === "" ? null : Number(v));
     return {

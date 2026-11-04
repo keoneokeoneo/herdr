@@ -2,10 +2,9 @@
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, home, appHome, readTextFile, watchFolder, exec, shared } from "herdr";
-import { pill, spritePath, alive, C } from "./ui.js";
+import { pill, spritePath, alive, C, narrow } from "./ui.js";
 import { progress } from "../lib/companion.js";
-import { tokensM } from "../lib/format.js";
-import { narrow } from "./brand.js";
+import { tokensM } from "../lib/tokens.js";
 import { coalesce, companionChanged } from "../lib/sync.js";
 
 const DIR = () => `${home()}/Library/Application Support/PokeTokenBar`;

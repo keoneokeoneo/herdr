@@ -15,7 +15,7 @@ function findNode(node, id) {
 export const isWorktree = (cwd) => !!cwd && cwd.includes("/worktrees/");
 
 export function tabType(branch, repoType) {
-  return typeOf(branch ?? "", shared("poke.typeSeed") ?? 7, shared("poke.typeMode") ?? "random", repoType);
+  return typeOf(branch ?? "", shared("poke.typeSeed") ?? 7, shared("poke.typeMode"), repoType);
 }
 
 export function render(st, _cx) {
@@ -54,7 +54,7 @@ export function render(st, _cx) {
     return div().flex_none().flex().flex_col().gap(2).child(el)
       .child(div().h(2).mx(10).rounded_full().bg(ty ? alpha(C[ty], "66") : "#00000000"));
   });
-  const panelShown = !findNode(layout(), "poke-panel")?.hidden;
+  const panelShown = !findNode(layout(), "panel")?.hidden;
   return h_flex().size_full().items_center().gap(4).px(10).bg(t.chrome)
     .children(items)
     .child(div().id("tab-new").px(8).text_size(16).text_color(t.dim).cursor_pointer()
@@ -65,6 +65,6 @@ export function render(st, _cx) {
       .bg(panelShown ? t.selected : "#00000000").text_color(panelShown ? t.foreground : t.muted)
       .hover((x) => x.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
-      .on_click(() => run("layout.toggle", { id: "poke-panel" }))
+      .on_click(() => run("layout.toggle", { id: "panel" }))
       .child(svg("mods/workspace-chrome/panel-right.svg").size(15)));
 }

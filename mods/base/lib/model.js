@@ -32,7 +32,7 @@ export function tabPill(agents) {
   return { text: '', tone: 'dim' };
 }
 
-export function typeOf(branch, seed, mode, repoType) {
+export function typeOf(branch, seed, mode = 'off', repoType) {
   if (mode === 'off') return null;
   if (mode === 'repo') return repoType || null;
   let h = seed >>> 0;
@@ -40,17 +40,13 @@ export function typeOf(branch, seed, mode, repoType) {
   return TYPES[h % TYPES.length];
 }
 
-// The sound for a session that starts waiting: its partner's cry, else Herdr's own.
-export const cryFor = (partner, sprites) =>
-  partner != null && (sprites || []).includes(`${partner}.mp3`) ? `poke-assets/${partner}.mp3` : 'blocked';
-
-// Per-id retry with doubling backoff (1 min → 30 min). Records the attempt when due.
-export function retryDue(tried, id, nowMs) {
-  const t = tried.get(id);
-  if (t && nowMs < t.at + t.wait) return false;
-  tried.set(id, { at: nowMs, wait: t ? Math.min(30 * 60_000, t.wait * 2) : 60_000 });
-  return true;
+// One quiet line under an agent row: what it needs, or (for agents that report them) model, effort, context.
+export function agentSubline(r, all) {
+  if (r.reviewOf) {
+    const tg = all.find((x) => x.address === r.reviewOf);
+    return `↳ reviewing ${tg?.tabName ?? 'a session'}${r.findings != null ? ` · ${r.findings} found` : ''}`;
+  }
+  if (r.status === 'blocked') return r.title || 'Waiting for you';
+  if (r.status === 'done') return 'New · not checked yet';
+  return [r.model, r.effort, r.ctx != null ? `ctx ${r.ctx}%` : null, r.telemetryNote].filter(Boolean).join(' · ');
 }
-
-export const assetsMissing = (id, files, names) =>
-  !(files.includes(`${id}.gif`) || files.includes(`${id}.png`)) || !files.includes(`${id}.mp3`) || !names?.[id];

@@ -1,33 +1,17 @@
-// One mod, many regions: each layout block passes props.view.
+// Poke persona: one mod, three views chosen by props.view (companion, dex, host).
 import { View, div } from "gpui-kit";
-import { props, nextCommand } from "herdr";
-import * as tabs from "./views/tabs.js";
-import * as spaces from "./views/spaces.js";
-import * as agentsView from "./views/agents.js";
+import { props } from "herdr";
 import * as companion from "./views/companion.js";
-import * as pane from "./views/pane.js";
-import * as panel from "./views/panel.js";
-import * as status from "./views/status.js";
-import * as paneltabs from "./views/paneltabs.js";
-import * as brand from "./views/brand.js";
+import * as dex from "./views/dex.js";
+import * as host from "./views/host.js";
 
-const VIEWS = { tabs, spaces, agents: agentsView, companion, pane, panel, paneltabs, brand, status };
+const VIEWS = { companion, dex, host };
 
 export default class Poke extends View {
   init(_props, cx) {
     this.view = VIEWS[props()?.view] ?? null;
     this.state = {};
     this.view?.init?.(this.state, cx);
-    // Commands reach every shown copy; only the status bar copy acts on them.
-    if (props()?.view === "status") {
-      cx.spawn(async (cx) => {
-        for (;;) {
-          const c = await nextCommand();
-          this.view?.command?.(this.state, c, cx);
-          cx.notify();
-        }
-      });
-    }
   }
 
   render(cx) {

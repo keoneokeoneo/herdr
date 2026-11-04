@@ -1,8 +1,7 @@
 // Reads the usage data contract: ~/.local/state/herdr-app/usage/{claude,codex,daily}.json.
 // Until the cutover (plan Task 10) the old ~/.local/state/herdr-poke files are a fallback.
 import { home } from "herdr";
-// Temporary path; Task 4 moves store.js next to this file and this becomes "./store.js".
-import { readJSON } from "../../poke/views/store.js";
+import { readJSON } from "./store.js";
 import { resolveLimits, resolveDaily } from "../lib/contract.js";
 
 export const USAGE_DIR = () => `${home()}/.local/state/herdr-app/usage`;

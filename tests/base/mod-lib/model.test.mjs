@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { URG, byUrgency, groups, waiting, chips, tabPill, typeOf, TYPES } from '../../../mods/poke/lib/model.js';
+import { URG, byUrgency, groups, waiting, chips, tabPill, typeOf, TYPES } from '../../../mods/base/lib/model.js';
 
 const M = 60e3, now = 1_000_000_000;
 test('URG order', () => assert.deepEqual(URG, { blocked: 0, working: 1, done: 2, idle: 3 }));
@@ -36,4 +36,26 @@ test('typeOf random is stable and valid', () => {
   assert.equal(a, b); assert.ok(TYPES.includes(a));
   assert.equal(typeOf('feat/x', 7, 'off'), null);
   assert.equal(typeOf('feat/x', 7, 'repo', 'water'), 'water');
+});
+
+import { agentSubline, typeOf as typeOf2 } from '../../../mods/base/lib/model.js';
+
+test('agentSubline: claude rows with no telemetry show nothing extra, codex rows keep model/effort/ctx', () => {
+  const claude = { status: 'working', provider: 'claude', model: null, effort: null, ctx: null, telemetryNote: null };
+  assert.equal(agentSubline(claude, [claude]), '');
+  const codex = { status: 'idle', provider: 'codex', model: 'gpt-6', effort: 'high', ctx: 42, telemetryNote: null };
+  assert.equal(agentSubline(codex, [codex]), 'gpt-6 · high · ctx 42%');
+});
+
+test('agentSubline keeps blocked, done and review lines', () => {
+  assert.equal(agentSubline({ status: 'blocked', title: 'Allow?' }, []), 'Allow?');
+  assert.equal(agentSubline({ status: 'blocked', title: '' }, []), 'Waiting for you');
+  assert.equal(agentSubline({ status: 'done' }, []), 'New · not checked yet');
+  const target = { address: 'a', tabName: 'work' };
+  assert.equal(agentSubline({ status: 'working', reviewOf: 'a', findings: 2 }, [target]), '↳ reviewing work · 2 found');
+});
+
+test('typeOf is off when the mode is unset (no Poke running)', () => {
+  assert.equal(typeOf2('main', 7, undefined), null);
+  assert.equal(typeOf2('main', 7, 'random') !== null, true);
 });

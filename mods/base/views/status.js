@@ -4,12 +4,11 @@ import { h_flex } from "gpui-base";
 import { theme, run } from "herdr";
 import { rows } from "./data.js";
 import { keepFresh, STATE_DIR, WIN_LABEL } from "./store.js";
-// Temporary cross-mod import; Task 4 moves these views into mods/base.
-import { loadUsage, USAGE_DIR } from "../../base/views/usagefiles.js";
+import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, tokensM } from "../lib/format.js";
 import { usageState } from "../lib/usage.js";
 import { waiting } from "../lib/model.js";
-import { start } from "../behaviours.js";
+import { start, jump, notes } from "../behaviours.js";
 
 export function init(s, cx) {
   keepFresh(s, cx, STATE_DIR, loadUsage, [USAGE_DIR]);
@@ -17,14 +16,10 @@ export function init(s, cx) {
   cx.timer.every(60000, (cx) => cx.notify());
 }
 
-// Behaviours (Task 13) hook in here; commands reach only this copy.
-export function command(s, c, cx) {
-  if (c === "notes") {
-    run("layout.show", { id: "poke-panel" });
-    run("layout.select", { stack: "poke-panel-body", child: "poke-obsidian" });
-    return;
-  }
-  s.onCommand?.(c, cx);
+// Key commands (base.jump, base.notes) reach shown copies; only this always-shown copy acts on them.
+export function command(s, c) {
+  if (c === "jump") jump(s);
+  else if (c === "notes") notes();
 }
 
 const sep = (t) => div().w(1).h(14).bg(t.border);
@@ -54,7 +49,7 @@ export function render(s, cx) {
   bar.child(div().flex_1());
   if (wait) {
     bar.child(div().id("jump").flex_none().px(10).py(2).rounded_full().bg(t.blocked + "26").text_color(t.blocked).font_weight(600).cursor_pointer()
-      .on_click(() => s.onCommand?.("jump"))
+      .on_click(() => jump(s))
       .child(`Jump to waiting · ${wait}  ⌘J`));
   }
   bar.child(div().id("palette").flex_none().text_color(t.dim).cursor_pointer().hover((x) => x.text_color(t.foreground))

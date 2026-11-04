@@ -1,7 +1,7 @@
-// Sidebar top: our mark in place of Herdr's, with the same search and sidebar buttons.
+// Sidebar top: an optional mark (props.logo, an image path the layout supplies) beside "Herdr", with the same search and sidebar buttons.
 import { div, image, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { theme, run, layout, window, shared, setShared } from "herdr";
+import { theme, run, layout, window, shared, setShared, props } from "herdr";
 
 function find(node, id) {
   if (!node || typeof node !== "object") return null;
@@ -34,7 +34,7 @@ export function render() {
   if (narrow()) return mac ? row : row.child(button(t, "sidebar-toggle", "sidebar", toggleSidebar));
   return row
     .child(h_flex().flex_1().gap(8).items_center()
-      .child(image("mods/poke/brand/pokeball.svg").size(18).flex_none())
+      .when(!!props()?.logo, (x) => x.child(image(props().logo).size(18).flex_none()))
       .child(div().text_size(13.5).font_weight(600).text_color(t.foreground).child("Herdr")))
     .child(button(t, "search", "search", () => run("mod.open", { name: "picker" })))
     .child(button(t, "sidebar-toggle", "sidebar", toggleSidebar));

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {telemetry} from '../../../mods/poke/lib/telemetry.js';
+import {telemetry} from '../../../mods/base/lib/telemetry.js';
 const labels = {'poke.owner':'123','poke.provider':'codex','poke.session':'s1','poke.model':'gpt-test','poke.effort':'high','poke.ctx':'92'};
 test('rejects previous process, provider and unverified legacy labels',()=>{
   for(const [pid,provider,l] of [[124,'codex',labels],[123,'claude',labels],[123,'codex',{'poke.model':'old','poke.ctx':'92'}],[null,'codex',labels]]) {
@@ -16,4 +16,16 @@ test('new collector awaiting rollout never exposes previous fields',()=>{
 test('invalid context is hidden and partial data has an honest note',()=>{
   for(const ctx of ['NaN','-1','101',''])assert.equal(telemetry({...labels,'poke.ctx':ctx},123,'codex').ctx,null);
   assert.equal(telemetry({...labels,'poke.ctx':''},123,'codex').note,'Waiting for context');
+});
+
+import { telemetryFor } from '../../../mods/base/lib/telemetry.js';
+
+test('telemetryFor: Claude no longer reports telemetry and shows no note', () => {
+  const labels = { 'poke.owner': '9', 'poke.provider': 'claude', 'poke.model': 'x', 'poke.ctx': '50' };
+  assert.deepEqual(telemetryFor(labels, 9, 'claude'), { model: null, effort: null, ctx: null, note: null });
+});
+
+test('telemetryFor: other providers still use telemetry', () => {
+  const labels = { 'poke.owner': '9', 'poke.provider': 'codex', 'poke.model': 'gpt-6', 'poke.ctx': '50' };
+  assert.deepEqual(telemetryFor(labels, 9, 'codex'), telemetry(labels, 9, 'codex'));
 });
