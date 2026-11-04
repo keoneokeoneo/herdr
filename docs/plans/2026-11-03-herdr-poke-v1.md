@@ -52,7 +52,7 @@
 ### Task 2: Go module, state files, label writer
 
 **Files:**
-- Create: `helper/go.mod` (module `herdr-poke`), `helper/main.go`, `helper/internal/state/state.go`, `helper/internal/state/state_test.go`, `helper/internal/labels/labels.go`, `helper/internal/labels/labels_test.go`, `scripts/build.sh`
+- Create: `helpers/poke/go.mod` (module `herdr-poke`), `helpers/poke/main.go`, `helpers/poke/internal/state/state.go`, `helpers/poke/internal/state/state_test.go`, `helpers/poke/internal/labels/labels.go`, `helpers/poke/internal/labels/labels_test.go`, `scripts/poke/build.sh`
 
 **Interfaces:**
 - Produces:
@@ -64,15 +64,15 @@
   - `main.go` dispatches subcommands `statusline | codex | usage | assets`; unknown → usage text, exit 2.
 
 - [ ] **Step 1:** Tests: `TestWriteJSONAtomic` (concurrent writers leave valid JSON), `TestUpdateLimitsKeepsOtherProvider` (write claude then codex → both present), `TestLabelsSkipsUnchanged` (fake `hc` on PATH logging argv; second identical `Set` makes no call; changed value → one call with only that key).
-- [ ] **Step 2:** `cd helper && go test ./...` → FAIL (undefined).
-- [ ] **Step 3:** Implement the signatures above. `scripts/build.sh`: `go build -o ~/.local/bin/herdr-poke ./helper`.
-- [ ] **Step 4:** `go test ./...` → PASS; `scripts/build.sh && herdr-poke` prints usage, exit 2.
+- [ ] **Step 2:** `cd helpers/poke && go test ./...` → FAIL (undefined).
+- [ ] **Step 3:** Implement the signatures above. `scripts/poke/build.sh`: `go build -o ~/.local/bin/herdr-poke ./helper`.
+- [ ] **Step 4:** `go test ./...` → PASS; `scripts/poke/build.sh && herdr-poke` prints usage, exit 2.
 - [ ] **Step 5:** Commit `feat(herdr-poke): go helper 골격과 상태 파일 추가`.
 
 ### Task 3: `herdr-poke statusline` (Claude)
 
 **Files:**
-- Create: `helper/internal/claude/statusline.go`, `helper/internal/claude/statusline_test.go`, `helper/internal/claude/testdata/*.json`, `helper/internal/claude/testdata/gen-golden.sh`
+- Create: `helpers/poke/internal/claude/statusline.go`, `helpers/poke/internal/claude/statusline_test.go`, `helpers/poke/internal/claude/testdata/*.json`, `helpers/poke/internal/claude/testdata/gen-golden.sh`
 
 **Interfaces:**
 - Consumes: `state.UpdateLimits`, `labels.Set`.
@@ -92,7 +92,7 @@
 ### Task 4: Codex rollout parser
 
 **Files:**
-- Create: `helper/internal/codex/rollout.go`, `helper/internal/codex/rollout_test.go`, `helper/internal/codex/testdata/rollout-*.jsonl` (redacted: no prompt text)
+- Create: `helpers/poke/internal/codex/rollout.go`, `helpers/poke/internal/codex/rollout_test.go`, `helpers/poke/internal/codex/testdata/rollout-*.jsonl` (redacted: no prompt text)
 
 **Interfaces:**
 - Produces:
@@ -108,7 +108,7 @@
 ### Task 5: `herdr-poke codex -- <args>` wrapper
 
 **Files:**
-- Create: `helper/internal/codex/wrap.go`, `helper/internal/codex/find.go`, `helper/internal/codex/wrap_test.go`, `helper/internal/codex/find_test.go`
+- Create: `helpers/poke/internal/codex/wrap.go`, `helpers/poke/internal/codex/find.go`, `helpers/poke/internal/codex/wrap_test.go`, `helpers/poke/internal/codex/find_test.go`
 
 **Interfaces:**
 - Consumes: Task 4 `Apply`, `SessionMeta`; Task 2 `labels.Set`, `state.UpdateLimits`.
@@ -129,7 +129,7 @@
 ### Task 6: `herdr-poke usage`
 
 **Files:**
-- Create: `helper/internal/usage/usage.go`, `helper/internal/usage/usage_test.go`, `helper/internal/usage/testdata/`
+- Create: `helpers/poke/internal/usage/usage.go`, `helpers/poke/internal/usage/usage_test.go`, `helpers/poke/internal/usage/testdata/`
 
 **Interfaces:**
 - Produces: `usage.Run(now time.Time, roots Roots) error` writing `usage.json` = `{"days":[{"date":"YYYY-MM-DD","claude":int,"codex":int}…14 entries, oldest first],"updated":unix}`; `Roots{ ClaudeProjects, CodexSessions string }`; offsets in `usage-offsets.json` (`path → {size, offset}`; reset when size shrinks).
@@ -143,7 +143,7 @@
 ### Task 7: `herdr-poke assets`
 
 **Files:**
-- Create: `helper/internal/assets/assets.go`, `helper/internal/assets/assets_test.go`
+- Create: `helpers/poke/internal/assets/assets.go`, `helpers/poke/internal/assets/assets_test.go`
 - Modify: `.gitignore` (add `mods/poke/assets/`)
 
 **Interfaces:**
@@ -157,7 +157,7 @@
 ### Task 8: Mod logic library (pure JS)
 
 **Files:**
-- Create: `mods/poke/lib/model.js`, `mods/poke/lib/partner.js`, `mods/poke/lib/companion.js`, `mods/poke/lib/format.js`, `mods/poke/lib/voice.js`, `tests/mod-lib/*.test.mjs`, `package.json` (`"type":"module"`, script `test: node --test tests/mod-lib`)
+- Create: `mods/poke/lib/model.js`, `mods/poke/lib/partner.js`, `mods/poke/lib/companion.js`, `mods/poke/lib/format.js`, `mods/poke/lib/voice.js`, `tests/poke/mod-lib/*.test.mjs`, `package.json` (`"type":"module"`, script `test: node --test tests/*/mod-lib/*.test.mjs`)
 
 **Interfaces (all plain ES modules, no imports from `herdr`/`gpui-kit`):**
 - `model.js`: `URG = {blocked:0, working:1, done:2, idle:3}`; `byUrgency(list)`; `groups(agents) → {needs, working, done, idle}`; `waiting(agents) → blocked sorted by since asc`; `chips(agent, nowMs) → [{text, tip, color}]` (`ctx N%` / `waiting Nm`); `tabPill(agents) → {text, tone}`; `typeOf(branch, seed, mode, repoType)` (hash `h=seed; h=(h*31+code)>>>0`, types `grass fire water electric psychic normal`).
@@ -246,12 +246,12 @@
 ### Task 14: Install, apply to Keno's setup, uninstall, README
 
 **Files:**
-- Create: `scripts/install.sh`, `scripts/uninstall.sh`, `README.md`
+- Create: `scripts/poke/install.sh`, `scripts/poke/uninstall.sh`, `README.md`
 
 **Interfaces:**
-- `install.sh`: build helper (`scripts/build.sh`); for each of `~/.claude/settings.json`, `~/.zshrc`, `~/.config/herdr-app/settings.json`: copy to `<file>.herdr-poke-backup-<YYYYmmddHHMMSS>` then edit — Claude `statusLine.command` = `~/.local/bin/herdr-poke statusline` (JSON edit, other keys untouched), `.zshrc` line `alias codex='codex --yolo'` → `alias codex='herdr-poke codex -- codex --yolo --no-daemon'`, Herdr `sounds.enabled=false`; run `herdr-poke assets --companion` and `herdr-poke usage`; add a launchd agent or Herdr-side timer to rerun `usage` every 10 min (pick launchd `~/Library/LaunchAgents/dev.keno.herdr-poke.usage.plist`); show the layout (`herdr-app` command `layout.switch` to `poke`).
+- `install.sh`: build helper (`scripts/poke/build.sh`); for each of `~/.claude/settings.json`, `~/.zshrc`, `~/.config/herdr-app/settings.json`: copy to `<file>.herdr-poke-backup-<YYYYmmddHHMMSS>` then edit — Claude `statusLine.command` = `~/.local/bin/herdr-poke statusline` (JSON edit, other keys untouched), `.zshrc` line `alias codex='codex --yolo'` → `alias codex='herdr-poke codex -- codex --yolo --no-daemon'`, Herdr `sounds.enabled=false`; run `herdr-poke assets --companion` and `herdr-poke usage`; add a launchd agent or Herdr-side timer to rerun `usage` every 10 min (pick launchd `~/Library/LaunchAgents/dev.keno.herdr-poke.usage.plist`); show the layout (`herdr-app` command `layout.switch` to `poke`).
 - `uninstall.sh`: restore the newest backup of each file, unload/remove the launchd plist, switch Herdr back to `main`, remove `~/.local/bin/herdr-poke`. Leaves the repo.
-- README sections: What it is, Prerequisites (`brew install --cask herdr-app`, `brew install --cask chattymin/tap/poke-token-bar`, `brew install go`, Claude Code, Codex CLI), Install (launch Herdr once → `git init`/`remote add`/`fetch`/`checkout` in `~/.config/herdr-app` → `scripts/install.sh`), Undo, Troubleshooting (`herdr-app status`, `*.error` files, `ctrl-alt-shift-escape`).
+- README sections: What it is, Prerequisites (`brew install --cask herdr-app`, `brew install --cask chattymin/tap/poke-token-bar`, `brew install go`, Claude Code, Codex CLI), Install (launch Herdr once → `git init`/`remote add`/`fetch`/`checkout` in `~/.config/herdr-app` → `scripts/poke/install.sh`), Undo, Troubleshooting (`herdr-app status`, `*.error` files, `ctrl-alt-shift-escape`).
 
 - [ ] **Step 1:** Dry run: `HOME=$(mktemp -d)` with copies of the three files → `install.sh` then `uninstall.sh` → files byte-identical to originals (`cmp`).
 - [ ] **Step 2:** Real run on Keno's machine (Keno approved). Open a new zsh, start a Claude session and a Codex session in Herdr; confirm: Claude statusline looks exactly as before; both panes show model/effort/ctx; status bar shows Claude 5h/wk and Codex wk; usage chart filled.

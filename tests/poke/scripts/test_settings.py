@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-SCRIPT = Path(__file__).resolve().parents[2] / 'scripts/settings_edit.py'
+SCRIPT = Path(__file__).resolve().parents[3] / 'scripts/poke/settings_edit.py'
 
 class SettingsTests(unittest.TestCase):
     def setUp(self):

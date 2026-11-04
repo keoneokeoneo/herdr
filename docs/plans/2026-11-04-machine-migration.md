@@ -45,7 +45,7 @@ pokeTokenBar의 `usage-cache.json`은 열거나 복호화하지 않는다. 성�
 ## 2. 새 머신의 도구 준비
 
 Herdr 앱과 `herdr-app`/`hc` CLI, Git, Python 3, Go, Claude Code, Codex CLI를 준비한다.
-Go 요구 버전은 `helper/go.mod`가 기준이다. Codex는 `--help`에 `--no-daemon`을
+Go 요구 버전은 `helpers/poke/go.mod`가 기준이다. Codex는 `--help`에 `--no-daemon`을
 지원하는 배포본이어야 한다. 미지원 버전에서 옵션만 제거하면 라벨 수집이 깨진다.
 
 Node 기반 hooks/MCP를 사용한다면 Node/npm/npx도 준비한다. nvm 사용 시 Node를
@@ -68,7 +68,7 @@ Jetendard와 pokeTokenBar는 별도로 설치한다. pokeTokenBar를 초기화�
      set -eu
      mkdir -p "$HOME/.config"
      migration_stage=$(mktemp -d "$HOME/.config/herdr-poke-migration.XXXXXX")
-     git clone git@github.com:keoneokeoneo/herdr-poke.git "$migration_stage/repo"
+     git clone git@github.com:keoneokeoneo/herdr.git "$migration_stage/repo"
      if [ -e "$HOME/.config/herdr-app" ] || [ -L "$HOME/.config/herdr-app" ]; then
        mv "$HOME/.config/herdr-app" "$migration_stage/previous-herdr-app"
      fi
@@ -89,14 +89,14 @@ Jetendard와 pokeTokenBar는 별도로 설치한다. pokeTokenBar를 초기화�
 
    ```sh
    cd "$HOME/.config/herdr-app"
-   python3 scripts/preflight.py
+   python3 scripts/poke/preflight.py
    ```
 
    필수 도구 누락, 실행 실패, Go 버전 부족, Codex 옵션 미지원은 실패한다.
    Node/nvm, Jetendard, pokeTokenBar 상태는 선택 기능 경고다. 검사에서는
    버전·도움말 명령을 실행하지만 로그인·서버 시작·에이전트 세션은 만들지 않는다.
    CLI 자체가 수행하는 초기화까지 차단하는 sandbox는 아니다.
-6. Claude 세션을 닫고 일반 터미널에서 `bash scripts/install.sh`를 실행한다.
+6. Claude 세션을 닫고 일반 터미널에서 `bash scripts/poke/install.sh`를 실행한다.
    준비 검사는 빌드·설치 journal·백업·설정 변경 전에 다시 실행된다. 통과 후에는
    helper, 설정, nvm shim(해당 시), launchd 작업을 생성한다.
    `HERDR_POKE_DRY=1`도 파일을 변경하므로 준비 검사 대용으로 사용하지 않는다.

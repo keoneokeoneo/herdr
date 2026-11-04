@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('store ignores unrelated files and unchanged snapshots, but publishes changes', async () => {
-  const source = (await readFile(new URL('../../mods/poke/views/store.js', import.meta.url), 'utf8'))
+  const source = (await readFile(new URL('../../../mods/poke/views/store.js', import.meta.url), 'utf8'))
     .replace('import { home, readTextFile, watchFolder } from "herdr";',
       'const { home, readTextFile, watchFolder } = globalThis.__pokeStoreTest;');
   let wake;

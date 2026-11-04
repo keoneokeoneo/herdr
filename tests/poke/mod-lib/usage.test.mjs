@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { usageState } from '../../mods/poke/lib/usage.js';
+import { usageState } from '../../../mods/poke/lib/usage.js';
 
 const now = new Date(2026, 10, 4, 0, 5).getTime();
 const yesterday = { date: '2026-11-03', claude: 99e6, codex: 0 };
@@ -38,7 +38,7 @@ test('unknown and future update times do not pretend to be fresh', () => {
 
 test('panel and status do not relabel yesterday as today; historical chart remains', async () => {
   const { readFile } = await import('node:fs/promises');
-  const { tokensM } = await import('../../mods/poke/lib/format.js');
+  const { tokensM } = await import('../../../mods/poke/lib/format.js');
   const text = [];
   function element() {
     const el = new Proxy({}, { get: (_target, method) => (...args) => {
@@ -57,7 +57,7 @@ test('panel and status do not relabel yesterday as today; historical chart remai
   Date.now = () => now;
   try {
     for (const name of ['panel', 'status']) {
-      const source = (await readFile(new URL(`../../mods/poke/views/${name}.js`, import.meta.url), 'utf8'))
+      const source = (await readFile(new URL(`../../../mods/poke/views/${name}.js`, import.meta.url), 'utf8'))
         .replace(/^import .*;\n/gm, '');
       const prelude = `const {${Object.keys(globalThis.__usageRender).join(',')}}=globalThis.__usageRender;\n`;
       const view = await import('data:text/javascript;base64,' + Buffer.from(prelude + source).toString('base64'));

@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-SCRIPT = Path(__file__).resolve().parents[2] / 'scripts/install_files.py'
+SCRIPT = Path(__file__).resolve().parents[3] / 'scripts/poke/install_files.py'
 
 class FilesTests(unittest.TestCase):
     def setUp(self):
@@ -72,9 +72,9 @@ class InstallIntegrationTests(unittest.TestCase):
                    'HERDR_POKE_STATE':str(home/'state'), 'HERDR_POKE_DRY':'1',
                    'NVM_DIR':str(home/'.nvm'), 'FAKE_HELPER':str(helper),
                    'PATH':str(fakebin)+os.pathsep+os.environ['PATH']}
-            root = SCRIPT.parents[1]
+            root = SCRIPT.parents[2]
             for script in ['install.sh', 'install.sh', 'uninstall.sh', 'uninstall.sh']:
-                result = subprocess.run(['bash', str(root/'scripts'/script)], env=env, capture_output=True, text=True)
+                result = subprocess.run(['bash', str(root/'scripts/poke'/script)], env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
             self.assertEqual(binary.read_text(), 'original binary')
             self.assertFalse((home/'.local/bin/node').is_symlink())

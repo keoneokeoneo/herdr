@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { progress } from '../../mods/poke/lib/companion.js';
-import * as sync from '../../mods/poke/lib/sync.js';
+import { progress } from '../../../mods/poke/lib/companion.js';
+import * as sync from '../../../mods/poke/lib/sync.js';
 
 const D = '/home/Library/Application Support/PokeTokenBar';
 const settle = async () => { for (let i = 0; i < 80; i++) await Promise.resolve(); };
@@ -29,7 +29,7 @@ async function fixture() {
     watchFolder: () => new Promise((resolve) => { wake = resolve; }),
   };
   globalThis.__pokeCompanionTest = env;
-  const src = (await readFile(new URL('../../mods/poke/views/companion.js', import.meta.url), 'utf8'))
+  const src = (await readFile(new URL('../../../mods/poke/views/companion.js', import.meta.url), 'utf8'))
     .replace(/^import .*;\n/gm, '');
   const prelude = `const {home,appHome,C,progress,readTextFile,exec,watchFolder,coalesce,companionChanged}=globalThis.__pokeCompanionTest;`;
   const m = await import('data:text/javascript;base64,' + Buffer.from(prelude + src + `\n// fixture ${serial++}`).toString('base64'));

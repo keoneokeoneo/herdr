@@ -8,12 +8,12 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 class PreflightTests(unittest.TestCase):
     def setUp(self):
-        spec = importlib.util.spec_from_file_location('preflight', ROOT/'scripts/preflight.py')
+        spec = importlib.util.spec_from_file_location('preflight', ROOT/'scripts/poke/preflight.py')
         self.m = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.m)
         self.tmp = tempfile.TemporaryDirectory()
@@ -76,7 +76,7 @@ class PreflightTests(unittest.TestCase):
             tool.chmod(0o755)
         (self.home/'.zshrc').write_text('# original\n')
         before = sorted(str(p.relative_to(self.home)) for p in self.home.rglob('*'))
-        result = subprocess.run(['/bin/bash', str(ROOT/'scripts/install.sh')], env={**os.environ, 'HOME': str(self.home), 'PATH': str(tools), 'HERDR_APP_HOME': str(self.home/'app'), 'HERDR_POKE_STATE': str(self.home/'state')}, capture_output=True, text=True)
+        result = subprocess.run(['/bin/bash', str(ROOT/'scripts/poke/install.sh')], env={**os.environ, 'HOME': str(self.home), 'PATH': str(tools), 'HERDR_APP_HOME': str(self.home/'app'), 'HERDR_POKE_STATE': str(self.home/'state')}, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('codex is missing', result.stderr)
         self.assertEqual((self.home/'.zshrc').read_text(), '# original\n')
@@ -85,7 +85,7 @@ class PreflightTests(unittest.TestCase):
         codex.write_text('#!/bin/sh\necho "Usage: codex"\n')
         codex.chmod(0o755)
         before = sorted(str(p.relative_to(self.home)) for p in self.home.rglob('*'))
-        result = subprocess.run(['/bin/bash', str(ROOT/'scripts/install.sh')], env={**os.environ, 'HOME': str(self.home), 'PATH': str(tools), 'HERDR_APP_HOME': str(self.home/'app'), 'HERDR_POKE_STATE': str(self.home/'state')}, capture_output=True, text=True)
+        result = subprocess.run(['/bin/bash', str(ROOT/'scripts/poke/install.sh')], env={**os.environ, 'HOME': str(self.home), 'PATH': str(tools), 'HERDR_APP_HOME': str(self.home/'app'), 'HERDR_POKE_STATE': str(self.home/'state')}, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('does not advertise --no-daemon', result.stderr)
         self.assertEqual(before, sorted(str(p.relative_to(self.home)) for p in self.home.rglob('*')))

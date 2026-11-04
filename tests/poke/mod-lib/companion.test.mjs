@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GRAD, stageCost, progress } from '../../mods/poke/lib/companion.js';
+import { GRAD, stageCost, progress } from '../../../mods/poke/lib/companion.js';
 
 test('rare 3-form stage 1 costs 1.0B', () => assert.equal(stageCost('rare', 3, 1), 1e9));
 test('difficulty scales cost', () => assert.equal(stageCost('rare', 3, 1, 0.5), 5e8));

@@ -28,7 +28,7 @@ def check(root, home):
     required = {
         'herdr-app': 'Install Herdr and expose its CLI on PATH.',
         'hc': 'Install the Herdr core CLI and expose it on PATH.',
-        'go': 'Install Go matching helper/go.mod or newer.',
+        'go': 'Install Go matching helpers/poke/go.mod or newer.',
         'claude': 'Install Claude Code and expose its executable on PATH.',
         'codex': 'Install a Codex CLI with --no-daemon support.',
         'git': 'Install Git / Command Line Tools.',
@@ -50,13 +50,13 @@ def check(root, home):
         except (OSError, subprocess.TimeoutExpired, RuntimeError) as exc:
             errors.append(f'{name} cannot run ({exc}). {required[name]}')
     if 'go' in versions:
-        needed = re.search(r'^go\s+(\d+\.\d+(?:\.\d+)?)$', (root/'helper/go.mod').read_text(), re.M).group(1)
+        needed = re.search(r'^go\s+(\d+\.\d+(?:\.\d+)?)$', (root/'helpers/poke/go.mod').read_text(), re.M).group(1)
         actual = re.search(r'\bgo(\d+\.\d+(?:\.\d+)?)\b', versions['go'])
         def version(v):
             parts = tuple(map(int, v.split('.')))
             return parts + (0,) * (3 - len(parts))
         if not actual or version(actual.group(1)) < version(needed):
-            errors.append(f'Go {needed} or newer must be installed locally; see helper/go.mod.')
+            errors.append(f'Go {needed} or newer must be installed locally; see helpers/poke/go.mod.')
     if found['codex']:
         try:
             if not re.search(r'(?<![\w-])--no-daemon(?![\w-])', output(['codex', '--help'])):
@@ -85,7 +85,7 @@ def check(root, home):
 
 
 if __name__ == '__main__':
-    errors, warnings = check(Path(__file__).resolve().parents[1], Path.home())
+    errors, warnings = check(Path(__file__).resolve().parents[2], Path.home())
     for message in warnings:
         print('warn    ' + message)
     for message in errors:

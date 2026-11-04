@@ -1,6 +1,15 @@
 {
-  "name": "herdr-poke-mod",
+  "name": "herdr",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test tests/mod-lib/*.test.mjs" }
+  "scripts": {
+    "test": "node --test tests/*/mod-lib/*.test.mjs",
+    "test:poke": "node --test tests/poke/mod-lib/*.test.mjs",
+    "test:poke:helper": "cd helpers/poke && go test ./...",
+    "test:poke:scripts": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/poke/scripts",
+    "preflight:poke": "python3 scripts/poke/preflight.py",
+    "build:poke": "bash scripts/poke/build.sh",
+    "install:poke": "bash scripts/poke/install.sh",
+    "uninstall:poke": "bash scripts/poke/uninstall.sh"
+  }
 }

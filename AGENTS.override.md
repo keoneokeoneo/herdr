@@ -1,4 +1,4 @@
-# herdr-poke
+# Personal Herdr
 
 This file replaces Herdr's generated `AGENTS.md` for Codex in this repo. That file is
 still here and is the Herdr API reference: search it for what you need, never edit it.

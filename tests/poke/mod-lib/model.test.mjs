@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { URG, byUrgency, groups, waiting, chips, tabPill, typeOf, TYPES } from '../../mods/poke/lib/model.js';
+import { URG, byUrgency, groups, waiting, chips, tabPill, typeOf, TYPES } from '../../../mods/poke/lib/model.js';
 
 const M = 60e3, now = 1_000_000_000;
 test('URG order', () => assert.deepEqual(URG, { blocked: 0, working: 1, done: 2, idle: 3 }));

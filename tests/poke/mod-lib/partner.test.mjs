@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { excluded, pickPartner, activePartners } from '../../mods/poke/lib/partner.js';
+import { excluded, pickPartner, activePartners } from '../../../mods/poke/lib/partner.js';
 
 test('excluded = dex chains + active line', () => {
   const s = excluded({ dex: [{ chainOrder: [1, 2, 3] }], active: { plannedPathIDs: [4, 5, 6] } });

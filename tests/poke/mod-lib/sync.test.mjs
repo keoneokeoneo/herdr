@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ptbChanged, companionChanged, coalesce } from '../../mods/poke/lib/sync.js';
+import { ptbChanged, companionChanged, coalesce } from '../../../mods/poke/lib/sync.js';
 
 const D = '/Users/k/Library/Application Support/PokeTokenBar';
 

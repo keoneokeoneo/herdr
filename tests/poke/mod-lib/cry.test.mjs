@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cryFor, retryDue } from '../../mods/poke/lib/model.js';
+import { cryFor, retryDue } from '../../../mods/poke/lib/model.js';
 
 test('cryFor plays the partner cry when its mp3 is on disk', () => {
   assert.equal(cryFor(36, ['36.gif', '36.mp3']), 'poke-assets/36.mp3');
@@ -23,7 +23,7 @@ test('retryDue backs off per id: 1m, 2m, 4m … capped at 30m', () => {
 });
 
 test('asset completeness requires a sprite, cry and name', async () => {
-  const { assetsMissing } = await import('../../mods/poke/lib/model.js');
+  const { assetsMissing } = await import('../../../mods/poke/lib/model.js');
   assert.equal(assetsMissing(7, ['7.gif'], {'7': 'Squirtle'}), true);
   assert.equal(assetsMissing(7, ['7.gif', '7.mp3'], {}), true);
   assert.equal(assetsMissing(7, ['7.png', '7.mp3'], {'7': 'Squirtle'}), false);

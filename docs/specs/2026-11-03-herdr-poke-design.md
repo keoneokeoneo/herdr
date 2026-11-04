@@ -77,7 +77,7 @@ The sections below are the v1 design. Where they differ from this list, this lis
   attach disable fallback. Assets are outside the mod. Repository publishing is
   permitted by the guide; the old local-only restriction below is historical.
 - **Migration preflight:** installation requires runnable Herdr/hc, Claude/Codex,
-  the local Go version required by `helper/go.mod`, and Codex `--no-daemon` support
+  the local Go version required by `helpers/poke/go.mod`, and Codex `--no-daemon` support
   before installation writes. Node/nvm, fonts and companion state are optional-feature
   warnings; login and new-machine UI validation remain manual.
 - **Install/undo:** creates missing config, adds the wrapper alias and PATH, refuses
@@ -180,7 +180,7 @@ Reference clones under the session scratchpad: `herdr-app`, `herdr-core`, `herdr
 - Repo = `~/.config/herdr-app/`, `git init` in place. **Local only for now**; later private on GitHub `keoneokeoneo` (fresh install: launch Herdr once → `git init` → `remote add` → `fetch` → `checkout`).
 - `.gitignore` everything Herdr writes/rewrites (`AGENTS.md`, `*.d.ts`, `icons/`, `frame/`, shipped themes/layouts/mods, `view.json`, `shared.json`, `data/`, `seen.json`, `installed.json`, `window*.json`, `telemetry/`, `update-notes*`, `*.sock`, `*.error`, `*.reset-*`, `jsconfig.json`). Track our layout, mods, `keys.json`, `settings.json`, helper source, assets, fonts, docs, scripts.
 - Docs live in `docs/specs/` (this file) and `docs/plans/`.
-- **Apply to Keno's real setup**: Claude `statusLine.command`, `~/.zshrc:46` alias, Herdr `settings.json` sounds, show the new layout. Back up each file first (timestamped, beside it); `scripts/uninstall.sh` restores all. Verify in a real Claude and a real Codex session.
+- **Apply to Keno's real setup**: Claude `statusLine.command`, `~/.zshrc:46` alias, Herdr `settings.json` sounds, show the new layout. Back up each file first (timestamped, beside it); `scripts/poke/uninstall.sh` restores all. Verify in a real Claude and a real Codex session.
 - README: prerequisites, install, undo.
 - Commits: `~/.claude/commit-convention.md`; no AI signatures.
 

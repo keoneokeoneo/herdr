@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {telemetry} from '../../mods/poke/lib/telemetry.js';
+import {telemetry} from '../../../mods/poke/lib/telemetry.js';
 const labels = {'poke.owner':'123','poke.provider':'codex','poke.session':'s1','poke.model':'gpt-test','poke.effort':'high','poke.ctx':'92'};
 test('rejects previous process, provider and unverified legacy labels',()=>{
   for(const [pid,provider,l] of [[124,'codex',labels],[123,'claude',labels],[123,'codex',{'poke.model':'old','poke.ctx':'92'}],[null,'codex',labels]]) {

@@ -1,4 +1,4 @@
-# herdr-poke
+# Personal Herdr
 
 @docs/guide.md
 

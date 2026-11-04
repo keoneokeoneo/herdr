@@ -5,7 +5,7 @@ description: Change or check the herdr-poke Herdr setup in ~/.config/herdr-app â
 
 # herdr-poke: change â†’ check â†’ look â†’ commit
 
-1. Read `docs/guide.md`. Use its "What lives where" table to pick the files, and open
+1. Read `docs/guide.md`, then `docs/modes/poke.md`. Use its "What lives where" table to pick the files, and open
    only those. Product intent and earlier decisions are in
    `docs/specs/2026-11-03-herdr-poke-design.md`. Herdr's API: search the generated
    `AGENTS.md` and `mods/poke/views/gpui-kit.d.ts`. Don't read them whole.
@@ -15,12 +15,12 @@ description: Change or check the herdr-poke Herdr setup in ~/.config/herdr-app â
    - forgetting the folded-sidebar form (`narrow()`) when changing a sidebar view;
    - a colour written as `"transparent"`.
 3. Logic changes get a failing test first: `npm test` for `mods/poke/lib`,
-   `cd helper && go test ./...` for the helper.
+   `cd helpers/poke && go test ./...` for the helper.
 4. After the edit:
    - Run `herdr-app check mods/poke` and `herdr-app status`. Expect `check passed` and
      `"errors": []`.
    - If the helper changed, rebuild it with
-     `cd helper && go build -o ~/.local/bin/herdr-poke .`.
+     `cd helpers/poke && go build -o ~/.local/bin/herdr-poke .`.
 5. Look at the result. Use `herdr-app shot`, or `screencapture -l <Herdr window id>` when
    the traffic lights matter. Crop to the region you changed before reading it. If you
    changed the sidebar, check it both expanded (262px) and folded (92px), then restore
@@ -32,5 +32,5 @@ description: Change or check the herdr-poke Herdr setup in ~/.config/herdr-app â
    for example a sprite that was not on screen.
 
 If the change adds or moves a responsibility, a file, or a gotcha, update
-`docs/guide.md` in the same commit. If the product behaviour changes, also update
+`docs/modes/poke.md` in the same commit. If the product behaviour changes, also update
 "Current state" in the spec.
