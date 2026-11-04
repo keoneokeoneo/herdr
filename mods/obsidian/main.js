@@ -102,7 +102,7 @@ export default class Obsidian extends View {
     root.child(h_flex().items_center().justify_between().gap(8)
       .child(div().font_semibold().truncate().child(displayName(this.root) || 'Choose a vault'))
       .child(h_flex().gap(6).child(button('vault-picker', 'Vault', cx => { this.choosing = !this.choosing; cx.notify(); }))
-        .when(this.embedded, el => el.child(button('notes-close', '×', () => run('layout.hide', { id: 'poke-panel' }))))));
+        .when(this.embedded, el => el.child(button('notes-close', '×', () => run('layout.hide', { id: 'panel' }))))));
     if (this.choosing) {
       root.child(v_flex().h(Math.min(180, this.vaults.length * 36)).flex_none().overflow_y_scrollbar().gap(4).children(this.vaults.map((v, i) =>
         button(`vault-${i}`, displayName(v), cx => this.select(v, cx)))));
@@ -143,7 +143,7 @@ export default class Obsidian extends View {
     root.child(h_flex().flex_1().min_h(0).gap(12).child(list).child(reader));
     root.child(h_flex().justify_between().text_size(11).text_color(t.muted)
       .child(div().child(`${this.rows.length} shown · ${this.total || 0} notes${this.limited ? ' · Refine your search' : ''} · Read only`))
-      .when(!this.embedded, el => el.child(button('poke-layout', 'Back to Poke', () => run('layout.switch', { name: 'poke' })))));
+      .when(!this.embedded, el => el.child(button('back-layout', 'Back', () => run('layout.switch', { name: 'base' })))));
     return root;
   }
 }
