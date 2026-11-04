@@ -1,5 +1,6 @@
 // Package state owns the herdr-poke state directory: small JSON files that the
-// helper writes and the Herdr mods read (limits.json, usage.json, label caches).
+// helper writes (label caches, usage ledger and offsets, locks). The neutral usage data
+// contract (claude.json, codex.json, daily.json) lives in UsageDir().
 package state
 
 import (
@@ -25,8 +26,6 @@ type ProviderLimits struct {
 	Windows []Window `json:"windows"`
 	Updated int64    `json:"updated"`
 }
-
-const limitsFile = "limits.json"
 
 // lockWait bounds how long a writer waits for another one, so a stopped
 // process holding a lock can never hang a statusline.
@@ -150,70 +149,6 @@ func withLockIn(dir, lockName string, fn func() error) error {
 	}
 	defer syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
 	return fn()
-}
-
-// UpdateLimits sets limits.json[provider] = l, leaving every other provider's
-// entry untouched. The read-modify-write runs under a flock, and the file is
-// replaced atomically. A missing or corrupt limits.json starts from empty.
-func UpdateLimits(provider string, l ProviderLimits) error {
-	if l.Windows == nil {
-		l.Windows = []Window{} // serialise as [] rather than null
-	}
-	entry, err := json.Marshal(l)
-	if err != nil {
-		return err
-	}
-	return WithLock("limits.lock", func() error {
-		all := map[string]json.RawMessage{}
-		if b, err := os.ReadFile(filepath.Join(Dir(), limitsFile)); err == nil {
-			if json.Unmarshal(b, &all) != nil || all == nil {
-				all = map[string]json.RawMessage{}
-			}
-		}
-		all[provider] = entry
-		return WriteJSON(limitsFile, all)
-	})
-}
-
-// MergeLimits is UpdateLimits for a provider reported by several processes at
-// once (one Claude statusline per session). For a window with the same reset
-// time it keeps the larger used %, so an older session can't move it back,
-// and it skips the write entirely when no window changed: every rewrite wakes
-// the mod's folder watch. wrote reports whether limits.json was written.
-func MergeLimits(provider string, l ProviderLimits) (wrote bool, err error) {
-	err = WithLock("limits.lock", func() error {
-		all := map[string]json.RawMessage{}
-		if b, e := os.ReadFile(filepath.Join(Dir(), limitsFile)); e == nil {
-			if json.Unmarshal(b, &all) != nil || all == nil {
-				all = map[string]json.RawMessage{}
-			}
-		}
-		var old ProviderLimits
-		if raw, ok := all[provider]; ok {
-			_ = json.Unmarshal(raw, &old)
-		}
-		merged := make([]Window, 0, len(l.Windows))
-		for _, w := range l.Windows {
-			for _, o := range old.Windows {
-				if o.Minutes == w.Minutes && o.ResetsAt == w.ResetsAt && o.Used > w.Used {
-					w.Used = o.Used
-				}
-			}
-			merged = append(merged, w)
-		}
-		if sameWindows(old.Windows, merged) && old.Plan == l.Plan {
-			return nil
-		}
-		l.Windows = merged
-		entry, e := json.Marshal(l)
-		if e != nil {
-			return e
-		}
-		all[provider] = entry
-		wrote = true
-		return WriteJSON(limitsFile, all)
-	})
-	return wrote, err
 }
 
 func sameWindows(a, b []Window) bool {

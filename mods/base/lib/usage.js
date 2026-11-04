@@ -1,4 +1,4 @@
-// usage.json uses local calendar dates and is normally collected every 10 minutes.
+// daily.json uses local calendar dates and is normally collected every 10 minutes.
 import { ago } from './format.js';
 
 const STALE_AFTER = 20 * 60_000;

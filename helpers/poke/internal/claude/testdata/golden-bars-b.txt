@@ -1,1 +1,0 @@
-[90mdev@example.com[0m[2m · [0m[34mExample Org[0m[2m | [0m[96m[1m~/repos/nogit[0m[2m | [0m[35m[1mOpus 4.7[0m[2m | [0m[31m5h ▰▰▰▰▱ 80%[0m[2m (1h 0m)[0m  [31m7d ▰▰▰▰▰ 100%[0m[2m (1d 1h 1m)[0m

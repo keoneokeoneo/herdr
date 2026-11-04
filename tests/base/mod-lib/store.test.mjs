@@ -27,27 +27,9 @@ test('store ignores unrelated files and unchanged snapshots, but publishes chang
   value = 2;
   wake(['/state/limits.json']);
   await settle();
+  assert.equal(notices, 1, 'legacy limits.json no longer triggers a load');
+  wake(['/state/claude.json']);
+  await settle();
   assert.equal(notices, 2);
-  delete globalThis.__pokeStoreTest;
-});
-
-test('store also watches extra folders and reacts to the neutral usage files', async () => {
-  const source = (await readFile(new URL('../../../mods/base/views/store.js', import.meta.url), 'utf8'))
-    .replace('import { home, readTextFile, watchFolder } from "herdr";',
-      'const { home, readTextFile, watchFolder } = globalThis.__pokeStoreTest;');
-  const wakes = {};
-  globalThis.__pokeStoreTest = { home: () => '/home', readTextFile: async () => null,
-    watchFolder: (dir) => new Promise((resolve) => { wakes[dir] = resolve; }) };
-  const { keepFresh } = await import('data:text/javascript;base64,' + Buffer.from(source + '\n// extra').toString('base64'));
-  let loads = 0, value = 1;
-  const cx = { notify: () => {}, spawn: (fn) => fn(cx), timer: { every: () => {} } };
-  const settle = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
-  keepFresh({}, cx, () => '/state', async (s) => { loads++; s.limits = { value }; }, [() => '/usage']);
-  await settle();
-  const before = loads;
-  value = 2;
-  wakes['/usage'](['/usage/claude.json']);
-  await settle();
-  assert.equal(loads, before + 1);
   delete globalThis.__pokeStoreTest;
 });

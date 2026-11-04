@@ -1,1 +1,0 @@
-[90mdev@example.com[0m[2m · [0m[34mExample Org[0m[2m | [0m[96m[1m~/repos/dirty[0m[2m | [0m[33mfeat/x[0m[33m●[0m[2m | [0m[35m[1mOpus 4.7[0m[35m:high[0m[2m | [0m[32mctx 45%[0m[2m | [0m[32m5h ▰▰▱▱▱ 42%[0m[2m (1h 25m)[0m  [31m7d ▰▰▰▰▱ 82%[0m[2m (2d 3h 4m)[0m[2m | [0m[95m[1mLearning[0m[2m | [0m[90m1h 2m[0m

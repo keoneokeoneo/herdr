@@ -1,5 +1,5 @@
-// herdr-poke is the helper behind the Herdr poke UI: Claude statusline,
-// Codex wrapper, usage aggregator and asset fetcher in one binary.
+// herdr-poke is the helper behind the Herdr UI: Codex wrapper, usage aggregator and
+// asset fetcher in one binary. (Claude limits come from the global statusline.)
 package main
 
 import (
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"herdr-poke/internal/assets"
-	"herdr-poke/internal/claude"
 	"herdr-poke/internal/codex"
 	"herdr-poke/internal/usage"
 )
@@ -17,10 +16,9 @@ import (
 const usageText = `usage: herdr-poke <command> [args]
 
 commands:
-  statusline   Claude Code statusLine.command (reads stdin JSON, prints the line)
   codex        run Codex under herdr-poke: herdr-poke codex -- <codex args>
                or mirror one started elsewhere: herdr-poke codex --attach <terminal>
-  usage        aggregate 14-day token usage into usage.json
+  usage        aggregate 14-day token usage into daily.json (the usage data contract folder)
   assets       fetch Pokemon and companion assets: assets <id> | --companion | --list | --dex | --normalize
 `
 
@@ -35,8 +33,6 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 2
 	}
 	switch args[0] {
-	case "statusline":
-		return claude.Run(stdin, stdout)
 	case "codex":
 		// herdr-poke codex -- codex --yolo --no-daemon: what follows "--" is the command.
 		cmd := args[1:]

@@ -23,7 +23,7 @@ const limitsProvider = "codex"
 
 // Wrap is `herdr-poke codex -- <command> [args...]`. It runs the command (the
 // real codex) as a child that shares this process's terminal, mirrors what
-// Codex logs into terminal labels and limits.json while it runs, and returns
+// Codex logs into terminal labels and codex.json (usage contract) while it runs, and returns
 // the child's exit status (128+n if a signal n killed it).
 //
 // Codex draws its own screen and emits its own OSC 7501 state, so nothing is

@@ -3,7 +3,7 @@ import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme, run } from "herdr";
 import { rows } from "./data.js";
-import { keepFresh, STATE_DIR, WIN_LABEL } from "./store.js";
+import { keepFresh, WIN_LABEL } from "./store.js";
 import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, tokensM } from "../lib/format.js";
 import { usageState } from "../lib/usage.js";
@@ -11,7 +11,7 @@ import { waiting } from "../lib/model.js";
 import { start, jump, notes } from "../behaviours.js";
 
 export function init(s, cx) {
-  keepFresh(s, cx, STATE_DIR, loadUsage, [USAGE_DIR]);
+  keepFresh(s, cx, USAGE_DIR, loadUsage);
   start(s, cx);
   cx.timer.every(60000, (cx) => cx.notify());
 }

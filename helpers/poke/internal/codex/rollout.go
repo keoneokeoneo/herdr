@@ -1,5 +1,5 @@
 // Package codex reads Codex session logs (rollouts) and runs Codex under
-// herdr-poke, mirroring what the log says into terminal labels and limits.json.
+// herdr-poke, mirroring what the log says into terminal labels and codex.json.
 package codex
 
 import (

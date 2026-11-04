@@ -27,18 +27,20 @@ func TestUnknownSubcommandPrintsUsageAndExits2(t *testing.T) {
 func TestUsageListsEverySubcommand(t *testing.T) {
 	var out, errOut bytes.Buffer
 	run([]string{"nope"}, strings.NewReader(""), &out, &errOut)
-	for _, cmd := range []string{"statusline", "codex", "usage", "assets"} {
+	for _, cmd := range []string{"codex", "usage", "assets"} {
 		if !strings.Contains(errOut.String(), cmd) {
 			t.Errorf("usage does not mention %q: %q", cmd, errOut.String())
 		}
 	}
 }
 
-func TestStatuslineSubcommandAlwaysExitsZero(t *testing.T) {
+func TestStatuslineSubcommandIsGone(t *testing.T) {
 	var out, errOut bytes.Buffer
-	code := run([]string{"statusline"}, strings.NewReader("garbage"), &out, &errOut)
-	if code != 0 || out.String() != "\n" || errOut.Len() != 0 {
-		t.Errorf("code=%d stdout=%q stderr=%q", code, out.String(), errOut.String())
+	if code := run([]string{"statusline"}, strings.NewReader("{}"), &out, &errOut); code != 2 {
+		t.Errorf("statusline exit %d, want 2 (the global Claude statusline owns that now)", code)
+	}
+	if strings.Contains(errOut.String(), "statusline") && strings.Contains(errOut.String(), "reads stdin") {
+		t.Errorf("usage still advertises statusline: %q", errOut.String())
 	}
 }
 

@@ -1,1 +1,0 @@
-{"model":{"id":"claude-opus-4-7","display_name":"Opus 4.7"},"cwd":"__HOME__/repos/nogit","context_window":{"total_input_tokens":1,"context_window_size":200000,"current_usage":{"input_tokens":0,"output_tokens":7,"cache_creation_input_tokens":0,"cache_read_input_tokens":160000},"used_percentage":0},"cost":{"total_duration_ms":3600000}}

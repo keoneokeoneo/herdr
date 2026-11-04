@@ -2,14 +2,14 @@
 import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme } from "herdr";
-import { keepFresh, STATE_DIR, WIN_LABEL, win } from "./store.js";
+import { keepFresh, WIN_LABEL, win } from "./store.js";
 import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
 import { usageState } from "../lib/usage.js";
 
 export function init(s, cx) {
   cx.timer.every(60000, (cx) => cx.notify());
-  keepFresh(s, cx, STATE_DIR, loadUsage, [USAGE_DIR]);
+  keepFresh(s, cx, USAGE_DIR, loadUsage);
 }
 
 const kv = (t, k, v, color) => h_flex().text_size(11).child(div().text_color(t.muted).child(k)).child(div().flex_1())
