@@ -1,6 +1,11 @@
 # Layer separation: usage, shell, Obsidian and Poke
 
-Status: draft for Keno's approval. Nothing here is implemented.
+Status: implemented. This is the dated design record; the living docs are `docs/guide.md`
+and `docs/modes/`. Where they differ, the living docs win. Differences found while building:
+the jump command is `base.jump` and the notes command is `base.notes` (not `shell.jump` /
+`obsidian.notes`); `SeedDaily` was dropped (the ledger recomputes all 14 days every run);
+`UsageDir` never follows `HERDR_POKE_STATE`; the plan's rulings list is in the branch's
+final report.
 
 ## Intent
 
