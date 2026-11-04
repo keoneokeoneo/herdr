@@ -15,7 +15,7 @@ The sections below are the v1 design. Where they differ from this list, this lis
   fill one square canvas, because Herdr stretches each frame to its box. Avatars fit the
   sprite into the circle; no crop, no zoom.
 - **Animation:** every sprite animates (companion, all agents, Dex), not only working
-  agents. Each sprite is wrapped in a sub-pixel native loop so GIF frames keep advancing.
+  agents. GIF sprites are wrapped in a sub-pixel native loop; static PNGs do not request animation redraws.
 - **Sidebar:**
   - The brand row is a pokeball and "Herdr", with search and a fold button.
   - Folded, the sidebar becomes a 92px rail:
@@ -25,7 +25,8 @@ The sections below are the v1 design. Where they differ from this list, this lis
     - A › button unfolds it.
   - Traffic lights are centred on the brand row (`traffic_lights: [12, 10]`).
 - **Spaces** have a + (new space). Spaces, tabs and agents have right-click menus (the
-  shipped `menu` mod), rename on double-click, and drag to reorder. Agents can be pinned.
+  shipped `menu` mod). Expanded spaces and tabs have double-click rename and drag
+  reorder; agents and folded spaces do not. Agents can be pinned.
 - **Dex** Caught is a grid of sprite tiles, using pokeTokenBar's own art and ✦ for shiny.
   Active lists unique assigned partners from currently open agent sessions across spaces,
   including idle/waiting sessions. It refreshes every 2 seconds and removes partners
@@ -37,9 +38,10 @@ The sections below are the v1 design. Where they differ from this list, this lis
   Both provider cards omit plan names; internal identifiers such as `prolite` are not displayed.
 - **Codex menu launch:** `programs.json` starts `herdr-poke codex -- codex --yolo --no-daemon` directly. The menu launcher does not expand zsh aliases. Existing sessions keep their original launch mode.
 - **Codex labels without the wrapper:** a Codex started by `hc run` or a script gets
-  `herdr-poke codex --attach <t>`, spawned by the mod when a Codex row has no model.
-  It finds the rollout via `lsof` and holds a per-terminal lock, so it never doubles up
-  with the wrapper.
+  `herdr-poke codex --attach <t>`, probed by the mod every minute even when a Codex row retains model labels.
+  It finds the rollout via `lsof`; both attach and wrapper require a per-terminal
+  flock before monitoring. Attach rechecks foreground every 5 seconds. This supports
+  local bare Codex, not remote terminal PIDs.
 - **Terminals started by the hc server:**
   - There are no permission prompts. The global defaults are Codex
     `approval_policy="never"` with `sandbox_mode="danger-full-access"`, and Claude
@@ -48,6 +50,22 @@ The sections below are the v1 design. Where they differ from this list, this lis
 - **Fonts:** terminal `Jetendard` at 10, UI `IBM Plex Sans KR`. The theme uses the One
   Double Dark ANSI palette.
 - The egg state (no active companion) has its own static card.
+- **Post-review corrections:** missing cries/names retry independently of sprite
+  presence. Dex caches shiny separately and normalizes only newly copied GIFs.
+  Status bar uses Session/Weekly and omits windows the provider does not report.
+- **v1 features deferred:** partner-based terminal renaming, pane footer with
+  dirty/ahead/type details, review completion labels (`N to fix` / `clean`),
+  and a selectable by-repository type mode. Existing review links still work.
+- **Data differences from v1:** Today in Usage/status comes from the 10-minute usage
+  aggregation; the companion's Fed today comes from PTB. Codex resume uses open-file
+  lookup, not SQLite. Legacy fallback spans -0.5 to +10 seconds; `--no-daemon` and
+  attach disable fallback. Assets are outside the mod. Repository publishing is
+  permitted by the guide; the old local-only restriction below is historical.
+- **Install/undo:** creates missing config, adds the wrapper alias and PATH, refuses
+  custom aliases, journals before configuration edits, and records installed-file
+  ownership. Uninstall restores owned files, preserves user replacements and leaves
+  the selected layout, assets, state and backups intact. Security defaults and review
+  skills remain manual. Jetendard is a separate font prerequisite.
 
 ## Intent
 
