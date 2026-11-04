@@ -65,6 +65,7 @@ export function render(st, _cx) {
       .bg(panelShown ? t.selected : "#00000000").text_color(panelShown ? t.foreground : t.muted)
       .hover((x) => x.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+      .tooltip(panelShown ? "Hide the right panel (⌘K)" : "Show the right panel (⌘K)")
       .on_click(() => run("layout.toggle", { id: "panel" }))
       .child(svg("mods/workspace-chrome/panel-right.svg").size(15)));
 }

@@ -12,6 +12,9 @@ function find(node, id) {
   return null;
 }
 
+// Tabs with a key of their own say so on hover.
+const KEY = { obsidian: "Notes (⌘⇧O)" };
+
 export function render() {
   const t = theme();
   const tabs = tabsFrom(props());
@@ -23,6 +26,7 @@ export function render() {
     head.child(div().id(`ptab-${id}`).flex_1().py(4).rounded(6).text_center().text_size(11).font_weight(600)
       .bg(on ? t.raised : "#00000000").text_color(on ? t.foreground : t.muted).cursor_pointer()
       .hover((x) => x.text_color(t.foreground))
+      .tooltip(KEY[id] ?? label)
       .on_click(() => run("layout.select", { stack, child: id }))
       .child(label));
   }

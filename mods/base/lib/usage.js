@@ -44,3 +44,31 @@ export function pace(w, minutes, nowMs) {
   const hit = rate > 0 && w.used < 100 ? (100 - w.used) / rate : null;
   return { atReset, hitsInSec: hit != null && hit < left ? Math.round(hit) : null };
 }
+
+// How close a window is to its limit; views colour the number, not the bar (the bar keeps the provider colour).
+export const level = (used) => (used >= 80 ? 'limit' : used >= 60 ? 'high' : null);
+
+const NAMES = { claude: 'Claude', codex: 'Codex' };
+const WIN = { 300: 'session', 10080: 'weekly' };
+
+// Alerts not yet shown (keys in `seen`): a live window at 80%+, or one that will hit 100% before it resets.
+// Keys carry resets_at, so each new window can alert again.
+export function limitAlerts(limits, nowMs, seen) {
+  const out = [];
+  for (const [prov, p] of Object.entries(limits ?? {})) {
+    for (const w of p?.windows ?? []) {
+      if (!WIN[w.minutes] || !(w.resets_at * 1000 > nowMs)) continue;
+      const base = `${prov}:${w.minutes}:${w.resets_at}`;
+      const name = `${NAMES[prov] ?? prov} ${WIN[w.minutes]}`;
+      if (w.used >= 80) {
+        if (!seen.includes(`${base}:80`)) out.push({ key: `${base}:80`, title: `${name} at ${Math.round(w.used)}%`, level: 'warning' });
+        continue;
+      }
+      const p2 = pace(w, w.minutes, nowMs);
+      if (p2?.hitsInSec != null && !seen.includes(`${base}:pace`)) {
+        out.push({ key: `${base}:pace`, title: `${name} may hit its limit before it resets`, level: 'warning' });
+      }
+    }
+  }
+  return out;
+}

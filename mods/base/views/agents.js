@@ -42,7 +42,7 @@ export function render(s) {
   const all = rows();
   const g = groups(all);
   const list = v_flex().size_full().gap(2).px(8).py(8).bg(t.chrome).overflow_y_scroll();
-  if (narrow()) return railList(t, list.px(0).items_center().gap(6), g);
+  if (narrow()) return railList(t, list.px(0).items_center().gap(6), g, s);
   list.child(div().px(6).pb(2).text_size(10).font_weight(700).text_color(t.dim).child("AGENTS"));
   if (!all.length) list.child(div().px(6).text_size(11).text_color(t.dim).child("No agents yet. Start claude or codex in a pane."));
   for (const [k, title, tone] of TITLES) {
@@ -64,13 +64,20 @@ export function render(s) {
 }
 
 // Folded sidebar: faces only, groups split by a short tinted rule.
-function railList(t, list, g) {
+function railList(t, list, g, s) {
   let first = true;
   for (const [k, , tone] of TITLES) {
     const items = g[k];
     if (!items.length) continue;
     if (!first) list.child(div().w(20).h(2).my(2).rounded_full().bg(alpha(t[tone] ?? t.dim, "66")));
     first = false;
+    // Idle faces fold into a count, as in the wide list.
+    if (k === "idle" && !s.idleOpen) {
+      list.child(div().id("rail-idle").size(28).rounded_full().flex().items_center().justify_center().bg(t.raised)
+        .text_size(10).font_weight(700).text_color(t.muted).cursor_pointer().tooltip(`${items.length} idle`)
+        .on_click((_e, cx) => { s.idleOpen = true; cx.notify(); }).child(`+${items.length}`));
+      continue;
+    }
     for (const r of [...items].sort((a, b) => (b.pinned - a.pinned) || (a.since - b.since)))
       list.child(div().id(`ag-${r.address}`).p(4).rounded(10).bg(r.focused ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()
         .on_click(() => run("agent.focus", { terminal: r.address }))

@@ -5,7 +5,7 @@ import { theme } from "herdr";
 import { keepFresh, WIN_LABEL, win } from "./store.js";
 import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
-import { usageState, dailySummary, pace } from "../lib/usage.js";
+import { usageState, dailySummary, pace, level } from "../lib/usage.js";
 import { PROV } from "./ui.js";
 
 export function init(s, cx) {
@@ -34,12 +34,15 @@ function limitCard(t, name, prov, now, color, icon) {
     if (prov && !w) continue;
     const ok = live(w, now);
     const pct = ok ? Math.min(100, w.used) : 0;
-    const barC = pct >= 80 ? t.blocked : pct >= 60 ? t.accent : color;
+    // The bar keeps the provider colour; closeness to the limit shows on the number.
+    const lv = ok ? level(w.used) : null;
+    const barC = color;
     c.child(v_flex().gap(3).pt(4)
       .child(h_flex().text_size(11)
         .child(div().text_color(t.muted).child(WIN_LABEL(m)))
         .child(div().flex_1())
-        .child(div().font_weight(600).text_color(ok ? t.foreground : t.dim).child(pctOrDash(w, now))))
+        .child(div().font_weight(600).text_color(!ok ? t.dim : lv === "limit" ? t.blocked : lv === "high" ? t.accent : t.foreground)
+          .child(`${lv === "limit" ? "⚠ " : ""}${pctOrDash(w, now)}`)))
       .child(div().w_full().h(5).rounded_full().bg(t.raised).overflow_hidden().child(div().h(5).rounded_full().bg(barC).w(`${Math.max(ok ? 2 : 0, Math.round(pct))}%`)))
       .child(h_flex().text_size(10)
         .child(div().text_color(ok ? t.muted : t.dim).child(ok ? `resets in ${resetsIn(w.resets_at, now)}` : w ? "no current data" : "no data yet"))
@@ -69,7 +72,8 @@ function usage(t, s) {
   for (const d of days) {
     const cl = Math.round((d.claude / max) * H), cx = Math.round((d.codex / max) * H);
     const empty = d.claude + d.codex === 0;
-    bars.child(v_flex().flex_1().justify_end().h(H)
+    bars.child(v_flex().id(`day-${d.date}`).flex_1().justify_end().h(H)
+      .tooltip(`${d.date} · Claude ${tokensM(d.claude)} · Codex ${tokensM(d.codex)}`)
       .child(div().w_full().h(cx).bg(PROV.codex).rounded_t(2))
       .child(div().w_full().h(cl).bg(PROV.claude))
       // A faint baseline keeps empty days visible as days, not as missing chart.

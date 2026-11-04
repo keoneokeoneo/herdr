@@ -72,3 +72,31 @@ test('stackAgents leaves idle agents out of the space row', () => {
   const list = [{ status: 'idle', address: 'a' }, { status: 'working', address: 'b' }, { status: 'blocked', address: 'c' }];
   assert.deepEqual(stackAgents(list).map((x) => x.address), ['c', 'b']);
 });
+
+import { limitAlerts, level } from '../../../mods/base/lib/usage.js';
+import { nextDone } from '../../../mods/base/lib/model.js';
+
+test('level marks 60% and 80% without touching the provider colour', () => {
+  assert.equal(level(59), null);
+  assert.equal(level(60), 'high');
+  assert.equal(level(80), 'limit');
+});
+
+test('limitAlerts fires once per window for 80% and for a forecast hit', () => {
+  const now = 1_000_000, ms = now * 1000;
+  const limits = {
+    claude: { windows: [{ minutes: 300, used: 85, resets_at: now + 2 * H }, { minutes: 10080, used: 10, resets_at: now + 100 * H }] },
+    codex: { windows: [{ minutes: 300, used: 50, resets_at: now + 4 * H }] }, // 1h in, 50%: hits before reset
+  };
+  const first = limitAlerts(limits, ms, []);
+  assert.deepEqual(first.map((a) => a.key), [`claude:300:${now + 2 * H}:80`, `codex:300:${now + 4 * H}:pace`]);
+  assert.match(first[0].title, /Claude session at 85%/);
+  assert.match(first[1].title, /Codex session may hit its limit/);
+  assert.deepEqual(limitAlerts(limits, ms, first.map((a) => a.key)), []);
+  assert.deepEqual(limitAlerts({}, ms, []), []);
+});
+
+test('nextDone picks the oldest finished agent to review', () => {
+  assert.equal(nextDone([{ status: 'done', since: 5, address: 'a' }, { status: 'done', since: 2, address: 'b' }, { status: 'idle', since: 1, address: 'c' }]).address, 'b');
+  assert.equal(nextDone([{ status: 'idle' }]), null);
+});

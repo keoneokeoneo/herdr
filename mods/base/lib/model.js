@@ -79,3 +79,6 @@ export function spaceMeta(space, mine) {
 
 // Faces on a space row: only agents that are doing something (blocked first).
 export const stackAgents = (list) => byUrgency(list.filter((a) => a.status !== 'idle'));
+
+// The finished agent to look at next (oldest first); viewing it clears its "new" mark.
+export const nextDone = (agents) => [...agents].filter((a) => a.status === 'done').sort((a, b) => a.since - b.since)[0] ?? null;

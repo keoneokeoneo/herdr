@@ -1,20 +1,30 @@
 // Status bar: both providers' limits, today's tokens, unread done, jump to waiting.
 import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { theme, run, layout } from "herdr";
+import { theme, run, layout, notify } from "herdr";
 import { rows } from "./data.js";
 import { keepFresh, WIN_LABEL } from "./store.js";
 import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, tokensM, live } from "../lib/format.js";
 import { usageShown } from "../lib/panel.js";
-import { usageState } from "../lib/usage.js";
-import { waiting, agentSummary } from "../lib/model.js";
+import { usageState, level, limitAlerts } from "../lib/usage.js";
+import { waiting, agentSummary, nextDone } from "../lib/model.js";
 import { start, jump, notes } from "../behaviours.js";
 
 export function init(s, cx) {
   keepFresh(s, cx, USAGE_DIR, loadUsage);
   start(s, cx);
   cx.timer.every(60000, (cx) => cx.notify());
+  // Limit alerts: once per window (keys carry resets_at), checked after each usage load settles.
+  s.alerted = [];
+  cx.timer.every(30000, () => alertLimits(s));
+}
+
+function alertLimits(s) {
+  for (const a of limitAlerts(s.limits, Date.now(), s.alerted)) {
+    s.alerted.push(a.key);
+    notify({ title: a.title, body: "Open the Usage tab for the forecast.", level: a.level, action: { name: "layout.show", args: { id: "panel" } } });
+  }
 }
 
 // Key commands (base.jump, base.notes) reach shown copies; only this always-shown copy acts on them.
@@ -33,10 +43,11 @@ function prov(t, name, icon, p, now) {
   const ws = (p?.windows ?? []).filter((w) => w.minutes === 300 || w.minutes === 10080);
   if (!ws.length) return el.child(div().text_color(t.dim).child("–"));
   ws.forEach((w, i) => {
-    const u = live(w, now) ? w.used : 0;
-    const c = u >= 80 ? t.blocked : u >= 60 ? t.accent : t.foreground;
+    const lv = live(w, now) ? level(w.used) : null;
+    const c = lv === "limit" ? t.blocked : lv === "high" ? t.accent : t.foreground;
     if (i) el.child(div().text_color(t.dim).child("·"));
-    el.child(div().text_color(t.muted).child(WIN_LABEL(w.minutes))).child(div().font_weight(u >= 60 ? 600 : 400).text_color(c).child(pctOrDash(w, now)));
+    el.child(div().text_color(t.muted).child(WIN_LABEL(w.minutes)))
+      .child(div().font_weight(lv ? 600 : 400).text_color(c).child(`${lv === "limit" ? "⚠ " : ""}${pctOrDash(w, now)}`));
   });
   return el;
 }
@@ -60,12 +71,21 @@ export function render(s, cx) {
   const sum = agentSummary(all);
   if (sum) bar.child(sep(t)).child(div().text_color(wait ? t.blocked : fresh ? t.accent : t.muted).child(sum));
   bar.child(div().flex_1());
+  // Finished agents: open the oldest one; viewing it clears its "new" mark.
+  const done = nextDone(all);
+  if (done && !wait) {
+    bar.child(div().id("review").flex_none().px(10).py(2).rounded_full().bg(t.accent + "26").text_color(t.accent).font_weight(600).cursor_pointer()
+      .tooltip("Show the oldest finished agent")
+      .on_click(() => run("agent.focus", { terminal: done.address }))
+      .child(`Review new · ${fresh}`));
+  }
   if (wait) {
     bar.child(div().id("jump").flex_none().px(10).py(2).rounded_full().bg(t.blocked + "26").text_color(t.blocked).font_weight(600).cursor_pointer()
+      .tooltip("Show the agent that has waited longest (⌘J)")
       .on_click(() => jump(s))
       .child(`Jump to waiting · ${wait}  ⌘J`));
   }
   bar.child(div().id("palette").flex_none().text_color(t.dim).cursor_pointer().hover((x) => x.text_color(t.foreground))
-    .on_click(() => run("app.palette")).child("⌘⇧P"));
+    .tooltip("Command palette").on_click(() => run("app.palette")).child("⌘⇧P"));
   return bar;
 }
