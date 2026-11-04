@@ -53,7 +53,7 @@ test('panel and status do not relabel yesterday as today; historical chart remai
     div: element, image: element, h_flex: element, v_flex: element,
     theme: () => ({}), props: () => ({ tab: 'usage' }), rows: () => [], waiting: () => [],
     win: () => null, live: () => false, pctOrDash: () => '–', WIN_LABEL: String,
-    tokensM, usageState, dailySummary, pace: () => null, resetsIn: () => '–', layout: () => null, usageShown,
+    tokensM, usageState, dailySummary, pace: () => null, resetsIn: () => '–', layout: () => null, usageShown, PROV: {}, agentSummary: () => '',
   };
   const originalNow = Date.now;
   Date.now = () => now;

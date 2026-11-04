@@ -110,6 +110,14 @@ def _journal(state):
     return json.loads(p.read_text()) if p.exists() else {"installed": {}}
 
 
+def _backup(path, rel, state, stamp):
+    """Copy a file about to be replaced to <state>/backups/<stamp>/<rel>. Never inside the
+    app home: a write under mods/ makes Herdr reload that mod."""
+    target = Path(state) / "backups" / stamp / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(path, target)
+
+
 def install(names, source, app, state, manifest, dry=False, run_installers=True, select=None):
     source, app, state = Path(source).resolve(), Path(app).resolve(), Path(state)
     order = resolve(names, manifest)
@@ -124,7 +132,7 @@ def install(names, source, app, state, manifest, dry=False, run_installers=True,
             if in_place or digest(src) == digest(dst):
                 continue
             if dst.exists():
-                shutil.copy2(dst, dst.with_name(dst.name + f".setup-backup-{stamp}"))
+                _backup(dst, rel, state, stamp)
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
             copied.append(rel)
@@ -137,7 +145,7 @@ def install(names, source, app, state, manifest, dry=False, run_installers=True,
         merged, kept = merge_keys(keys_src, current, layouts)
         if merged != current:
             if keys_path.exists():
-                shutil.copy2(keys_path, keys_path.with_name(f"keys.json.setup-backup-{stamp}"))
+                _backup(keys_path, "keys.json", state, stamp)
             _atomic_write(keys_path, _dump(merged))
     Path(state).mkdir(parents=True, exist_ok=True)
     _atomic_write(Path(state) / "setups.json", _dump(journal))
@@ -177,6 +185,20 @@ def main(argv=None):
             changed = [rel for rel, h in entry["files"].items() if digest(app / rel) != h]
             print(f"{name}: " + ("ok" if not changed else "modified or missing: " + ", ".join(changed)))
         return 0
+    if command == "update":
+        # Re-copy what is already installed (after a git pull or an edit); installers do not run again.
+        names = list(_journal(state)["installed"])
+        if not names:
+            print("nothing installed yet; use: setup.py install <name>...", file=sys.stderr)
+            return 1
+        summary = install(names, ROOT, app, state, manifest, dry=os.environ.get("HERDR_SETUP_DRY") == "1",
+                          run_installers=False)
+        print("updated: " + ", ".join(summary["order"]))
+        for rel in summary["copied"]:
+            print(f"copied   {rel}")
+        for line in summary["kept"]:
+            print(f"kept     {line}")
+        return 0
     if command == "install":
         select = None
         run_installers = True
@@ -204,7 +226,7 @@ def main(argv=None):
         for line in summary["kept"]:
             print(f"kept     {line}")
         return 0
-    print("usage: setup.py list | install <name>... | status", file=sys.stderr)
+    print("usage: setup.py list | install <name>... | update | status", file=sys.stderr)
     return 2
 
 

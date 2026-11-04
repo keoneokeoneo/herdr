@@ -8,7 +8,7 @@ import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, tokensM, live } from "../lib/format.js";
 import { usageShown } from "../lib/panel.js";
 import { usageState } from "../lib/usage.js";
-import { waiting } from "../lib/model.js";
+import { waiting, agentSummary } from "../lib/model.js";
 import { start, jump, notes } from "../behaviours.js";
 
 export function init(s, cx) {
@@ -56,7 +56,9 @@ export function render(s, cx) {
   bar.child(h_flex().gap(6).child(div().text_color(t.muted).child("Today"))
       .child(div().text_color(t.foreground).child(today ? tokensM(today.claude + today.codex) : "–")));
   if (stale) bar.child(div().text_size(10).text_color(t.dim).child(updatedText));
-  if (fresh) bar.child(sep(t)).child(div().text_color(t.accent).child(`✓ ${fresh} new`));
+  // Agent counts keep the bar useful when the sidebar is folded or the limits are in the panel.
+  const sum = agentSummary(all);
+  if (sum) bar.child(sep(t)).child(div().text_color(wait ? t.blocked : fresh ? t.accent : t.muted).child(sum));
   bar.child(div().flex_1());
   if (wait) {
     bar.child(div().id("jump").flex_none().px(10).py(2).rounded_full().bg(t.blocked + "26").text_color(t.blocked).font_weight(600).cursor_pointer()

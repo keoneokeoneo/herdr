@@ -63,7 +63,7 @@
           "id": "agents",
           "type": "block",
           "size": {
-            "weight": 1
+            "weight": 2
           },
           "min": 90,
           "content": {

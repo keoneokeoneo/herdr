@@ -9,6 +9,7 @@
     "setup:list": "python3 scripts/setup.py list",
     "setup:install": "python3 scripts/setup.py install",
     "setup:status": "python3 scripts/setup.py status",
+    "setup:update": "python3 scripts/setup.py update",
     "test:poke": "node --test tests/poke/mod-lib/*.test.mjs",
     "test:poke:helper": "cd helpers/poke && go test ./...",
     "test:poke:scripts": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/poke/scripts",

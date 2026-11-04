@@ -47,3 +47,28 @@ test('usageShown is true only when the panel is open on the usage view', () => {
   assert.equal(usageShown({ id: 'root', children: [] }), false);
   assert.equal(usageShown(null), false);
 });
+
+import { agentSummary, spaceMeta, stackAgents } from '../../../mods/base/lib/model.js';
+test('pace stays quiet in the last 10% of a window', () => {
+  const now = 1_000_000;
+  assert.equal(pace({ used: 65, resets_at: now + 0.4 * H }, 300, now * 1000), null);
+});
+
+test('agentSummary counts what needs a look, in order of urgency', () => {
+  const r = (status) => ({ status });
+  assert.equal(agentSummary([r('working'), r('working'), r('blocked'), r('done'), r('idle')]), '1 waiting · 2 working · 1 new');
+  assert.equal(agentSummary([r('idle')]), '');
+  assert.equal(agentSummary([]), '');
+});
+
+test('spaceMeta shows the branch, else how many agents, never a bare path', () => {
+  assert.equal(spaceMeta({ branch: 'main', folder: '/Users/me' }, [{}, {}]), '⎇ main');
+  assert.equal(spaceMeta({ branch: null, folder: '/Users/me' }, [{}, {}]), '2 agents');
+  assert.equal(spaceMeta({ branch: null, folder: '/Users/me' }, [{}]), '1 agent');
+  assert.equal(spaceMeta({ branch: null, folder: '/Users/me' }, []), '');
+});
+
+test('stackAgents leaves idle agents out of the space row', () => {
+  const list = [{ status: 'idle', address: 'a' }, { status: 'working', address: 'b' }, { status: 'blocked', address: 'c' }];
+  assert.deepEqual(stackAgents(list).map((x) => x.address), ['c', 'b']);
+});

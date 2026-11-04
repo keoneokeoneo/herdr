@@ -8,6 +8,8 @@ import { spriteSrc, letterFor } from "../lib/avatar.js";
 export const C = {
   grass: "#86c97e", fire: "#f2a072", water: "#82b4f0", electric: "#efcf6e", psychic: "#ee9cc4", normal: "#a9adbb",
 };
+// Provider colours follow their icons (Claude orange, Codex blue).
+export const PROV = { claude: "#d97757", codex: "#8ec5f5" };
 export const tone = (t, name) => (name === "accent" ? t.accent : t[name] ?? C[name] ?? t.dim);
 export const alpha = (hex, aa) => (hex?.length === 7 ? hex + aa : hex);
 

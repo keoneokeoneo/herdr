@@ -2,9 +2,8 @@ import { div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme, props, panes, run, home } from "herdr";
 import { rows } from "./data.js";
-import { avatar, pill, SYMBOL, alpha, C } from "./ui.js";
+import { avatar, pill, SYMBOL, alpha, C, PROV } from "./ui.js";
 import { chips } from "../lib/model.js";
-import { ago } from "../lib/format.js";
 import { isWorktree } from "./tabs.js";
 
 const LABEL = { working: "Working", blocked: "Needs you", done: "Done", idle: "Idle" };
@@ -51,7 +50,7 @@ export function render(_s, _cx) {
   const col = t[r.status] ?? t.dim;
   let left = bar.child(avatar(r, { size: 24, key: "pane" }))
     .child(div().font_weight(700).text_color(t.foreground).flex_none().child(r.provider === "codex" ? "Codex" : r.provider === "claude" ? "Claude Code" : (r.program?.name ?? "Agent")))
-    .child(pill(`${SYMBOL[r.status] ?? ""} ${LABEL[r.status] ?? r.status} · ${ago(Date.now() - r.since)}`, col));
+    .child(pill(`${SYMBOL[r.status] ?? ""} ${LABEL[r.status] ?? r.status}`, col));
   for (const c of chips(r, Date.now())) left = left.child(pill(c.text, C[c.color] ?? t.accent, { size: 10 }));
   // Review link: reviewer → target, or target ← reviewer.
   const target = r.reviewOf && all.find((x) => x.address === r.reviewOf);
@@ -67,7 +66,7 @@ export function render(_s, _cx) {
   if (r.branch) right.child(div().font_family("IBM Plex Mono").text_color(isWorktree(r.cwd) ? "#8ec5f5" : t.dim).child(`${isWorktree(r.cwd) ? "⎇ " : ""}${r.branch}`));
   if (r.telemetryNote) right.child(div().text_color(t.dim).child(r.telemetryNote));
   if (r.model) right.child(div().child(r.model));
-  if (r.effort) right.child(pill(r.effort, r.provider === "claude" ? t.done : "#8ec5f5", { size: 10 }));
+  if (r.effort) right.child(pill(r.effort, PROV[r.provider] ?? t.accent, { size: 10 }));
   if (r.ctx != null) right.child(div().text_color(t.dim).child("ctx")).child(meter(t, r.ctx)).child(div().child(`${r.ctx}%`));
   return left.child(right).child(actions(t, props()?.pane, p.zoomed));
 }

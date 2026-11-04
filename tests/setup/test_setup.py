@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("setup_tool", REPO / "scripts" / "setup.py")
@@ -93,13 +94,30 @@ class SetupTests(unittest.TestCase):
         self.assertEqual(keys["layout:base"]["cmd-k"], "layout.toggle:panel")
         self.assertTrue(any("cmd-j" in k for k in summary["kept"]))
 
-    def test_differing_target_file_is_backed_up(self):
-        (self.app / "themes").mkdir()
-        (self.app / "themes" / "base.json").write_text("{}")
-        self.install(["obsidian"])
-        backups = list((self.app / "themes").glob("base.json.setup-backup-*"))
+    def test_differing_target_file_is_backed_up_outside_the_app_home(self):
+        # a write inside mods/ reloads the mod, so backups live in the state folder
+        (self.app / "mods" / "base" / "views").mkdir(parents=True)
+        (self.app / "mods" / "base" / "views" / "panel.js").write_text("old")
+        (self.app / "keys.json").write_text(json.dumps({"global": {}}))
+        self.install(["base"])
+        self.assertEqual([p for p in self.app.rglob("*") if "setup-backup" in p.name], [])
+        backups = list((self.state / "backups").glob("*/mods/base/views/panel.js"))
         self.assertEqual(len(backups), 1)
-        self.assertEqual(backups[0].read_text(), "{}")
+        self.assertEqual(backups[0].read_text(), "old")
+        self.assertEqual(len(list((self.state / "backups").glob("*/keys.json"))), 1)
+
+    def test_update_refreshes_only_installed_setups_without_installers(self):
+        env = {"HERDR_APP_HOME": str(self.app), "HERDR_SETUP_STATE": str(self.state), "HERDR_SETUP_DRY": "1"}
+        with patch.dict(os.environ, env):
+            self.assertEqual(S.main(["update"]), 1)  # nothing installed yet
+            self.install(["obsidian"])
+            (self.app / "mods/obsidian/main.js").write_text("stale")
+            with patch.object(S, "install", wraps=S.install) as spy:
+                self.assertEqual(S.main(["update"]), 0)
+            self.assertEqual(spy.call_args.args[0], ["obsidian"])
+            self.assertFalse(spy.call_args.kwargs["run_installers"])
+        self.assertEqual((self.app / "mods/obsidian/main.js").read_bytes(), (REPO / "mods/obsidian/main.js").read_bytes())
+        self.assertFalse((self.app / "mods/base").exists())
 
     def test_in_place_checkout_copies_nothing(self):
         summary = S.install(["base"], REPO, REPO, self.state, MANIFEST, dry=True, run_installers=False)

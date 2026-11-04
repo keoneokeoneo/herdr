@@ -33,12 +33,12 @@ export function dailySummary(days) {
 }
 
 // At the current rate, the share used when the window resets, and seconds until 100% (null if not before reset).
-// Too early in the window (under 10% elapsed) the rate is noise, so there is no forecast.
+// Too early in the window the rate is noise, and in its last 10% the forecast says nothing new.
 export function pace(w, minutes, nowMs) {
   const now = nowMs / 1000;
   if (!w || !(w.resets_at > now)) return null;
   const span = minutes * 60, left = w.resets_at - now, elapsed = span - left;
-  if (elapsed < span * 0.1) return null;
+  if (elapsed < span * 0.1 || left < span * 0.1) return null; // too early to tell, or about to reset anyway
   const rate = w.used / elapsed;
   const atReset = Math.round(w.used + rate * left);
   const hit = rate > 0 && w.used < 100 ? (100 - w.used) / rate : null;

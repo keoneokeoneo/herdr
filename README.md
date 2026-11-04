@@ -90,12 +90,13 @@ setup을 제거하려면 `~/.config/herdr-app`에서 해당 mod, 레이아웃, �
 npm run setup:list                               # setup 목록, 필요한 것, 설치 여부
 npm run setup:install -- base obsidian           # 이것들만 (필요한 것과 함께) 설치
 npm run setup:install -- base --select base      # 설치 후 Herdr를 해당 레이아웃으로 전환
+npm run setup:update                             # 이미 설치한 setup을 지금 체크아웃으로 다시 복사 (git pull 뒤)
 npm run setup:status                             # 설치된 setup과 파일 변경 여부
 ```
 
 `setup:install`은 선택한 리소스만 `~/.config/herdr-app`에 복사합니다(이 체크아웃이 이미 그 폴더이면
 복사하지 않습니다). 빠진 키 바인딩만 추가하고(이미 있는 다른 바인딩은 유지하고 알려 줍니다), 교체할
-파일은 백업하며, 한 일을 기록합니다. `poke`를 설치하면 `base`도 함께 설치되고, poke 전용 설치기는 마지막에
+파일은 `~/.local/state/herdr-app/backups/<시각>/`에 백업하며(mod 폴더 안에 쓰면 리로드되므로), 한 일을 기록합니다. `poke`를 설치하면 `base`도 함께 설치되고, poke 전용 설치기는 마지막에
 실행됩니다. `bash scripts/poke/install.sh`는 `poke`를 설치하는 것과 같습니다.
 
 ## 개발

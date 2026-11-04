@@ -5,17 +5,18 @@ import { h_flex, v_flex } from "gpui-base";
 import { theme, spaces, run, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, alpha } from "./ui.js";
-import { byUrgency, waiting } from "../lib/model.js";
+import { waiting, spaceMeta, stackAgents } from "../lib/model.js";
 
 function stack(list) {
-  const shown = byUrgency(list).slice(0, 4);
+  const active = stackAgents(list);
+  const shown = active.slice(0, 4);
   const row = h_flex().flex_none().items_center();
   shown.forEach((r, i) => {
     row.child(div().id(`sp-av-${r.address}`).ml(i ? -8 : 0).cursor_pointer()
       .on_click(() => run("agent.focus", { terminal: r.address }))
       .child(avatar(r, { size: 22, key: "sp", noBadge: true, still: true })));
   });
-  if (list.length > 4) row.child(div().ml(4).text_size(10).text_color(theme().dim).child(`+${list.length - 4}`));
+  if (active.length > 4) row.child(div().ml(4).text_size(10).text_color(theme().dim).child(`+${active.length - 4}`));
   return row;
 }
 
@@ -41,7 +42,7 @@ export function render(st) {
     const letter = (s.name || "?").trim().charAt(0).toUpperCase();
     const chipC = s.active ? t.accent : t.muted;
     let meta = h_flex().gap(6).items_center().text_size(10).text_color(t.dim)
-      .child(div().font_family("IBM Plex Mono").truncate().child(s.branch ? `⎇ ${s.branch}` : s.folder?.replace(/^.*\//, "") ?? ""));
+      .child(div().font_family("IBM Plex Mono").truncate().child(spaceMeta(s, mine)));
     if (wait) meta = meta.child(pill(`${wait} waiting`, t.blocked, { size: 9 }));
     if (fresh) meta = meta.child(pill(`${fresh} new`, t.accent, { size: 9 }));
     list.child(

@@ -63,3 +63,19 @@ export function placeLabel(name, { title, cwd, space } = {}) {
   const f = folderOf(cwd);
   return f && f !== space ? f : name || '';
 }
+
+// One line for the status bar: what needs a look, most urgent first; idle agents are not news.
+export function agentSummary(agents) {
+  const g = groups(agents);
+  return [[g.needs, 'waiting'], [g.working, 'working'], [g.done, 'new']]
+    .filter(([l]) => l.length).map(([l, w]) => `${l.length} ${w}`).join(' · ');
+}
+
+// Space row second line: the branch when there is one, else how many agents are in it.
+export function spaceMeta(space, mine) {
+  if (space?.branch) return `⎇ ${space.branch}`;
+  return mine.length ? `${mine.length} agent${mine.length === 1 ? '' : 's'}` : '';
+}
+
+// Faces on a space row: only agents that are doing something (blocked first).
+export const stackAgents = (list) => byUrgency(list.filter((a) => a.status !== 'idle'));
