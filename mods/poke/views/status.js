@@ -5,6 +5,7 @@ import { theme, run } from "herdr";
 import { rows } from "./data.js";
 import { keepFresh, loadUsage, STATE_DIR, WIN_LABEL } from "./store.js";
 import { pctOrDash, tokensM } from "../lib/format.js";
+import { usageState } from "../lib/usage.js";
 import { waiting } from "../lib/model.js";
 import { start } from "../behaviours.js";
 
@@ -35,12 +36,13 @@ export function render(s, cx) {
   const all = rows();
   const wait = waiting(all).length;
   const fresh = all.filter((r) => r.status === "done").length;
-  const today = s.usage?.days?.at(-1);
+  const { today, updatedText, stale } = usageState(s.usage, now);
   const bar = h_flex().size_full().items_center().gap(12).px(12).bg(t.chrome).border_t_1().border_color(t.border).text_size(11)
     .child(prov(t, "Claude", "icons/claude.svg", L.claude, now)).child(sep(t))
     .child(prov(t, "Codex", "icons/codex.svg", L.codex, now)).child(sep(t))
     .child(h_flex().gap(6).child(div().text_color(t.muted).child("Today"))
       .child(div().text_color(t.foreground).child(today ? tokensM(today.claude + today.codex) : "–")));
+  if (stale) bar.child(div().text_size(10).text_color(t.dim).child(updatedText));
   if (fresh) bar.child(sep(t)).child(div().text_color(t.accent).child(`✓ ${fresh} new`));
   bar.child(div().flex_1());
   if (wait) {

@@ -5,6 +5,7 @@ import { theme, shared, setShared, props } from "herdr";
 import { pill, sprite, C, alpha } from "./ui.js";
 import { keepFresh, loadUsage, readJSON, STATE_DIR, PTB_DIR, WIN_LABEL, win } from "./store.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
+import { usageState } from "../lib/usage.js";
 
 
 async function loadDex(s) {
@@ -53,10 +54,12 @@ function usage(t, s) {
     .child(limitCard(t, "Claude", L.claude, now, t.done, "icons/claude.svg"))
     .child(limitCard(t, "Codex", L.codex, now, "#8ec5f5", "icons/codex.svg"));
   const days = s.usage?.days ?? [];
-  const today = days.at(-1);
+  const { today, updatedText, stale } = usageState(s.usage, now);
   const tc = card(t).child(div().text_size(12).font_weight(700).text_color(t.foreground).child("Today"));
-  if (!today) return box.child(tc.child(div().text_size(10).text_color(t.dim).child("Run herdr-poke usage to collect.")));
-  tc.child(kv(t, "Claude", tokensM(today.claude), t.done)).child(kv(t, "Codex", tokensM(today.codex), "#8ec5f5"));
+  if (today) tc.child(kv(t, "Claude", tokensM(today.claude), t.done)).child(kv(t, "Codex", tokensM(today.codex), "#8ec5f5"));
+  else tc.child(div().text_size(10).text_color(t.dim).child("No usage recorded for today yet."));
+  tc.child(div().text_size(10).text_color(stale ? t.muted : t.dim).child(updatedText));
+  if (!days.length) return box.child(tc);
   const max = Math.max(1, ...days.map((d) => d.claude + d.codex));
   const avg = days.reduce((a, d) => a + d.claude + d.codex, 0) / Math.max(1, days.length);
   const bars = h_flex().h(60).items_end().gap(3).pt(6);

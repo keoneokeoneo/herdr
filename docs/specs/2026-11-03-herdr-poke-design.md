@@ -33,6 +33,9 @@ The sections below are the v1 design. Where they differ from this list, this lis
   when their last session disappears; it is not a cumulative encounter history.
 - **Right panel** tabs are Usage, Dex, Changes and Files. Changes and Files are Herdr's
   shipped mods. The panel toggle is at the right end of the tab bar, with `⌘K`.
+- **Usage freshness:** Today is selected by local calendar date; missing Today
+  keeps the history chart visible. The panel shows collection age, and the status
+  bar flags missing data or updates older than 20 minutes.
 - **Usage labels** are "Session" (5h) and "Weekly". A window a provider never reports is
   hidden, not shown as "–". Keno's Codex plan reports weekly only.
   Both provider cards omit plan names; internal identifiers such as `prolite` are not displayed.
