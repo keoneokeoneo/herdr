@@ -4,7 +4,8 @@ This repository owns a personal Herdr configuration with multiple layouts, mods 
 themes, organised as independent **setups**: [Base](modes/base.md) (the neutral sidebar,
 tab bar, usage bar and right panel), [Obsidian](modes/obsidian.md) (a vault reader) and
 Poke ([development](modes/poke.md), [installation](modes/poke-setup.md); Pokémon partners on top of
-Base). Read the setup's guide before changing its implementation.
+Base). Read the setup's guide before changing its implementation, and [Customizing Herdr](herdr-dev.md)
+for how Herdr loads these files, its traps and how to check a change.
 
 ## What lives where
 
@@ -16,6 +17,7 @@ Base). Read the setup's guide before changing its implementation.
 | Optional setup helper | `helpers/<name>/` (Poke's helper is an independent Go module) |
 | Setup installation tools | `scripts/<name>/` |
 | JavaScript and installer tests | `tests/<name>/mod-lib/`, `tests/<name>/scripts/`, `tests/setup/` |
+| Herdr how-to and traps | `docs/herdr-dev.md` |
 | Setup guide | `docs/modes/<name>.md` |
 | Design records and plans | `docs/specs/`, `docs/plans/` (dated history; the guides are the living docs) |
 | Shared keyboard, launcher and app settings | `keys.json`, `programs.json`, `settings.json` |

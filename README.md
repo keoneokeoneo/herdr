@@ -50,6 +50,8 @@ You need Herdr installed and started once, so that `~/.config/herdr-app` exists,
 Python 3 and Node.js for the installer and tests. Nothing here replaces your own files silently:
 the installer backs up whatever it would overwrite and never changes a key binding you already have.
 
+The repository is private; ask the owner for access first.
+
 ```sh
 git clone git@github.com:keoneokeoneo/herdr.git && cd herdr
 npm run setup:list                        # what exists, what it requires
@@ -98,7 +100,8 @@ runs last. `bash scripts/poke/install.sh` is the same as installing `poke`.
 
 ## Development
 
-Read [the repository guide](docs/guide.md) for conventions and how to add a setup.
+Read [the repository guide](docs/guide.md) for conventions and how to add a setup, and
+[Customizing Herdr](docs/herdr-dev.md) for how Herdr loads mods and layouts and what to check after a change.
 The repo keeps Herdr's native directory structure so it can live at
 `~/.config/herdr-app`. A checkout elsewhere is a source checkout, not an installed
 Herdr configuration: install the setups you want with the commands above.

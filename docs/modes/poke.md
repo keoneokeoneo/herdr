@@ -66,10 +66,9 @@ publishes the file list as shared `poke.sprites` so base can draw avatars. pokeT
 
 ## Gotchas (each one cost real time)
 
-- **Hot reload:** Herdr reloads a mod whenever any non-hidden file inside
-  `mods/<name>/` is written. Anything written at runtime goes in `poke-assets/` or
-  `~/.local/state/herdr-poke/` or `~/.local/state/herdr-app/usage/`. Writing into `mods/poke/` at runtime loops the reload
-  until QuickJS runs out of memory.
+General Herdr traps (hot reload, shipped mods, `setShared`, colours, traffic lights, the Dock and `hc` PATH) are in
+[Customizing Herdr](../herdr-dev.md). These are Poke's own:
+
 - **GIFs advance only when the window redraws.** `mods/poke/views/ui.js` `alive()` (and the copy in `mods/base/views/ui.js`) wraps a sprite in a
   sub-pixel native `.loop()` so it keeps animating. Static PNGs bypass this loop.
   An earlier local observation was about 3% CPU; this is not a measured budget
@@ -79,26 +78,6 @@ publishes the file list as shared `poke.sprites` so base can draw avatars. pokeT
   (`assets --normalize` for repair; download, companion copy and `assets --dex`
   normalize new sprites). Never show
   a raw GIF.
-- **macOS traffic lights:** `traffic_lights: [12, 10]` in the layout centres them on the
-  46px brand row. They span up to x≈80, so the brand row pads 96px and the folded
-  sidebar is 92px wide. Below 120px every sidebar view switches to its rail form
-  (`narrow()`).
-- **Colours:** `"transparent"` is not a colour; use `"#00000000"`.
-- **Start Herdr from the Dock,** never from a Claude shell. A herdr-core server started
-  there inherits `CLAUDE_CODE_CHILD_SESSION=1`, and every Claude in it stops saving
-  transcripts. Don't run `hc` from a Claude shell when no server is up.
-- **The hc server has a minimal PATH** (no nvm, no zsh aliases). Programs started by
-  `hc run` therefore:
-  - get node from the `~/.local/bin/{node,npm,npx}` shims (`scripts/poke/nvm-shim`);
-  - get no permission prompts from the global defaults (see "Outside the repo");
-  - get Codex labels from `--attach`.
-- **Shipped mods are restored on every start.** An edited one is moved to
-  `<name>-edited`. Clone a shipped mod instead of editing it. Reuse shipped behaviours
-  through commands: `openOverlay({mod:"menu"})`, `mod:"new-menu"`, `layout.toggle`,
-  `layout.resize`, `terminal.pin`, `app.palette`.
-- **`setShared` re-renders every view.** Only call it when the value really changed.
-  `cx.notify()` rebuilds its owning view and redraws the window. Hidden views keep
-  their timers after first display; native animation stops when hidden.
 - **Codex mirror ownership:** both wrapper and attach must acquire the terminal's
   flock before monitoring. Attach checks the terminal foreground every 5 seconds
   and exits if it changes or cannot be queried. A minute probe recovers a stopped

@@ -11,7 +11,7 @@ description: Change or check the Herdr setups in ~/.config/herdr-app — the neu
    where" table to pick the files, and open only those. Product intent and earlier decisions are in
    `docs/specs/2026-11-03-herdr-poke-design.md` and the layer split in `docs/specs/2026-11-04-layer-separation-design.md`. Herdr's API: search the generated
    `AGENTS.md`, `herdr.d.ts` and `gpui-kit.d.ts` in the installed home. Don't read them whole.
-2. Before editing, check the guide's Gotchas. The usual traps:
+2. Before editing, read the traps in `docs/herdr-dev.md` (and Poke's own Gotchas in `docs/modes/poke.md`). The usual traps:
    - writing into `mods/base/` or `mods/poke/` at runtime;
    - importing across mods (mods cannot; use shared state, labels, commands or the data files);
    - showing GIFs that are not wrapped in `alive()` or not normalized;
