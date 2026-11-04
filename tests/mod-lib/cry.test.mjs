@@ -21,3 +21,10 @@ test('retryDue backs off per id: 1m, 2m, 4m … capped at 30m', () => {
   for (let i = 0; i < 20; i++) retryDue(tried, 8, 1e12 + i * 31 * 60_000);
   assert.ok(tried.get(8).wait <= 30 * 60_000);
 });
+
+test('asset completeness requires a sprite, cry and name', async () => {
+  const { assetsMissing } = await import('../../mods/poke/lib/model.js');
+  assert.equal(assetsMissing(7, ['7.gif'], {'7': 'Squirtle'}), true);
+  assert.equal(assetsMissing(7, ['7.gif', '7.mp3'], {}), true);
+  assert.equal(assetsMissing(7, ['7.png', '7.mp3'], {'7': 'Squirtle'}), false);
+});

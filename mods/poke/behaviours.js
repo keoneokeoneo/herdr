@@ -3,7 +3,7 @@ import { hc, exec, home, appHome, run, shared, setShared, playSound, notify } fr
 import { rows } from "./views/data.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
 import { excluded, pickPartner, activePartners } from "./lib/partner.js";
-import { waiting, cryFor, retryDue } from "./lib/model.js";
+import { waiting, cryFor, retryDue, assetsMissing } from "./lib/model.js";
 import { say } from "./lib/voice.js";
 
 const HP = () => `${home()}/.local/bin/herdr-poke`;
@@ -69,7 +69,7 @@ async function step(s) {
     const was = s.prev.get(r.address);
     if (r.status === "blocked" && was && was !== "blocked") playSound(cryFor(r.partnerSet ? r.partner : null, sprites));
     // A partner whose sprite or cry never arrived (offline, API hiccup) is fetched again, with backoff.
-    if (r.partnerSet && !(sprites.includes(`${r.partner}.gif`) || sprites.includes(`${r.partner}.png`)) && retryDue(s.tried, r.partner, Date.now())) {
+    if (r.partnerSet && assetsMissing(r.partner, sprites, shared("poke.names")) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
     // A Codex started without the wrapper (hc run, scripts) has no model/ctx: mirror it after the fact.

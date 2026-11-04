@@ -51,3 +51,6 @@ export function retryDue(tried, id, nowMs) {
   tried.set(id, { at: nowMs, wait: t ? Math.min(30 * 60_000, t.wait * 2) : 60_000 });
   return true;
 }
+
+export const assetsMissing = (id, files, names) =>
+  !(files.includes(`${id}.gif`) || files.includes(`${id}.png`)) || !files.includes(`${id}.mp3`) || !names?.[id];
