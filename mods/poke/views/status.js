@@ -3,14 +3,16 @@ import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme, run } from "herdr";
 import { rows } from "./data.js";
-import { keepFresh, loadUsage, STATE_DIR, WIN_LABEL } from "./store.js";
+import { keepFresh, STATE_DIR, WIN_LABEL } from "./store.js";
+// Temporary cross-mod import; Task 4 moves these views into mods/base.
+import { loadUsage, USAGE_DIR } from "../../base/views/usagefiles.js";
 import { pctOrDash, tokensM } from "../lib/format.js";
 import { usageState } from "../lib/usage.js";
 import { waiting } from "../lib/model.js";
 import { start } from "../behaviours.js";
 
 export function init(s, cx) {
-  keepFresh(s, cx, STATE_DIR, loadUsage);
+  keepFresh(s, cx, STATE_DIR, loadUsage, [USAGE_DIR]);
   start(s, cx);
   cx.timer.every(60000, (cx) => cx.notify());
 }

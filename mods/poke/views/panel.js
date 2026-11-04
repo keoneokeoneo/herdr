@@ -3,7 +3,9 @@ import { div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, shared, setShared, props } from "herdr";
 import { pill, sprite, C, alpha } from "./ui.js";
-import { keepFresh, loadUsage, readJSON, STATE_DIR, PTB_DIR, WIN_LABEL, win } from "./store.js";
+import { keepFresh, readJSON, STATE_DIR, PTB_DIR, WIN_LABEL, win } from "./store.js";
+// Temporary cross-mod import; Task 4 moves these views into mods/base.
+import { loadUsage, USAGE_DIR } from "../../base/views/usagefiles.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
 import { usageState } from "../lib/usage.js";
 
@@ -18,7 +20,7 @@ async function loadDex(s) {
 
 export function init(s, cx) {
   cx.timer.every(60000, (cx) => cx.notify());
-  keepFresh(s, cx, STATE_DIR, async (s) => { await loadUsage(s); await loadDex(s); });
+  keepFresh(s, cx, STATE_DIR, async (s) => { await loadUsage(s); await loadDex(s); }, [USAGE_DIR]);
 }
 
 const kv = (t, k, v, color) => h_flex().text_size(11).child(div().text_color(t.muted).child(k)).child(div().flex_1())
