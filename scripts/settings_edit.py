@@ -6,7 +6,7 @@ uninstall: put back only what the manifest says this project changed, leaving ev
            other change (Claude Code rewrites its settings.json often) as it is.
 Writes are atomic (temp file + os.replace) and abort if the file changed under us.
 """
-import json, os, re, sys, tempfile
+import json, os, re, sys, tempfile, shlex, fcntl
 
 HOME = os.path.expanduser("~")
 APP = os.environ.get("HERDR_APP_HOME") or os.path.join(HOME, ".config", "herdr-app")
@@ -16,6 +16,7 @@ CLAUDE = os.path.join(HOME, ".claude", "settings.json")
 ZSHRC = os.path.join(HOME, ".zshrc")
 HERDR = os.path.join(APP, "settings.json")
 OLD_ALIAS = "alias codex='codex --yolo'"
+PATH_LINE = 'export PATH="$HOME/.local/bin:$PATH" # herdr-poke'
 NEW_ALIAS = "alias codex='herdr-poke codex -- codex --yolo --no-daemon'"
 
 
@@ -25,13 +26,14 @@ def read(path):
 
 
 def write_atomic(path, text, expect):
-    if read(path) != expect:
+    if (read(path) if os.path.exists(path) else None) != expect:
         sys.exit(f"abort: {path} changed while editing; run again")
     d = os.path.dirname(path)
+    os.makedirs(d, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=d, prefix=".herdr-poke-")
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(text)
-    os.chmod(tmp, os.stat(path).st_mode & 0o777)
+    os.chmod(tmp, (os.stat(path).st_mode & 0o777) if os.path.exists(path) else 0o600)
     if os.path.islink(path):
         path = os.path.realpath(path)
     os.replace(tmp, path)
@@ -52,7 +54,7 @@ def dump(obj):
 def manifest():
     try:
         return json.loads(read(MANIFEST))
-    except (OSError, ValueError):
+    except FileNotFoundError:
         return {}
 
 
@@ -68,37 +70,53 @@ def save_manifest(m):
 
 def install(binary):
     m = manifest()
-    want = f"{binary} statusline"
-    if os.path.exists(CLAUDE):
-        raw, s = load_json(CLAUDE)
-        if (s.get("statusLine") or {}).get("command") != want:
-            m.setdefault("claude_statusLine", s.get("statusLine"))  # keep the first "before"
-            s["statusLine"] = {**(s.get("statusLine") or {}), "type": "command", "command": want}
-            write_atomic(CLAUDE, dump(s), raw)
-            print(f"edited  {CLAUDE} (statusLine)")
-    if os.path.exists(ZSHRC):
-        raw = read(ZSHRC)
-        pat = re.compile("^" + re.escape(OLD_ALIAS) + "$", re.M)
-        if pat.search(raw):
-            m["zshrc_alias"] = True
-            write_atomic(ZSHRC, pat.sub(NEW_ALIAS, raw, count=1), raw)
-            print(f"edited  {ZSHRC} (codex alias)")
-    if os.path.exists(HERDR):
-        raw, s = load_json(HERDR)
-        cur = (s.get("sounds") or {}).get("enabled")
-        if cur is not False:
-            m.setdefault("herdr_sounds_enabled", cur)
-            s.setdefault("sounds", {})["enabled"] = False
-            write_atomic(HERDR, dump(s), raw)
-            print(f"edited  {HERDR} (sounds off)")
+    # Validate every input before writing any configuration.
+    raw_c, c = load_json(CLAUDE) if os.path.exists(CLAUDE) else (None, {})
+    raw_h, h = load_json(HERDR) if os.path.exists(HERDR) else (None, {})
+    raw_z = read(ZSHRC) if os.path.exists(ZSHRC) else None
+    for obj, key in [(c, "statusLine"), (h, "sounds")]:
+        if not isinstance(obj, dict) or (obj.get(key) is not None and not isinstance(obj[key], dict)):
+            sys.exit(f"abort: invalid {key} settings")
+    z = raw_z or ""
+    aliases = re.findall(r"^[ \t]*alias[ \t]+codex=.*$", z, re.M)
+    if any(a not in (OLD_ALIAS, NEW_ALIAS) for a in aliases) or len(aliases) > 1:
+        sys.exit("abort: custom or duplicate codex alias; resolve it before installation")
+    want = f"{shlex.quote(binary)} statusline"
+    edits = []
+    if (c.get("statusLine") or {}).get("command") != want or (c.get("statusLine") or {}).get("type") != "command":
+        m.setdefault("claude_statusLine", c.get("statusLine"))
+        c["statusLine"] = {**(c.get("statusLine") or {}), "type": "command", "command": want}
+        edits.append((CLAUDE, dump(c), raw_c))
+    if NEW_ALIAS not in aliases:
+        if OLD_ALIAS in aliases:
+            z = z.replace(OLD_ALIAS, NEW_ALIAS, 1)
+            m.setdefault("zshrc_alias", True)
+        else:
+            z = z + ("\n" if z and not z.endswith("\n") else "") + NEW_ALIAS + "\n"
+            m.setdefault("zshrc_alias", "added")
+        edits.append((ZSHRC, z, raw_z))
+    if PATH_LINE not in z.splitlines():
+        m.setdefault("zshrc_path", True)
+        z = PATH_LINE + "\n" + z
+        edits = [e for e in edits if e[0] != ZSHRC]
+        edits.append((ZSHRC, z, raw_z))
+    cur = (h.get("sounds") or {}).get("enabled")
+    if cur is not False:
+        m.setdefault("herdr_sounds_enabled", cur)
+        h["sounds"] = {**(h.get("sounds") or {}), "enabled": False}
+        edits.append((HERDR, dump(h), raw_h))
+    # Write-ahead recovery: a crash after any edit still retains the original values.
     save_manifest(m)
+    for path, text, expected in edits:
+        write_atomic(path, text, expected)
+        print(f"edited  {path}")
 
 
 def uninstall():
     m = manifest()
     if "claude_statusLine" in m and os.path.exists(CLAUDE):
         raw, s = load_json(CLAUDE)
-        if (s.get("statusLine") or {}).get("command", "").endswith("herdr-poke statusline"):
+        if (s.get("statusLine") or {}).get("command", "").replace("\'", "").endswith("herdr-poke statusline"):
             if m["claude_statusLine"] is None:
                 s.pop("statusLine", None)
             else:
@@ -110,16 +128,21 @@ def uninstall():
         raw = read(ZSHRC)
         pat = re.compile("^" + re.escape(NEW_ALIAS) + "$", re.M)
         if pat.search(raw):
-            write_atomic(ZSHRC, pat.sub(OLD_ALIAS, raw, count=1), raw)
+            write_atomic(ZSHRC, pat.sub("" if m["zshrc_alias"] == "added" else OLD_ALIAS, raw, count=1), raw)
             print(f"restored {ZSHRC} codex alias")
         del m["zshrc_alias"]
+    if m.get("zshrc_path") and os.path.exists(ZSHRC):
+        raw = read(ZSHRC)
+        write_atomic(ZSHRC, raw.replace(PATH_LINE + "\n", "", 1), raw)
+        del m["zshrc_path"]
     if "herdr_sounds_enabled" in m and os.path.exists(HERDR):
         raw, s = load_json(HERDR)
         before = m["herdr_sounds_enabled"]
-        if before is None:
-            (s.get("sounds") or {}).pop("enabled", None)
-        else:
-            s.setdefault("sounds", {})["enabled"] = before
+        if (s.get("sounds") or {}).get("enabled") is False:
+            if before is None:
+                s["sounds"].pop("enabled", None)
+            else:
+                s["sounds"]["enabled"] = before
         write_atomic(HERDR, dump(s), raw)
         print(f"restored {HERDR} sounds")
         del m["herdr_sounds_enabled"]
@@ -127,4 +150,7 @@ def uninstall():
 
 
 if __name__ == "__main__":
-    {"install": lambda: install(sys.argv[2]), "uninstall": uninstall}[sys.argv[1]]()
+    os.makedirs(STATE, mode=0o700, exist_ok=True)
+    with open(os.path.join(STATE, "settings-install.lock"), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        {"install": lambda: install(sys.argv[2]), "uninstall": uninstall}[sys.argv[1]]()

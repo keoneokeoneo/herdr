@@ -17,6 +17,8 @@ API reference. Both tools get the `herdr-poke-dev` skill from `.agents/skills/`.
 - Herdr: `brew install --cask herdr-app`
 - pokeTokenBar: `brew install --cask chattymin/tap/poke-token-bar` (read only; never edited)
 - Go: `brew install go`
+- Python 3 (installer), Jetendard terminal font (install separately)
+- nvm with an installed Node version for the optional hc node/npm/npx shims
 - Claude Code and the Codex CLI
 
 ## Install
@@ -43,8 +45,11 @@ Keys: `⌘J` next session waiting for you (oldest first), `⌘K` show/hide the r
 
 ## Undo
 
-`scripts/uninstall.sh` restores the newest `*.herdr-poke-backup-*` of each edited file,
-removes the launchd job, the binary and the node shims, and switches Herdr back to `main`. The repo stays.
+`scripts/uninstall.sh` uses the configuration and installed-file journals, not the
+newest whole-file backup. It restores original settings and owned files, preserving
+later user replacements and unjournaled legacy files. The current layout, repo,
+assets, runtime state and backups stay. Manual security defaults and external review
+skills are not removed. See `docs/guide.md` for recovery and migration details.
 
 ## Troubleshooting
 
