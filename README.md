@@ -38,7 +38,8 @@ settings.json             공용 앱 설정
 설치할 때 건드리는 것:
 
 - **base**: 자기 mod, 레이아웃, 테마 파일과 `layout:base` 키 바인딩
-  (`cmd-j` 대기 중인 에이전트로 이동, `cmd-k` 오른쪽 패널 열기/닫기, `cmd-shift-o` 노트).
+  (`cmd-j` 대기 중인 에이전트로 이동, `cmd-shift-j` 끝난 에이전트 확인, `cmd-k` 오른쪽 패널 열기/닫기,
+  `cmd-shift-o` 노트).
   Claude 한도는 전역 Claude statusline이 채우고, Codex 한도와 일별 사용량은 `herdr-poke` 헬퍼가
   설치돼 있을 때 채워집니다. 자세한 내용은 Base 가이드에 있습니다.
 - **obsidian**: 자기 mod, 레이아웃과 공용 base 테마. 그 외에는 건드리지 않습니다.

@@ -72,3 +72,9 @@ export function limitAlerts(limits, nowMs, seen) {
   }
   return out;
 }
+
+// Why a provider card has less than both windows: no writer yet, or a plan without a 5h limit.
+export function limitNote(provider, p) {
+  if (!p) return provider === 'claude' ? 'Claude limits come from the Claude statusline' : `${NAMES[provider] ?? provider} limits need the herdr-poke helper`;
+  return (p.windows ?? []).some((w) => w.minutes === 300) ? null : 'No 5h limit on this plan';
+}

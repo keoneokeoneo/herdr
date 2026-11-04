@@ -30,6 +30,7 @@ function alertLimits(s) {
 // Key commands (base.jump, base.notes) reach shown copies; only this always-shown copy acts on them.
 export function command(s, c) {
   if (c === "jump") jump(s);
+  else if (c === "review") { const d = nextDone(rows()); if (d) run("agent.focus", { terminal: d.address }); }
   else if (c === "notes") notes();
 }
 
@@ -75,9 +76,9 @@ export function render(s, cx) {
   const done = nextDone(all);
   if (done && !wait) {
     bar.child(div().id("review").flex_none().px(10).py(2).rounded_full().bg(t.accent + "26").text_color(t.accent).font_weight(600).cursor_pointer()
-      .tooltip("Show the oldest finished agent")
+      .tooltip("Show the oldest finished agent (⌘⇧J)")
       .on_click(() => run("agent.focus", { terminal: done.address }))
-      .child(`Review new · ${fresh}`));
+      .child(`Review new · ${fresh}  ⌘⇧J`));
   }
   if (wait) {
     bar.child(div().id("jump").flex_none().px(10).py(2).rounded_full().bg(t.blocked + "26").text_color(t.blocked).font_weight(600).cursor_pointer()

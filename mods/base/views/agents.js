@@ -4,7 +4,7 @@ import { h_flex, v_flex } from "gpui-base";
 import { theme, run, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, C, alpha } from "./ui.js";
-import { groups, chips, agentSubline, placeLabel } from "../lib/model.js";
+import { groups, chips, agentSubline, placeLabel, sinceText } from "../lib/model.js";
 import { ago } from "../lib/format.js";
 import { narrow } from "./brand.js";
 
@@ -23,7 +23,7 @@ function row(t, r, all, now) {
       .text_color(r.pinned ? t.muted : t.chrome).hover((x) => x.bg(t.hover).text_color(t.foreground))
       .on_click((_e, cx) => { cx.stop_propagation(); run("terminal.pin", { terminal: r.address, pinned: !r.pinned }); })
       .child(svg(`mods/workspace-chrome/${r.pinned ? "pin-off" : "pin"}.svg`).size(11)))
-    .child(div().flex_none().text_size(10).text_color(t.dim).child(ago(now - r.since)));
+    .child(div().id(`since-${r.address}`).flex_none().text_size(10).text_color(t.dim).tooltip(sinceText(r.status, now - r.since)).child(ago(now - r.since)));
   const sub = agentSubline(r, all);
   return h_flex().id(`ag-${r.address}`).items_center().gap(8).px(6).py(5).rounded(8)
     .bg(r.focused ? t.selected : "#00000000").hover((x) => x.bg(t.hover)).cursor_pointer()

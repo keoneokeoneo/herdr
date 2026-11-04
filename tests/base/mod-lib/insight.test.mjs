@@ -100,3 +100,20 @@ test('nextDone picks the oldest finished agent to review', () => {
   assert.equal(nextDone([{ status: 'done', since: 5, address: 'a' }, { status: 'done', since: 2, address: 'b' }, { status: 'idle', since: 1, address: 'c' }]).address, 'b');
   assert.equal(nextDone([{ status: 'idle' }]), null);
 });
+
+import { limitNote } from '../../../mods/base/lib/usage.js';
+import { sinceText } from '../../../mods/base/lib/model.js';
+
+test('limitNote explains a missing window or a missing writer', () => {
+  assert.equal(limitNote('codex', { windows: [{ minutes: 10080 }] }), 'No 5h limit on this plan');
+  assert.equal(limitNote('codex', { windows: [{ minutes: 300 }, { minutes: 10080 }] }), null);
+  assert.equal(limitNote('codex', null), 'Codex limits need the herdr-poke helper');
+  assert.equal(limitNote('claude', null), 'Claude limits come from the Claude statusline');
+});
+
+test('sinceText says what the row time measures', () => {
+  assert.equal(sinceText('working', 2 * 3600e3 + 28 * 60e3), 'Working for 2h 28m');
+  assert.equal(sinceText('blocked', 5 * 60e3), 'Waiting for you for 5m');
+  assert.equal(sinceText('done', 3 * 60e3), 'Finished 3m ago');
+  assert.equal(sinceText('idle', 60 * 60e3), 'Idle for 1h 0m');
+});
