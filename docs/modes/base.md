@@ -54,8 +54,8 @@ The UI only reads these files. Each has exactly one writer.
 Rules every reader and writer keeps: `updated` and `resets_at` are epoch seconds; a window
 whose `resets_at` has passed is never shown as a percentage; an older snapshot never replaces a
 newer one; a missing, empty or corrupt file means "no data", never an error. Override the folder
-with `HERDR_USAGE_STATE` (tests). `HERDR_POKE_STATE` still relocates the helper's private state;
-when only it is set, the contract folder is its `usage/` subfolder.
+with `HERDR_USAGE_STATE` (tests). `HERDR_POKE_STATE` only relocates the helper's private state
+and never moves the contract folder (the launchd job exports it permanently).
 
 ### The Claude statusline change
 

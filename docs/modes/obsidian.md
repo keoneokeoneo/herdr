@@ -44,7 +44,7 @@ Enter a title, relative path or body search and press Enter or **Search**. Empty
 search browses the folder tree. Click a note to read Markdown, follow wiki links or relative
 Markdown links, use **←** to return, and **Refresh** to reload a changed note.
 **Search** also refreshes the file list. HTTP(S) links open in the default browser.
-Use **Back** to switch to the `base` layout; existing Cmd-Shift-L cycles layouts.
+Use **Back** to switch to the `base` layout (or, when `base` is not installed, to the next layout); Cmd-Shift-L cycles layouts.
 The mod accepts `obsidian.search`, `obsidian.vault:<folder>` and
 `obsidian.note:<relative path>` commands through `herdr-app do` for keyboard or
 CLI integration. `pane.go` focuses its search input.

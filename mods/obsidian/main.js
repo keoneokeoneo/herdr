@@ -1,8 +1,8 @@
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex, Input, InputState, TextView } from "gpui-base";
-import { exec, appHome, theme, shared, setShared, run, nextCommand, props } from "herdr";
+import { exec, appHome, theme, shared, setShared, run, nextCommand, props, layouts } from "herdr";
 
-import { treeRows, parentFolders, displayName } from "./tree.js";
+import { treeRows, parentFolders, displayName, backLayout } from "./tree.js";
 
 const button = (id, label, click) => div().id(id).px(10).py(6).rounded(6).cursor_pointer()
   .bg(theme().raised).hover(s => s.bg(theme().hover)).child(label).on_click((_e, cx) => click(cx));
@@ -143,7 +143,7 @@ export default class Obsidian extends View {
     root.child(h_flex().flex_1().min_h(0).gap(12).child(list).child(reader));
     root.child(h_flex().justify_between().text_size(11).text_color(t.muted)
       .child(div().child(`${this.rows.length} shown · ${this.total || 0} notes${this.limited ? ' · Refine your search' : ''} · Read only`))
-      .when(!this.embedded, el => el.child(button('back-layout', 'Back', () => run('layout.switch', { name: 'base' })))));
+      .when(!this.embedded, el => el.child(button('back-layout', 'Back', () => run('layout.switch', backLayout(layouts()))))));
     return root;
   }
 }

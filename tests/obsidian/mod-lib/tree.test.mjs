@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { treeRows, parentFolders, displayName } from '../../../mods/obsidian/tree.js';
+import { treeRows, parentFolders, displayName, backLayout } from '../../../mods/obsidian/tree.js';
 test('folders precede notes and remain collapsed until expanded', () => {
  const paths = ['z.md', 'Projects/A/a.md', 'Projects/B/b.md', 'Archive/old.md'];
  assert.deepEqual(treeRows(paths, new Set()).map(r => r.path), ['Archive', 'Projects', 'z.md']);
@@ -15,4 +15,10 @@ test('expanded descendants preserve hierarchy and duplicate basenames', () => {
 test('display names omit parent paths and markdown extensions', () => {
  assert.equal(displayName('/Users/keno/personal-vault/'), 'personal-vault');
  assert.equal(displayName('Folder/한글 노트.md', true), '한글 노트');
+});
+
+test('backLayout goes to base when it exists, otherwise to the next layout', () => {
+  assert.deepEqual(backLayout(['main', 'base', 'obsidian']), { name: 'base' });
+  assert.deepEqual(backLayout(['main', 'obsidian']), {});
+  assert.deepEqual(backLayout(undefined), {});
 });

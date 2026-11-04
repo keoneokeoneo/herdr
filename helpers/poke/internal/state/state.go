@@ -47,21 +47,17 @@ func Dir() string {
 }
 
 // UsageDir is the neutral usage data contract folder that the base mod reads:
-// $HERDR_USAGE_STATE, else $HERDR_POKE_STATE/usage when that override is set (so tests
-// and sandboxes that relocate the state dir never touch the real home), else
-// ~/.local/state/herdr-app/usage. It is created (0700) if missing.
+// $HERDR_USAGE_STATE, else ~/.local/state/herdr-app/usage. It deliberately does
+// not follow HERDR_POKE_STATE (the launchd job exports that permanently). It is
+// created (0700) if missing.
 func UsageDir() string {
 	dir := os.Getenv("HERDR_USAGE_STATE")
 	if dir == "" {
-		if poke := os.Getenv("HERDR_POKE_STATE"); poke != "" {
-			dir = filepath.Join(poke, "usage")
-		} else {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				home = os.TempDir()
-			}
-			dir = filepath.Join(home, ".local", "state", "herdr-app", "usage")
+		home, err := os.UserHomeDir()
+		if err != nil {
+			home = os.TempDir()
 		}
+		dir = filepath.Join(home, ".local", "state", "herdr-app", "usage")
 	}
 	_ = os.MkdirAll(dir, 0o700)
 	return dir

@@ -26,6 +26,7 @@ type env struct {
 func newEnv(t *testing.T) *env {
 	t.Helper()
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	return &env{t: t, claude: t.TempDir(), codex: t.TempDir()}
 }
 
@@ -202,6 +203,7 @@ func TestFourteenDaysZeroFilled(t *testing.T) {
 
 func TestMissingRootsStillWriteZeroDays(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	if err := Run(noon, Roots{ClaudeProjects: "/nonexistent/claude", CodexSessions: "/nonexistent/codex"}); err != nil {
 		t.Fatal(err)
 	}

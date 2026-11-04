@@ -57,5 +57,6 @@ test('agentSubline keeps blocked, done and review lines', () => {
 
 test('typeOf is off when the mode is unset (no Poke running)', () => {
   assert.equal(typeOf2('main', 7, undefined), null);
+  assert.equal(typeOf2('main', 7, null), null); // Herdr returns null for an unset shared key
   assert.equal(typeOf2('main', 7, 'random') !== null, true);
 });

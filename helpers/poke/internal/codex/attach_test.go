@@ -36,6 +36,7 @@ func TestParseForegroundSkipsWrapperAndOthers(t *testing.T) {
 
 func TestAttachLockIsExclusive(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	release, ok := tryTerminalLock("t9")
 	if !ok {
 		t.Fatal("first lock refused")

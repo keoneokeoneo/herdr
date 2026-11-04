@@ -14,6 +14,7 @@ func useTempState(t *testing.T) string {
 	t.Helper()
 	dir := filepath.Join(t.TempDir(), "state")
 	t.Setenv("HERDR_POKE_STATE", dir)
+	t.Setenv("HERDR_USAGE_STATE", filepath.Join(dir, "usage"))
 	return dir
 }
 
@@ -165,15 +166,13 @@ func TestUsageDirEnvOverride(t *testing.T) {
 	}
 }
 
-func TestUsageDirFollowsPokeStateOverrideThenHome(t *testing.T) {
-	dir := useTempState(t)
-	t.Setenv("HERDR_USAGE_STATE", "")
-	if got, want := UsageDir(), filepath.Join(dir, "usage"); got != want {
-		t.Fatalf("UsageDir() = %q, want %q", got, want)
-	}
+func TestUsageDirIgnoresPokeStateOverride(t *testing.T) {
+	// the launchd job and install.sh export HERDR_POKE_STATE permanently; the
+	// neutral contract folder must not move with it
 	home := t.TempDir()
-	t.Setenv("HERDR_POKE_STATE", "")
 	t.Setenv("HOME", home)
+	t.Setenv("HERDR_USAGE_STATE", "")
+	t.Setenv("HERDR_POKE_STATE", filepath.Join(t.TempDir(), "poke"))
 	if got, want := UsageDir(), filepath.Join(home, ".local", "state", "herdr-app", "usage"); got != want {
 		t.Fatalf("UsageDir() = %q, want %q", got, want)
 	}
@@ -181,7 +180,6 @@ func TestUsageDirFollowsPokeStateOverrideThenHome(t *testing.T) {
 
 func TestUpdateLimitsLatestWritesProviderFile(t *testing.T) {
 	dir := useTempState(t)
-	t.Setenv("HERDR_USAGE_STATE", "")
 	l := ProviderLimits{Plan: "p", Updated: 10, Windows: []Window{{Minutes: 10080, Used: 5, ResetsAt: 99}}}
 	if err := UpdateLimitsLatest("codex", l); err != nil {
 		t.Fatal(err)
@@ -197,7 +195,6 @@ func TestUpdateLimitsLatestWritesProviderFile(t *testing.T) {
 
 func TestOlderSnapshotDoesNotReplaceNewer(t *testing.T) {
 	useTempState(t)
-	t.Setenv("HERDR_USAGE_STATE", "")
 	newer := ProviderLimits{Updated: 20, Windows: []Window{{Minutes: 300, Used: 50, ResetsAt: 99}}}
 	older := ProviderLimits{Updated: 10, Windows: []Window{{Minutes: 300, Used: 1, ResetsAt: 99}}}
 	_ = UpdateLimitsLatest("codex", newer)

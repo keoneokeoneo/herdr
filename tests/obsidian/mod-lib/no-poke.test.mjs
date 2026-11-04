@@ -13,7 +13,7 @@ test('obsidian mod and layout have no Poke reference', async () => {
 test('closing the embedded reader hides the neutral panel; Back leads to base', async () => {
   const src = await read('mods/obsidian/main.js');
   assert.ok(src.includes("run('layout.hide', { id: 'panel' })"));
-  assert.ok(src.includes("run('layout.switch', { name: 'base' })"));
+  assert.ok(src.includes("run('layout.switch', backLayout(layouts()))"));
   assert.ok(src.includes("'Back'"));
 });
 

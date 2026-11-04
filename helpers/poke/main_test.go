@@ -64,12 +64,14 @@ func TestCodexSubcommandNeedsACommand(t *testing.T) {
 func TestUsageSubcommandWritesUsageJSON(t *testing.T) {
 	stateDir := t.TempDir()
 	t.Setenv("HERDR_POKE_STATE", stateDir)
+	usageDir := filepath.Join(t.TempDir(), "usage")
+	t.Setenv("HERDR_USAGE_STATE", usageDir)
 	t.Setenv("HOME", t.TempDir()) // no logs: 14 zero days
 	var out, errOut bytes.Buffer
 	if code := run([]string{"usage"}, strings.NewReader(""), &out, &errOut); code != 0 {
 		t.Fatalf("exit %d, stderr %q", code, errOut.String())
 	}
-	b, err := os.ReadFile(filepath.Join(stateDir, "usage", "daily.json"))
+	b, err := os.ReadFile(filepath.Join(usageDir, "daily.json"))
 	if err != nil || !strings.Contains(string(b), `"days"`) {
 		t.Errorf("daily.json: err=%v content=%q", err, b)
 	}

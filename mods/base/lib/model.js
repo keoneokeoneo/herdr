@@ -32,8 +32,8 @@ export function tabPill(agents) {
   return { text: '', tone: 'dim' };
 }
 
-export function typeOf(branch, seed, mode = 'off', repoType) {
-  if (mode === 'off') return null;
+export function typeOf(branch, seed, mode, repoType) {
+  if (mode == null || mode === 'off') return null; // unset (undefined or null) means no type
   if (mode === 'repo') return repoType || null;
   let h = seed >>> 0;
   for (const c of branch || '') h = (h * 31 + c.charCodeAt(0)) >>> 0;

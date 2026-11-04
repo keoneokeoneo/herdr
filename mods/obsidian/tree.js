@@ -28,3 +28,9 @@ export function treeRows(paths, expanded) {
   visit(root, 0);
   return rows;
 }
+
+// layout.switch arguments for "Back": the neutral base layout when it is installed,
+// otherwise no name (Herdr cycles to the next layout), so Back works with obsidian alone.
+export function backLayout(names) {
+  return Array.isArray(names) && names.includes('base') ? { name: 'base' } : {};
+}

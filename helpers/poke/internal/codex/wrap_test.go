@@ -180,6 +180,7 @@ func readLog(path string) string {
 
 func TestWrapTailsRolloutIntoLabelsAndLimits(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	t.Setenv("HC_TERMINAL_ID", "t42")
 	hcLog := fakeHC(t)
 
@@ -240,6 +241,7 @@ func TestWrapTailsRolloutIntoLabelsAndLimits(t *testing.T) {
 
 func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	t.Setenv("HC_TERMINAL_ID", "t43")
 	hcLog := fakeHC(t)
 
@@ -330,6 +332,7 @@ func TestTailerHandlesTruncation(t *testing.T) {
 
 func TestPublishLimitsSkipsStaleAndOlder(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	now := time.Unix(1_800_000_000, 0)
 
 	newer := state.ProviderLimits{Plan: "p", Updated: now.Unix() - 10, Windows: []state.Window{{Minutes: 10080, Used: 50, ResetsAt: now.Unix() + 3600}}}
@@ -370,6 +373,7 @@ func TestPublishLimitsSkipsStaleAndOlder(t *testing.T) {
 
 func TestWrapSkipsMirrorWhenTerminalLockHeld(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	t.Setenv("HC_TERMINAL_ID", "locked")
 	release, ok := tryTerminalLock("locked")
 	if !ok {
@@ -388,6 +392,7 @@ func TestWrapSkipsMirrorWhenTerminalLockHeld(t *testing.T) {
 
 func TestOwnedSnapshotClearsPreviousContext(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	log := fakeHC(t)
 	if err := publishOwned(Snapshot{Model: "old", HasCtx: true, CtxPct: 92}, "t1", time.Now(), 10, "old-session"); err != nil {
 		t.Fatal(err)
@@ -403,6 +408,7 @@ func TestOwnedSnapshotClearsPreviousContext(t *testing.T) {
 
 func TestMonitorFollowsSessionSwitchWithinSameProcess(t *testing.T) {
 	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HERDR_USAGE_STATE", t.TempDir())
 	log := fakeHC(t)
 	old := filepath.Join(t.TempDir(), "rollout-old.jsonl")
 	next := filepath.Join(t.TempDir(), "rollout-new.jsonl")
