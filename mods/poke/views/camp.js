@@ -2,12 +2,12 @@
 import { div } from 'gpui-kit';
 import { h_flex, v_flex } from 'gpui-base';
 import { agents, terminals, shared, run, openOverlay, closeOverlay, props } from 'herdr';
-import { campGroups, gardenVisitors, campState } from '../lib/camp.js';
+import { campGroups, gardenVisitors, campState, gardenWindowSize } from '../lib/camp.js';
 import { sprite, C } from './ui.js';
 
 export function openCamp() {
   return openOverlay({ mod: 'poke', props: { view: 'camp' }, kind: 'window',
-    key: 'poke-camp', width: 0.88, height: 0.85 });
+    key: 'poke-camp', ...gardenWindowSize(window.viewport_size()) });
 }
 
 

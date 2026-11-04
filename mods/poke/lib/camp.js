@@ -1,5 +1,9 @@
 import { MAX_SPECIES } from './partner.js';
 
+export function gardenWindowSize(viewport) {
+  return { width: Math.min(1000, viewport.width * 0.88), height: Math.min(700, viewport.height * 0.8) };
+}
+
 // A fresh snapshot: visitors are sessions, not deduplicated species.
 export function campGroups(agents, terminals) {
   const groups = { blocked: [], working: [], done: [], idle: [], unknown: [] };
