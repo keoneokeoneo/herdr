@@ -4,7 +4,7 @@ import { h_flex, v_flex } from "gpui-base";
 import { theme, run, openOverlay } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, C, alpha } from "./ui.js";
-import { groups, chips, agentSubline } from "../lib/model.js";
+import { groups, chips, agentSubline, placeLabel } from "../lib/model.js";
 import { ago } from "../lib/format.js";
 import { narrow } from "./brand.js";
 
@@ -16,7 +16,7 @@ function row(t, r, all, now) {
   const head = h_flex().items_center().gap(6).min_w(0)
     .child(div().flex_none().px(5).rounded(4).bg(alpha(t.muted, "22")).text_size(9).font_weight(700).text_color(t.muted)
       .child((r.spaceName || "?").charAt(0).toUpperCase()))
-    .child(div().truncate().text_size(12).font_weight(600).text_color(t.foreground).child(r.tabName || r.address));
+    .child(div().truncate().text_size(12).font_weight(600).text_color(t.foreground).child(placeLabel(r.tabName, { title: r.title, cwd: r.cwd, space: r.spaceName }) || r.address));
   for (const c of chips(r, now)) head.child(pill(c.text, C[c.color] ?? t.accent, { size: 9 }));
   head.child(div().flex_1())
     .child(div().id(`pin-${r.address}`).flex_none().p(2).rounded(4).cursor_pointer()
@@ -36,7 +36,7 @@ function row(t, r, all, now) {
 
 const TITLES = [["needs", "Needs you", "blocked"], ["working", "Working", "working"], ["done", "Done", "done"], ["idle", "Idle", "idle"]];
 
-export function render() {
+export function render(s) {
   const t = theme();
   const now = Date.now();
   const all = rows();
@@ -48,8 +48,15 @@ export function render() {
   for (const [k, title, tone] of TITLES) {
     const items = g[k];
     if (!items.length) continue;
-    list.child(h_flex().px(6).pt(6).gap(6).items_center().text_size(10).font_weight(700).text_color(t[tone] ?? t.dim)
-      .child(title).child(div().text_color(t.dim).child(String(items.length))));
+    // Idle agents are folded by default so the ones that need attention stay on screen.
+    const fold = k === "idle";
+    const open = !fold || s.idleOpen;
+    let head = h_flex().px(6).pt(6).gap(6).items_center().text_size(10).font_weight(700).text_color(t[tone] ?? t.dim);
+    if (fold) head = head.id("idle-toggle").cursor_pointer().hover((x) => x.text_color(t.foreground))
+      .on_click((_e, cx) => { s.idleOpen = !s.idleOpen; cx.notify(); })
+      .child(div().text_color(t.dim).child(open ? "▾" : "▸"));
+    list.child(head.child(title).child(div().text_color(t.dim).child(String(items.length))));
+    if (!open) continue;
     // Pinned first, then oldest first.
     for (const r of [...items].sort((a, b) => (b.pinned - a.pinned) || (a.since - b.since))) list.child(row(t, r, all, now));
   }

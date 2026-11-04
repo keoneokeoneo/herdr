@@ -5,7 +5,7 @@ import { theme } from "herdr";
 import { keepFresh, WIN_LABEL, win } from "./store.js";
 import { loadUsage, USAGE_DIR } from "./usagefiles.js";
 import { pctOrDash, resetsIn, live, tokensM } from "../lib/format.js";
-import { usageState } from "../lib/usage.js";
+import { usageState, dailySummary, pace } from "../lib/usage.js";
 
 export function init(s, cx) {
   cx.timer.every(60000, (cx) => cx.notify());
@@ -15,6 +15,13 @@ export function init(s, cx) {
 const kv = (t, k, v, color) => h_flex().text_size(11).child(div().text_color(t.muted).child(k)).child(div().flex_1())
   .child(div().font_family("IBM Plex Mono").text_color(color ?? t.foreground).truncate().child(v));
 const card = (t) => v_flex().gap(4).p(10).rounded(10).bg(t.surface).border_1().border_color(t.border);
+
+// "At this pace": where the window ends up by its reset, or when it would hit the limit.
+function paceText(t, p, now) {
+  if (!p) return div();
+  if (p.hitsInSec != null) return div().font_weight(600).text_color(t.blocked).child(`limit in ~${resetsIn(now / 1000 + p.hitsInSec, now)} at this pace`);
+  return div().text_color(p.atReset >= 80 ? t.accent : t.dim).child(`~${Math.min(p.atReset, 999)}% by reset`);
+}
 
 function limitCard(t, name, prov, now, color, icon) {
   const c = card(t).child(h_flex().items_center().gap(6)
@@ -33,7 +40,10 @@ function limitCard(t, name, prov, now, color, icon) {
         .child(div().flex_1())
         .child(div().font_weight(600).text_color(ok ? t.foreground : t.dim).child(pctOrDash(w, now))))
       .child(div().w_full().h(5).rounded_full().bg(t.raised).overflow_hidden().child(div().h(5).rounded_full().bg(barC).w(`${Math.max(ok ? 2 : 0, Math.round(pct))}%`)))
-      .child(div().text_size(10).text_color(t.dim).child(ok ? `resets in ${resetsIn(w.resets_at, now)}` : w ? "no current data" : "no data yet")));
+      .child(h_flex().text_size(10)
+        .child(div().text_color(ok ? t.muted : t.dim).child(ok ? `resets in ${resetsIn(w.resets_at, now)}` : w ? "no current data" : "no data yet"))
+        .child(div().flex_1())
+        .child(paceText(t, ok ? pace(w, m, now) : null, now))));
   }
   return c;
 }
@@ -52,16 +62,27 @@ function usage(t, s) {
   tc.child(div().text_size(10).text_color(stale ? t.muted : t.dim).child(updatedText));
   if (!days.length) return box.child(tc);
   const max = Math.max(1, ...days.map((d) => d.claude + d.codex));
-  const avg = days.reduce((a, d) => a + d.claude + d.codex, 0) / Math.max(1, days.length);
-  const bars = h_flex().h(60).items_end().gap(3).pt(6);
+  const sum = dailySummary(days);
+  const H = 56;
+  const bars = h_flex().h(H + 4).items_end().gap(3).pt(6);
   for (const d of days) {
-    const H = 56;
     const cl = Math.round((d.claude / max) * H), cx = Math.round((d.codex / max) * H);
+    const empty = d.claude + d.codex === 0;
     bars.child(v_flex().flex_1().justify_end().h(H)
       .child(div().w_full().h(cx).bg("#8ec5f5").rounded_t(2))
-      .child(div().w_full().h(cl).bg(t.done)));
+      .child(div().w_full().h(cl).bg(t.done))
+      // A faint baseline keeps empty days visible as days, not as missing chart.
+      .child(div().w_full().h(2).rounded_full().bg(empty ? t.raised : "#00000000")));
   }
-  tc.child(bars).child(h_flex().text_size(10).text_color(t.dim).child(div().child("14 days")).child(div().flex_1()).child(div().child(`avg ${tokensM(avg)}/day`)));
+  const dot = (c, label) => h_flex().gap(4).items_center().child(div().size(7).rounded_full().bg(c)).child(div().child(label));
+  tc.child(h_flex().gap(10).pt(8).text_size(10).text_color(t.muted)
+      .child(div().font_weight(600).text_color(t.foreground).child("Last 14 days"))
+      .child(div().flex_1()).child(dot(t.done, "Claude")).child(dot("#8ec5f5", "Codex")))
+    .child(bars)
+    .child(h_flex().text_size(10).text_color(t.dim).child(div().child(sum.from ?? "")).child(div().flex_1()).child(div().child("today")))
+    .child(div().text_size(10).text_color(t.muted).child(sum.active
+      ? `${sum.active} active day${sum.active === 1 ? "" : "s"} · avg ${tokensM(sum.avg)} on those days`
+      : "No usage in the last 14 days."));
   return box.child(tc);
 }
 

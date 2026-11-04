@@ -27,8 +27,8 @@ python3 scripts/setup.py install base --select base
 | 탭 바와 패널 토글 | `mods/base/views/tabs.js` |
 | pane 헤더 | `mods/base/views/pane.js` |
 | 오른쪽 패널 헤더 탭 (레이아웃별로 `props.tabs`에 선언) | `mods/base/views/paneltabs.js`, `mods/base/lib/panel.js` |
-| Usage 탭 (한도 카드, 14일 차트) | `mods/base/views/panel.js` |
-| 하단 바 (한도, 오늘의 토큰, jump pill)와 키 command | `mods/base/views/status.js`, `mods/base/behaviours.js` |
+| Usage 탭 (한도 카드와 현재 속도 예측, 14일 차트) | `mods/base/views/panel.js`, `mods/base/lib/usage.js` |
+| 하단 바 (한도, 오늘의 토큰, jump pill)와 키 command. 패널이 Usage를 보여 주는 동안 한도는 생략 | `mods/base/views/status.js`, `mods/base/behaviours.js` |
 | 사용량 파일 읽기 | `mods/base/views/usagefiles.js`, `mods/base/lib/contract.js` |
 | agent 행 (Herdr 데이터 → view가 그리는 것) | `mods/base/views/data.js` |
 | 아바타와 pill | `mods/base/views/ui.js`, `mods/base/lib/avatar.js` |
@@ -82,6 +82,15 @@ Base는 agent 아바타와 탭 타입 pill을 그리며, 무언가 제공하면 
 
 `mods/base`, `layouts/base.json`, `themes/base.json`이 이 목록 밖의 Poke 이름을 언급하면
 `tests/base/mod-lib/layouts.test.mjs`가 실패한다.
+
+## 화면 규칙
+
+- 보조 텍스트 색 `muted`·`dim`은 배경과 chrome 위에서 4.5:1 이상을 유지한다(`tests/base/mod-lib/theme.test.mjs`).
+- 한도는 60% 이상이면 accent, 80% 이상이면 blocked 색으로 표시한다(패널 막대와 하단 바 공통).
+- 현재 속도 예측은 창의 10%가 지난 뒤에만 보이며, 리셋 전에 100%에 닿을 때만 "limit in …"으로 경고한다.
+- 14일 평균은 사용량이 있는 날만으로 계산한다.
+- 기본 번호 이름("1", "2")의 탭과 agent 행은 세션 제목, 없으면 스페이스 이름과 다른 폴더 이름으로 표시한다.
+- Idle agent 그룹은 기본으로 접혀 있다.
 
 ## 변경을 검증하는 방법
 

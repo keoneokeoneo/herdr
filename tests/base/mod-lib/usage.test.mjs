@@ -39,6 +39,8 @@ test('unknown and future update times do not pretend to be fresh', () => {
 test('panel and status do not relabel yesterday as today; historical chart remains', async () => {
   const { readFile } = await import('node:fs/promises');
   const { tokensM } = await import('../../../mods/base/lib/format.js');
+  const { dailySummary } = await import('../../../mods/base/lib/usage.js');
+  const { usageShown } = await import('../../../mods/base/lib/panel.js');
   const text = [];
   function element() {
     const el = new Proxy({}, { get: (_target, method) => (...args) => {
@@ -51,7 +53,7 @@ test('panel and status do not relabel yesterday as today; historical chart remai
     div: element, image: element, h_flex: element, v_flex: element,
     theme: () => ({}), props: () => ({ tab: 'usage' }), rows: () => [], waiting: () => [],
     win: () => null, live: () => false, pctOrDash: () => '–', WIN_LABEL: String,
-    tokensM, usageState,
+    tokensM, usageState, dailySummary, pace: () => null, resetsIn: () => '–', layout: () => null, usageShown,
   };
   const originalNow = Date.now;
   Date.now = () => now;
@@ -68,8 +70,8 @@ test('panel and status do not relabel yesterday as today; historical chart remai
       assert.ok(text.includes('Updated 10m ago'), name);
       if (name === 'panel') {
         assert.ok(text.includes('No usage recorded for today yet.'));
-        assert.ok(text.includes('14 days'));
-        assert.ok(text.includes('avg 99.0M/day'));
+        assert.ok(text.includes('Last 14 days'));
+        assert.ok(text.includes('1 active day · avg 99.0M on those days'));
       }
     }
   } finally {

@@ -3,7 +3,7 @@ import { h_flex } from "gpui-base";
 import { theme, run, shared, spaces, openOverlay, layout } from "herdr";
 import { rows } from "./data.js";
 import { avatar, pill, tone, C, alpha } from "./ui.js";
-import { byUrgency, tabPill, typeOf } from "../lib/model.js";
+import { byUrgency, tabPill, typeOf, placeLabel } from "../lib/model.js";
 
 function findNode(node, id) {
   if (!node || typeof node !== "object") return null;
@@ -41,7 +41,7 @@ export function render(st, _cx) {
       .on_click(() => run("tab.select", { id: tab.id }));
     if (tab.active) el = el.bg(t.raised);
     if (top) el = el.child(avatar(top, { size: 22, key: "tab", noBadge: true }));
-    el = el.child(div().max_w(170).truncate().text_size(13).font_weight(500).text_color(tab.active ? t.foreground : t.muted).child(tab.zoomed ? `${tab.name} Z` : tab.name));
+    el = el.child(div().max_w(170).truncate().text_size(13).font_weight(500).text_color(tab.active ? t.foreground : t.muted).child((n => tab.zoomed ? `${n} Z` : n)(placeLabel(tab.name, { title: top?.title, cwd: top?.cwd, space: sp.name }))));
     if (wt) el = el.child(div().text_size(11).text_color(t.dim).child("⎇"));
     if (p.text) el = el.child(p.tone === "dim" ? div().text_size(11).text_color(t.dim).child(p.text) : pill(p.text, tone(t, p.tone)));
     if (tab.active) {

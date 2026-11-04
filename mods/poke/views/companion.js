@@ -112,15 +112,12 @@ export function render(s) {
   const seen = (shared("poke.seen") ?? []).length;
   return card
     .child(h_flex().gap(10).items_center().child(face).child(info))
+    // One progress line; today's tokens are in the usage bar and Dex/Seen in the Poke tab.
     .child(h_flex().text_size(10).text_color(t.muted)
-      .child(div().child(c.next ? `Next: ${c.next}` : "Final form · to graduation"))
+      .child(div().child(c.next ? `Next: ${c.next}` : "Graduation"))
       .child(div().flex_1())
-      .child(div().child(`${Math.floor(c.pct)}% · ${tokensM(c.toNext)} to go`)))
-    .child(meter)
-    .child(h_flex().text_size(10).text_color(t.dim)
-      .child(div().child(c.fed != null ? `Fed today ${tokensM(c.fed)}` : ""))
-      .child(div().flex_1())
-      .child(div().child(`Dex ${c.dex} · Seen ${seen}`)));
+      .child(div().child(`${tokensM(c.toNext)} to go`)))
+    .child(meter);
 }
 
 function egg(t, card, s) {

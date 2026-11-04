@@ -48,5 +48,18 @@ export function agentSubline(r, all) {
   }
   if (r.status === 'blocked') return r.title || 'Waiting for you';
   if (r.status === 'done') return 'New · not checked yet';
-  return [r.model, r.effort, r.ctx != null ? `ctx ${r.ctx}%` : null, r.telemetryNote].filter(Boolean).join(' · ');
+  const facts = [r.model, r.effort, r.ctx != null ? `ctx ${r.ctx}%` : null].filter(Boolean).join(' · ');
+  return facts || [folderOf(r.cwd), r.branch].filter(Boolean).join(' · ');
+}
+
+const folderOf = (cwd) => (cwd ?? '').replace(/\/+$/, '').split('/').pop() || '';
+
+// Tabs are named "1", "2"... by default. Then the session title says more; failing that a folder,
+// unless it only repeats the space's name.
+export function placeLabel(name, { title, cwd, space } = {}) {
+  if (name && !/^\d+$/.test(name)) return name;
+  const clean = (title ?? '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+  if (clean) return clean;
+  const f = folderOf(cwd);
+  return f && f !== space ? f : name || '';
 }
