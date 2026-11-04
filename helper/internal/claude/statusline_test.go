@@ -240,7 +240,9 @@ func runEnv(t *testing.T) (stateDir string) {
 func liveInput(t *testing.T, resetPast bool) string {
 	t.Helper()
 	now := time.Now().Unix()
-	five := now + 5100
+	// Resets sit mid-minute so the countdown text ("1h 25m") stays the same for 30 s:
+	// two Runs a second apart must render identically even on a loaded machine.
+	five := now + 5100 + 30
 	if resetPast {
 		five = now - 60
 	}
@@ -248,7 +250,7 @@ func liveInput(t *testing.T, resetPast bool) string {
 "cwd":%q,
 "context_window":{"context_window_size":200000,"current_usage":{"input_tokens":10,"cache_creation_input_tokens":20000,"cache_read_input_tokens":70000}},
 "rate_limits":{"five_hour":{"used_percentage":42.4,"resets_at":%d},"seven_day":{"used_percentage":81.6,"resets_at":%d}}}`,
-		t.TempDir(), five, now+183840)
+		t.TempDir(), five, now+183840+30)
 }
 
 func TestRunWritesLabelsAndLimits(t *testing.T) {

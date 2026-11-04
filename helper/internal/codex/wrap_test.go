@@ -263,7 +263,12 @@ func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 	}()
 
 	o := FindOpts{SessionsDir: sessions, Lsof: lsof, Poll: 20 * time.Millisecond}
-	wrap([]string{"sh", "-c", "sleep 1.5"}, o)
+	// The child lives until its own labels reach hc (at most 10 s), not for a fixed
+	// time: on a loaded machine one fake hc call can take over a second.
+	waitOwn := `for i in $(seq 200); do grep -q gpt-6-own "$0" && exit 0; sleep 0.05; done; exit 1`
+	if code := wrap([]string{"sh", "-c", waitOwn, hcLog}, o); code != 0 {
+		t.Errorf("own labels never reached hc (child exit %d)", code)
+	}
 
 	log := readLog(hcLog)
 	if !strings.Contains(log, "poke.model=gpt-6-astra") || !strings.Contains(log, "poke.model=gpt-6-own") {
