@@ -61,12 +61,12 @@ export function limitAlerts(limits, nowMs, seen) {
       const base = `${prov}:${w.minutes}:${w.resets_at}`;
       const name = `${NAMES[prov] ?? prov} ${WIN[w.minutes]}`;
       if (w.used >= 80) {
-        if (!seen.includes(`${base}:80`)) out.push({ key: `${base}:80`, title: `${name} at ${Math.round(w.used)}%`, level: 'warning' });
+        if (!seen.includes(`${base}:80`)) out.push({ key: `${base}:80`, provider: prov, title: `${name} at ${Math.round(w.used)}%`, level: 'warning' });
         continue;
       }
       const p2 = pace(w, w.minutes, nowMs);
       if (p2?.hitsInSec != null && !seen.includes(`${base}:pace`)) {
-        out.push({ key: `${base}:pace`, title: `${name} may hit its limit before it resets`, level: 'warning' });
+        out.push({ key: `${base}:pace`, provider: prov, title: `${name} may hit its limit before it resets`, level: 'warning' });
       }
     }
   }

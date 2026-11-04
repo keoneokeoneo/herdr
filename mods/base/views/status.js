@@ -15,16 +15,17 @@ export function init(s, cx) {
   keepFresh(s, cx, USAGE_DIR, loadUsage);
   start(s, cx);
   cx.timer.every(60000, (cx) => cx.notify());
-  // Limit alerts: once per window (keys carry resets_at), checked after each usage load settles.
-  s.alerted = [];
-  cx.timer.every(30000, () => alertLimits(s));
 }
 
-function alertLimits(s) {
-  for (const a of limitAlerts(s.limits, Date.now(), s.alerted)) {
-    s.alerted.push(a.key);
-    notify({ title: a.title, body: "Open the Usage tab for the forecast.", level: a.level, action: { name: "layout.show", args: { id: "panel" } } });
-  }
+// Limit alerts, once per window (keys carry resets_at). Checked on every render, which follows each
+// usage change and the 60 s tick; keys are marked first so a re-render never posts twice.
+function alertLimits(s, cx) {
+  const fresh = limitAlerts(s.limits, Date.now(), (s.alerted ??= []));
+  if (!fresh.length) return;
+  s.alerted.push(...fresh.map((a) => a.key));
+  cx.spawn(async () => {
+    for (const a of fresh) notify({ title: a.title, body: "Open the Usage tab for the forecast.", level: a.level, icon: `icons/${a.provider}.svg`, timeout: 10000, action: { name: "layout.show", args: { id: "panel" } } });
+  });
 }
 
 // Key commands (base.jump, base.notes) reach shown copies; only this always-shown copy acts on them.
@@ -54,6 +55,7 @@ function prov(t, name, icon, p, now) {
 }
 
 export function render(s, cx) {
+  alertLimits(s, cx);
   const t = theme();
   const now = Date.now();
   const L = s.limits ?? {};

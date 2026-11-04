@@ -91,6 +91,7 @@ test('limitAlerts fires once per window for 80% and for a forecast hit', () => {
   const first = limitAlerts(limits, ms, []);
   assert.deepEqual(first.map((a) => a.key), [`claude:300:${now + 2 * H}:80`, `codex:300:${now + 4 * H}:pace`]);
   assert.match(first[0].title, /Claude session at 85%/);
+  assert.equal(first[0].provider, 'claude');
   assert.match(first[1].title, /Codex session may hit its limit/);
   assert.deepEqual(limitAlerts(limits, ms, first.map((a) => a.key)), []);
   assert.deepEqual(limitAlerts({}, ms, []), []);
