@@ -44,7 +44,7 @@ export function start(s, cx) {
   dexSync(cx);
   cx.timer.every(60000, dexSync);
 
-  const tick = (cx) => cx.spawn(async (cx) => { await step(s); cx.notify(); });
+  const tick = (cx) => cx.spawn(async () => { await step(s); });
   tick(cx);
   cx.timer.every(2000, tick);
   const evening = () => { const h = new Date().getHours(); const on = h >= 18 || h < 6; if (shared("poke.evening") !== on) setShared("poke.evening", on); };

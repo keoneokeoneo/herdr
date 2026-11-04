@@ -11,6 +11,7 @@ import { start } from "../behaviours.js";
 export function init(s, cx) {
   keepFresh(s, cx, STATE_DIR, loadUsage);
   start(s, cx);
+  cx.timer.every(60000, (cx) => cx.notify());
 }
 
 // Behaviours (Task 13) hook in here; commands reach only this copy.

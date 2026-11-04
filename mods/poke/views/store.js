@@ -10,14 +10,25 @@ export async function readJSON(path) {
 
 // Load now, then on every change in the folder, plus a slow timer in case watching fails.
 export function keepFresh(s, cx, dir, load) {
-  const again = (cx) => cx.spawn(async (cx) => { await load(s); cx.notify(); });
+  let busy = false;
+  let previous;
+  const refresh = async (cx) => {
+    if (busy) return;
+    busy = true;
+    try {
+      await load(s);
+      const next = JSON.stringify([s.limits, s.usage, s.dex]);
+      if (next !== previous) { previous = next; cx.notify(); }
+    } finally { busy = false; }
+  };
+  const again = (cx) => cx.spawn(refresh);
   again(cx);
   cx.timer.every(15000, again);
   cx.spawn(async (cx) => {
     for (;;) {
-      const ok = await watchFolder(dir()).then(() => true, () => false);
-      if (!ok) return;
-      await load(s); cx.notify();
+      const paths = await watchFolder(dir()).catch(() => null);
+      if (!paths) return;
+      if (paths.some((p) => p === dir() || /(?:limits|usage|companion-state)\.json$/.test(p))) await refresh(cx);
     }
   });
 }

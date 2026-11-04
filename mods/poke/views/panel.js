@@ -16,6 +16,7 @@ async function loadDex(s) {
 }
 
 export function init(s, cx) {
+  cx.timer.every(60000, (cx) => cx.notify());
   keepFresh(s, cx, STATE_DIR, async (s) => { await loadUsage(s); await loadDex(s); });
 }
 

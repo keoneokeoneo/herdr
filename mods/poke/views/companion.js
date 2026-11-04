@@ -73,11 +73,11 @@ export function render(s) {
   if (!c) return card;
   const src = spritePath(`companion-${c.id}`) ?? spritePath(c.id);
   if (narrow()) return card.px(0).items_center().gap(4)
-    .child(src ? alive(image(src).w(52).h(52)) : div().text_color(t.dim).child(`#${c.id}`))
+    .child(src ? alive(image(src).w(52).h(52), src) : div().text_color(t.dim).child(`#${c.id}`))
     .child(div().text_size(10).text_color(t.muted).child(`Lv.${c.level ?? "?"}`))
     .child(div().w(48).h(4).rounded_full().bg(t.raised).overflow_hidden().child(div().h(4).rounded_full().bg(t.accent).w(`${Math.max(2, Math.round(c.pct))}%`)));
   const face = div().flex_none().size(64).rounded(12).bg(t.surface).flex().items_center().justify_center()
-    .child(src ? alive(image(src).w(60).h(60)) : div().text_color(t.dim).child(`#${c.id}`));
+    .child(src ? alive(image(src).w(60).h(60), src) : div().text_color(t.dim).child(`#${c.id}`));
   const title = h_flex().items_center().gap(6)
     .child(div().text_size(14).font_weight(700).text_color(t.foreground).child(c.name))
     .child(c.shiny ? div().text_color(t.accent).child("✦") : div())
