@@ -3,7 +3,7 @@ import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, shared, setShared } from "herdr";
 import { sprite } from "./ui.js";
-import { openCamp, minimap } from "./camp.js";
+import { minimap } from "./camp.js";
 import { readJSON, PTB_DIR } from "./store.js";
 
 async function loadDex(s) {
@@ -33,6 +33,7 @@ function dex(t, s) {
   const caught = s.dex ?? [];
   const seen = shared("poke.seen") ?? [];
   const names = shared("poke.names") ?? {};
+  const gardenEnabled = shared("poke.gardenEnabled") !== false;
   const grid = () => h_flex().flex_wrap().gap(6);
   const box = v_flex().flex_none().gap(10)
     .child(div().text_size(12).font_weight(700).text_color(t.foreground).child(`Caught · ${caught.length}`));
@@ -44,8 +45,12 @@ function dex(t, s) {
   box.child(h_flex().pt(6).items_center().gap(8)
     .child(div().text_size(12).font_weight(700).text_color(t.foreground).child(`Active · ${seen.length}`))
     .child(div().flex_1())
-    .child(div().id("open-camp").px(8).py(4).rounded(6).bg(t.surface).text_size(10).text_color(t.accent)
-      .cursor_pointer().hover((x) => x.bg(t.hover)).on_click(openCamp).child("Open Garden ↗")));
+    .child(div().id("garden-toggle").px(8).py(4).rounded(6).bg(t.surface).text_size(11)
+      .text_color(gardenEnabled ? t.accent : t.muted).cursor_pointer().hover((x) => x.bg(t.hover))
+      .tooltip(gardenEnabled ? "Hide the garden minimap" : "Show the garden minimap")
+      .accessibility_label(gardenEnabled ? "Garden enabled. Click to disable" : "Garden disabled. Click to enable")
+      .on_click(() => setShared("poke.gardenEnabled", !gardenEnabled))
+      .child(gardenEnabled ? "Garden: On" : "Garden: Off")));
   if (seen.length) {
     const g = grid();
     for (const id of seen) g.child(tile(t, id, id, names[id] ?? null, false));
@@ -65,5 +70,5 @@ export function render(s, cx) {
   const t = theme();
   return v_flex().size_full().gap(12).px(12).pt(4).pb(12).bg(t.chrome).border_l_1().border_color(t.border).overflow_y_scroll()
     .child(dex(t, s))
-    .child(minimap());
+    .child(shared("poke.gardenEnabled") !== false ? minimap() : div());
 }
