@@ -19,16 +19,24 @@ export function keepFresh(s, cx, dir, load) {
       if (next !== previous) { previous = next; cx.notify(); }
     } finally { busy = false; }
   };
-  const again = (cx) => cx.spawn(refresh);
+  // The folder may not exist yet (nothing has written usage data): the slow timer starts the watch again.
+  let watching = false;
+  const watch = (cx) => {
+    if (watching) return;
+    watching = true;
+    cx.spawn(async (cx) => {
+      try {
+        for (;;) {
+          const paths = await watchFolder(dir()).catch(() => null);
+          if (!paths) return;
+          if (paths.some((p) => p === dir() || /(?:claude|codex|daily)\.json$/.test(p))) await refresh(cx);
+        }
+      } finally { watching = false; }
+    });
+  };
+  const again = (cx) => { cx.spawn(refresh); watch(cx); };
   again(cx);
   cx.timer.every(15000, again);
-  cx.spawn(async (cx) => {
-    for (;;) {
-      const paths = await watchFolder(dir()).catch(() => null);
-      if (!paths) return;
-      if (paths.some((p) => p === dir() || /(?:claude|codex|daily)\.json$/.test(p))) await refresh(cx);
-    }
-  });
 }
 
 export const WIN_LABEL = (m) => (m === 300 ? "Session" : m === 10080 ? "Weekly" : `${Math.round(m / 60)}h window`);

@@ -63,8 +63,8 @@ class SetupTests(unittest.TestCase):
         for p, text in files.items():
             p.write_text(text)
         before = {p: digest(p) for p in files}
-        os.environ["HOME"] = str(home)
-        self.install(["obsidian"])
+        with patch.dict(os.environ, {"HOME": str(home)}):
+            self.install(["obsidian"])
         self.assertEqual(before, {p: digest(p) for p in files})
 
     def test_install_poke_pulls_in_base(self):
@@ -129,6 +129,16 @@ class SetupTests(unittest.TestCase):
         self.assertIn("mods/obsidian/main.js", summary["skipped"])
         self.install(["obsidian"], force=True)
         self.assertEqual(live.read_bytes(), (REPO / "mods/obsidian/main.js").read_bytes())
+
+    def test_invalid_keys_json_stops_with_a_clear_message(self):
+        (self.app / "keys.json").write_text("{broken")
+        env = {"HERDR_APP_HOME": str(self.app), "HERDR_SETUP_STATE": str(self.state), "HERDR_SETUP_DRY": "1"}
+        err = io.StringIO()
+        with patch.dict(os.environ, env), contextlib.redirect_stderr(err):
+            self.assertEqual(S.main(["install", "base"]), 2)
+        self.assertIn("keys.json", err.getvalue())
+        self.assertEqual((self.app / "keys.json").read_text(), "{broken")
+        self.assertFalse((self.app / "mods").exists(), "nothing is copied before the keys are known to be readable")
 
     def test_in_place_checkout_copies_nothing(self):
         summary = S.install(["base"], REPO, REPO, self.state, MANIFEST, dry=True, run_installers=False)

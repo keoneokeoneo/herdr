@@ -33,3 +33,28 @@ test('store ignores unrelated files and unchanged snapshots, but publishes chang
   assert.equal(notices, 2);
   delete globalThis.__pokeStoreTest;
 });
+
+test('a folder that is missing at start is watched once it appears (the slow timer restarts the watch)', async () => {
+  const source = (await readFile(new URL('../../../mods/base/views/store.js', import.meta.url), 'utf8'))
+    .replace('import { home, readTextFile, watchFolder } from "herdr";',
+      'const { home, readTextFile, watchFolder } = globalThis.__pokeStoreTest;');
+  let calls = 0, wake;
+  globalThis.__pokeStoreTest = { home: () => '/home', readTextFile: async () => null,
+    watchFolder: () => { calls++; return calls === 1 ? Promise.reject(new Error('no such folder')) : new Promise((r) => { wake = r; }); } };
+  const { keepFresh } = await import('data:text/javascript;base64,' + Buffer.from(source + '\n//2').toString('base64'));
+  let loads = 0;
+  const timers = [];
+  const cx = { notify: () => {}, spawn: (fn) => fn(cx), timer: { every: (_ms, fn) => timers.push(fn) } };
+  const settle = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
+  keepFresh({}, cx, () => '/state', async (s) => { loads++; s.limits = { loads }; });
+  await settle();
+  assert.equal(calls, 1);
+  await timers[0](cx);
+  await settle();
+  assert.equal(calls, 2, 'the timer tick starts watching again');
+  const before = loads;
+  wake(['/state/claude.json']);
+  await settle();
+  assert.ok(loads > before);
+  delete globalThis.__pokeStoreTest;
+});

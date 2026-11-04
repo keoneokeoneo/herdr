@@ -110,6 +110,13 @@ def _journal(state):
     return json.loads(p.read_text()) if p.exists() else {"installed": {}}
 
 
+def _read_keys(path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except json.JSONDecodeError as e:
+        raise ValueError(f"{path} is not valid JSON ({e}); fix it, then install again") from None
+
+
 def _backup(path, rel, state, stamp):
     """Copy a file about to be replaced to <state>/backups/<stamp>/<rel>. Never inside the
     app home: a write under mods/ makes Herdr reload that mod."""
@@ -124,6 +131,8 @@ def install(names, source, app, state, manifest, dry=False, run_installers=True,
     in_place = source == app
     stamp = time.strftime("%Y%m%d%H%M%S")
     copied, kept, skipped, journal = [], [], [], _journal(state)
+    if not in_place:
+        _read_keys(app / "keys.json")  # an unreadable keys.json stops the install before any copy
     for name in order:
         fingerprints = {}
         for rel in setup_files(name, manifest, source):
@@ -148,7 +157,7 @@ def install(names, source, app, state, manifest, dry=False, run_installers=True,
     if layouts and not in_place:
         keys_src = json.loads((source / "keys.json").read_text(encoding="utf-8"))
         keys_path = app / "keys.json"
-        current = json.loads(keys_path.read_text(encoding="utf-8")) if keys_path.exists() else {}
+        current = _read_keys(keys_path)
         merged, kept = merge_keys(keys_src, current, layouts)
         if merged != current:
             if keys_path.exists():
@@ -199,8 +208,12 @@ def main(argv=None):
         if not names:
             print("nothing installed yet; use: setup.py install <name>...", file=sys.stderr)
             return 1
-        summary = install(names, ROOT, app, state, manifest, dry=os.environ.get("HERDR_SETUP_DRY") == "1",
-                          run_installers=False, force=force)
+        try:
+            summary = install(names, ROOT, app, state, manifest, dry=os.environ.get("HERDR_SETUP_DRY") == "1",
+                              run_installers=False, force=force)
+        except ValueError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
         print("updated: " + ", ".join(summary["order"]))
         for rel in summary["copied"]:
             print(f"copied   {rel}")

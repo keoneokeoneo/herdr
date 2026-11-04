@@ -33,3 +33,11 @@ test('corrupt input returns null and never throws', () => {
   assert.deepEqual(resolveLimits(null), { claude: null, codex: null });
   assert.equal(resolveDaily('x'), null);
 });
+
+test('a snapshot whose windows or days is not a list is rejected, not drawn', () => {
+  assert.equal(resolveLimits({ claude: { updated: 1, windows: 'x' } }).claude, null);
+  assert.equal(resolveLimits({ claude: { updated: 1, windows: [{ minutes: 300 }] } }).claude.windows.length, 1);
+  assert.equal(resolveLimits({ claude: { updated: 1 } }).claude, null);
+  assert.equal(resolveDaily({ updated: 1, days: {} }), null);
+  assert.equal(resolveDaily({ updated: 1, days: [] }).days.length, 0);
+});

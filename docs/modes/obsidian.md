@@ -54,9 +54,12 @@ vault는 Herdr 공유 상태의 `obsidian.vaults`와 `obsidian.root`에 유지�
 제출할 때 실행된다.
 
 설치기(`scripts/setup.py install obsidian`)는 이 모드, 그 레이아웃, 공용 `themes/base.json`만 복사하며, 변경된
-기존 파일은 옆에 백업한다. 키, 셸 설정, launchd, Obsidian 설정, 현재 레이아웃은 바꾸지 않으며 Base도 Poke도
+기존 파일은 `~/.local/state/herdr-app/backups/`에 백업한다. 키, 셸 설정, launchd, Obsidian 설정, 현재 레이아웃은 바꾸지 않으며 Base도 Poke도
 필요하지 않다. 런타임 상태는 Herdr의 공유 저장소에 있다. 제거하려면 다른 레이아웃으로 전환한 뒤 앱 홈에서
 `mods/obsidian`과 `layouts/obsidian.json`을 삭제하고, 공용 base 테마는 남겨 둔다.
+
+레이아웃의 UI 글꼴(IBM Plex Sans KR)은 base mod의 `fonts/`에 들어 있다. obsidian만 설치하면 이 글꼴이 없어
+Herdr 기본 글꼴로 표시된다. 같은 글꼴을 원하면 base도 설치한다.
 
 ## 검증
 

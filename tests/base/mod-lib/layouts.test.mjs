@@ -85,6 +85,14 @@ test('keys point to ids and commands that exist', async () => {
   }
 });
 
+test('shared keys outside the poke section never name Poke', async () => {
+  const keys = await json('keys.json');
+  for (const [section, map] of Object.entries(keys)) {
+    if (section === 'layout:poke') continue;
+    assert.equal(/poke/i.test(JSON.stringify(map)), false, section);
+  }
+});
+
 test('base files reference Poke only through the documented seam', async () => {
   const ALLOWED = /poke\.(sprites|evening|typeMode|typeSeed|partner|review_of|findings|owner|provider|model|effort|ctx)|herdr-poke|poke-assets/g;
   const files = [];
