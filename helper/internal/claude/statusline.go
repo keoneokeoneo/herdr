@@ -34,6 +34,7 @@ const (
 // Input mirrors the statusline JSON Claude Code (2.1.x) sends on stdin. Only
 // the fields the statusline uses are listed.
 type Input struct {
+	SessionID     string        `json:"session_id"`
 	Model         Model         `json:"model"`
 	Effort        Effort        `json:"effort"`
 	Cwd           string        `json:"cwd"`
@@ -449,7 +450,10 @@ func safeRender(in Input, env Env) (out string) {
 func sideEffects(in Input, env Env) {
 	defer func() { _ = recover() }()
 	if kv := labelsFrom(in, env); len(kv) > 0 {
-		_ = labels.Set(os.Getenv("HC_TERMINAL_ID"), kv)
+		terminal := os.Getenv("HC_TERMINAL_ID")
+		if owner := labels.ForegroundOwner(terminal, "claude"); owner > 0 {
+			_ = labels.Set(terminal, labels.Telemetry(owner, "claude", in.SessionID, kv))
+		}
 	}
 	if l, ok := limitsFrom(in, env.Now); ok {
 		_, _ = state.MergeLimits("claude", l)

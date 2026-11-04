@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -16,6 +17,12 @@ import (
 	"herdr-poke/internal/labels"
 	"herdr-poke/internal/state"
 )
+
+// Running tests inside Herdr must never publish into the caller's real terminal.
+func TestMain(m *testing.M) {
+	os.Unsetenv("HC_TERMINAL_ID")
+	os.Exit(m.Run())
+}
 
 func TestWrapPassesExitCode(t *testing.T) {
 	if got := Wrap([]string{"sh", "-c", "exit 3"}); got != 3 {
@@ -189,7 +196,13 @@ func TestWrapTailsRolloutIntoLabelsAndLimits(t *testing.T) {
 
 	// While Codex runs, a new turn appends lines, the last one cut mid-line.
 	go func() {
-		time.Sleep(400 * time.Millisecond)
+		deadline := time.Now().Add(10 * time.Second)
+		for !strings.Contains(readLog(hcLog), "poke.ctx=50") {
+			if time.Now().After(deadline) {
+				return
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 		f, err := os.OpenFile(rollout, os.O_APPEND|os.O_WRONLY, 0o644)
 		if err != nil {
 			return
@@ -201,7 +214,8 @@ func TestWrapTailsRolloutIntoLabelsAndLimits(t *testing.T) {
 		f.WriteString(line[40:])
 	}()
 
-	if got := wrap([]string{"sh", "-c", "sleep 1"}, o); got != 0 {
+	waitUpdated := `for i in $(seq 400); do grep -q 'poke.ctx=0' "$0" 2>/dev/null && exit 0; sleep 0.05; done; exit 1`
+	if got := wrap([]string{"sh", "-c", waitUpdated, hcLog}, o); got != 0 {
 		t.Fatalf("wrap = %d", got)
 	}
 
@@ -212,7 +226,7 @@ func TestWrapTailsRolloutIntoLabelsAndLimits(t *testing.T) {
 	if !strings.Contains(log, "label t42 poke.ctx=0") {
 		t.Errorf("updated ctx missing from hc log:\n%s", log)
 	}
-	if strings.Contains(log, "poke.model") && strings.Count(log, "poke.model") != 1 {
+	if strings.Count(log, "poke.model=gpt-6-astra") != 1 {
 		t.Errorf("unchanged model was written again:\n%s", log)
 	}
 
@@ -255,7 +269,13 @@ func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 		sibling := writeRollout(t, sessions, "bbbb", cwd, time.Now(), "")
 		appendTo(t, sibling, turnContextLine+tokenCountLine(now, 12000, 10.0, resets))
 		// Later this wrapper's own session writes its file, and lsof sees it.
-		time.Sleep(600 * time.Millisecond)
+		deadline := time.Now().Add(10 * time.Second)
+		for !strings.Contains(readLog(hcLog), "poke.model=gpt-6-astra") {
+			if time.Now().After(deadline) {
+				return
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 		appendTo(t, own, `{"type":"turn_context","payload":{"model":"gpt-6-own","effort":"low"}}`+"\n"+tokenCountLine(time.Now(), 135200, 20.0, resets))
 		mu.Lock()
 		owned = true
@@ -265,7 +285,7 @@ func TestWrapSwitchesToLsofFileAfterGuess(t *testing.T) {
 	o := FindOpts{SessionsDir: sessions, Lsof: lsof, Poll: 20 * time.Millisecond}
 	// The child lives until its own labels reach hc (at most 10 s), not for a fixed
 	// time: on a loaded machine one fake hc call can take over a second.
-	waitOwn := `for i in $(seq 200); do grep -q gpt-6-own "$0" && exit 0; sleep 0.05; done; exit 1`
+	waitOwn := `for i in $(seq 200); do grep -q gpt-6-own "$0" 2>/dev/null && exit 0; sleep 0.05; done; exit 1`
 	if code := wrap([]string{"sh", "-c", waitOwn, hcLog}, o); code != 0 {
 		t.Errorf("own labels never reached hc (child exit %d)", code)
 	}
@@ -366,5 +386,49 @@ func TestWrapSkipsMirrorWhenTerminalLockHeld(t *testing.T) {
 	}
 	if called {
 		t.Fatal("mirror ran without owning terminal lock")
+	}
+}
+
+func TestOwnedSnapshotClearsPreviousContext(t *testing.T) {
+	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	log := fakeHC(t)
+	if err := publishOwned(Snapshot{Model: "old", HasCtx: true, CtxPct: 92}, "t1", time.Now(), 10, "old-session"); err != nil {
+		t.Fatal(err)
+	}
+	if err := publishOwned(Snapshot{Model: "new"}, "t1", time.Now(), 11, "new-session"); err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(readLog(log)), "\n")
+	if len(lines) != 2 || !strings.Contains(lines[1], "poke.ctx= poke.effort=") || !strings.Contains(lines[1], "poke.owner=11") {
+		t.Fatalf("stale facts: %v", lines)
+	}
+}
+
+func TestMonitorFollowsSessionSwitchWithinSameProcess(t *testing.T) {
+	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	log := fakeHC(t)
+	old := filepath.Join(t.TempDir(), "rollout-old.jsonl")
+	next := filepath.Join(t.TempDir(), "rollout-new.jsonl")
+	appendTo(t, old, turnContextLine+tokenCountLine(time.Now(), 135200, 1, time.Now().Add(time.Hour).Unix()))
+	appendTo(t, next, `{"type":"turn_context","payload":{"model":"new-session"}}`+"\n")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	opts := FindOpts{Poll: 10 * time.Millisecond, Rediscover: 20 * time.Millisecond, NoFallback: true, Lsof: func(int) ([]string, error) {
+		if strings.Contains(readLog(log), "poke.model=gpt-6-astra") {
+			return []string{next}, nil
+		}
+		return []string{old}, nil
+	}}.withDefaults()
+	done := make(chan struct{})
+	go func() { defer close(done); monitor(ctx, 1, "", time.Now(), "t1", opts, 42) }()
+	for !strings.Contains(readLog(log), "poke.model=new-session") && ctx.Err() == nil {
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	<-done
+	lines := strings.Split(strings.TrimSpace(readLog(log)), "\n")
+	last := lines[len(lines)-1]
+	if !strings.Contains(last, "poke.ctx= poke.effort= poke.model=new-session") || !strings.Contains(last, "poke.owner=42") {
+		t.Fatalf("old snapshot survived session switch: %s", last)
 	}
 }

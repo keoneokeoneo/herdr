@@ -1,6 +1,8 @@
 // One place that turns Herdr's live data into rows the views draw.
 import { agents, terminals, panes, spaces } from "herdr";
 
+import { telemetry } from "../lib/telemetry.js";
+
 const PROVIDER = { "claude-code": "claude", claude: "claude", codex: "codex" };
 
 export function providerOf(a) {
@@ -20,6 +22,7 @@ export function rows() {
   return agents().map((a) => {
     const t = byAddr.get(a.address) ?? {};
     const l = t.labels ?? {};
+    const info = telemetry(l, t.foreground?.pid, providerOf(a));
     const p = paneBy.get(a.pane) ?? {};
     const num = (v) => (v == null || v === "" ? null : Number(v));
     return {
@@ -29,7 +32,7 @@ export function rows() {
       since: t.status_ms ?? t.created_ms ?? Date.now(), turn: t.turn ?? 0,
       partner: num(l["poke.partner"]) ?? fallbackPartner(a.address),
       partnerSet: l["poke.partner"] != null,
-      model: l["poke.model"] ?? null, effort: l["poke.effort"] ?? null, ctx: num(l["poke.ctx"]),
+      model: info.model, effort: info.effort, ctx: info.ctx, telemetryNote: info.note,
       reviewOf: l["poke.review_of"] ?? null, findings: num(l["poke.findings"]),
       cwd: p.cwd ?? t.cwd ?? null, branch: p.branch ?? null,
     };

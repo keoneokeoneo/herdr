@@ -198,6 +198,7 @@ func fakeHC(t *testing.T, extra string) (logPath string) {
 	logPath = filepath.Join(dir, "calls.log")
 	script := `#!/bin/sh
 [ "$1" = warmup ] && exit 0
+[ "$1" = get ] && { printf '%s' '{"foreground":{"pid":` + fmt.Sprint(os.Getpid()) + `,"argv":["claude"]}}'; exit 0; }
 for a in "$@"; do printf '[%s]' "$a" >> '` + logPath + `'; done
 printf '\n' >> '` + logPath + `'
 ` + extra + `
@@ -290,7 +291,7 @@ func TestRunWritesLabelsAndLimits(t *testing.T) {
 	}
 
 	got := hcCalls(t, logPath)
-	if len(got) != 1 || got[0] != "[label][t7][poke.ctx=45][poke.effort=high][poke.model=Opus 4.7]" {
+	if len(got) != 1 || got[0] != fmt.Sprintf("[label][t7][poke.ctx=45][poke.effort=high][poke.model=Opus 4.7][poke.owner=%d][poke.provider=claude][poke.session=]", os.Getpid()) {
 		t.Fatalf("hc calls = %q", got)
 	}
 
@@ -506,5 +507,16 @@ func TestGitInfoRealRepos(t *testing.T) {
 	}
 	if _, _, ok := gitInfo(filepath.Join(root, "missing")); ok {
 		t.Error("missing dir reported as repo")
+	}
+}
+
+func TestNewClaudeSessionClearsOldContext(t *testing.T) {
+	runEnv(t)
+	log := fakeHC(t, "")
+	Run(strings.NewReader(liveInput(t, false)), &bytes.Buffer{})
+	Run(strings.NewReader(`{"session_id":"new","model":{"display_name":"Sonnet"}}`), &bytes.Buffer{})
+	calls := hcCalls(t, log)
+	if len(calls) != 2 || !strings.Contains(calls[1], "[poke.ctx=]") || !strings.Contains(calls[1], "[poke.session=new]") {
+		t.Fatalf("old context survived: %v", calls)
 	}
 }

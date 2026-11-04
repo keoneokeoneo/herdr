@@ -34,6 +34,7 @@ in the table are relative to `mods/poke/`.
 | Agent rows (Herdr data → what views draw; provider; labels) | `views/data.js` |
 | Things that happen: partner assignment, cries, Dex sync, Codex attach, evening dim | `mods/poke/behaviours.js` |
 | Pure logic (urgency, groups, chips, partner pick, growth formula, formatting) | `mods/poke/lib/*.js`, with tests in `tests/mod-lib/` |
+| Session ownership and complete telemetry snapshots | `helper/internal/labels/session.go`, `mods/poke/lib/telemetry.js` |
 | Label caching, failure backoff, `hc label` timeout | `helper/internal/labels/labels.go` |
 | CLI dispatch and helper build | `helper/main.go`, `scripts/build.sh` |
 | Mod registration and bundled UI fonts | `mods/poke/mod.json`, `mods/poke/fonts/` |
@@ -60,7 +61,8 @@ helper `~/.local/bin/herdr-poke` adds what Herdr lacks:
   model labels remain. Local bare Codex foreground processes are supported; the
   helper cannot inspect a remote machine's PID or files.
 
-Both write terminal labels `poke.model`, `poke.effort`, `poke.ctx` and
+Both publish complete terminal snapshots (`poke.model`, `poke.effort`, `poke.ctx`)
+with `poke.owner` (foreground PID), `poke.provider` and `poke.session`, and
 `~/.local/state/herdr-poke/limits.json`. `usage` writes `usage.json`. Sprites, cries and
 names go to `~/.config/herdr-app/poke-assets/`, which the mod reads as
 `poke-assets/<file>`. pokeTokenBar's folder
@@ -108,6 +110,16 @@ names go to `~/.config/herdr-app/poke-assets/`, which the mod reads as
   on disk intentionally: flock releases on process exit, so do not unlink live locks.
   Label backoff returns an error until publication can retry; latest Codex limit
   comparison and replacement happen under the same lock.
+- **Telemetry ownership:** the UI hides snapshots without a matching foreground PID
+  and provider. Claude statusline checks `hc get` and process ancestry under a bounded
+  timeout before publishing; a delayed old statusline cannot claim a replacement
+  Claude. Codex rechecks its open rollout every 5 seconds for in-process session
+  switches, clearing missing fields when it switches. PID reuse is not a process
+  start-time identity check; unsupported/legacy snapshots are shown as unavailable.
+  Rebuilding the helper does not upgrade an already-running Codex wrapper/attach
+  process. Existing wrappers need a normal restart after the user finishes their
+  session; do not interrupt their work to upgrade. Claude picks up the new binary
+  on its next statusline invocation.
 - **Codex needs `--no-daemon`.** Without it, `lsof` can't tie the process to its
   rollout and `HC_TERMINAL_ID` is lost.
 
@@ -188,7 +200,7 @@ It does not undo the deliberately manual permission settings or external skills.
 | Agent transitions, partner assignment | 2 seconds | Reads Herdr rows; no unconditional notify |
 | Attach health probe | 60 seconds per Codex | One helper; held flock exits before querying hc |
 | Attach foreground validation | 5 seconds per live attach | One bounded `hc get`; failure exits for later retry |
-| Rollout discovery / tail | about 1 second | `lsof` until found; then incremental file reads |
+| Rollout discovery / tail | about 1 second | `lsof` until found; then incremental reads + open-rollout recheck every 5 seconds |
 | Companion + Dex copy, evolution/level toasts | PTB folder watch (`companion-state.json`, `sprites/`) + 300 seconds | Three helper executions per run, coalesced; no unchanged file rewrite; only new variant GIFs normalized |
 | Limits/usage/Dex load | filtered folder events + 15 seconds | Suppresses unchanged notify; concurrent loads coalesced |
 | Status/panel time labels | 60 seconds | Countdown/expiry refresh |
@@ -199,7 +211,8 @@ It does not undo the deliberately manual permission settings or external skills.
 Asset jobs start three helpers each time pokeTokenBar writes its state (every few
 minutes) and on the 5-minute fallback, plus partner fetches, retries and attach
 probes. Claude statusline also runs two git commands normally (three on detached
-HEAD), each with a two-second timeout. CPU impact has not been remeasured.
+HEAD), each with a two-second timeout, plus a bounded `hc get`/process-ancestry check
+for telemetry ownership. CPU impact has not been remeasured.
 
 The brand button folds to a rail; `cmd-b` hides the sidebar. Double-click rename and
 reorder are implemented for expanded spaces and tabs, not agent rows or rail spaces.

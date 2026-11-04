@@ -44,6 +44,9 @@ func Set(terminal string, kv map[string]string) error {
 		return fmt.Errorf("hc label %s: retry after %s", terminal, until.Format(time.RFC3339Nano))
 	}
 
+	// A changed owner/session must republish even unchanged facts: the core may
+	// have restarted or a new session may have cleared its terminal labels.
+	force := kv["poke.owner"] != "" && (kv["poke.owner"] != cache["poke.owner"] || kv["poke.provider"] != cache["poke.provider"] || kv["poke.session"] != cache["poke.session"])
 	var args []string
 	var changed []string
 	keys := make([]string, 0, len(kv))
@@ -52,7 +55,7 @@ func Set(terminal string, kv map[string]string) error {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		if old, ok := cache[k]; ok && old == kv[k] {
+		if old, ok := cache[k]; ok && old == kv[k] && !force {
 			continue
 		}
 		changed = append(changed, k)

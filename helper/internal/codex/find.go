@@ -20,6 +20,7 @@ type FindOpts struct {
 	SessionsDir string                          // default ~/.codex/sessions
 	Lsof        func(pid int) ([]string, error) // names of files pid has open; default runs lsof
 	Poll        time.Duration                   // time between attempts; default 1 s
+	Rediscover  time.Duration                   // recheck the open rollout after an in-process session switch; default 5 s
 	NoFallback  bool                            // trust lsof only: never guess from the sessions folder
 }
 
@@ -43,6 +44,9 @@ func (o FindOpts) withDefaults() FindOpts {
 	}
 	if o.Lsof == nil {
 		o.Lsof = lsofNames
+	}
+	if o.Rediscover <= 0 {
+		o.Rediscover = 5 * time.Second
 	}
 	if o.Poll <= 0 {
 		o.Poll = time.Second

@@ -65,6 +65,7 @@ export function render(_s, _cx) {
   left = left.child(div().flex_1());
   const right = h_flex().flex_none().items_center().gap(6).text_size(11).text_color(t.muted);
   if (r.branch) right.child(div().font_family("IBM Plex Mono").text_color(isWorktree(r.cwd) ? "#8ec5f5" : t.dim).child(`${isWorktree(r.cwd) ? "⎇ " : ""}${r.branch}`));
+  if (r.telemetryNote) right.child(div().text_color(t.dim).child(r.telemetryNote));
   if (r.model) right.child(div().child(r.model));
   if (r.effort) right.child(pill(r.effort, r.provider === "claude" ? t.done : "#8ec5f5", { size: 10 }));
   if (r.ctx != null) right.child(div().text_color(t.dim).child("ctx")).child(meter(t, r.ctx)).child(div().child(`${r.ctx}%`));

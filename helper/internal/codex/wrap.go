@@ -92,7 +92,7 @@ func wrap(args []string, opts FindOpts) int {
 				return // another mirror owns this terminal; the child still runs
 			}
 		}
-		monitor(ctx, cmd.Process.Pid, cwd, started, terminal, opts)
+		monitor(ctx, cmd.Process.Pid, cwd, started, terminal, opts, os.Getpid())
 	}()
 
 	err := cmd.Wait()
@@ -118,22 +118,25 @@ func exitCode(err error) int {
 // monitor finds the child's rollout, then follows it until ctx is done,
 // publishing whenever the log says something new. A last read after ctx is
 // done picks up what Codex wrote on its way out.
-func monitor(ctx context.Context, pid int, cwd string, started time.Time, terminal string, opts FindOpts) {
+func monitor(ctx context.Context, pid int, cwd string, started time.Time, terminal string, opts FindOpts, owner int) {
+	// Publish an empty owned snapshot while waiting for the first rollout.
+	_ = labels.Set(terminal, labels.Telemetry(owner, "codex", "", nil))
 	path, certain, err := FindRollout(ctx, pid, cwd, started, opts)
 	if err != nil {
 		return // the child ended before it logged anything
 	}
 	t := &tailer{path: path}
-	pending := false // something changed and has not been published yet
+	pending := true // something changed and has not been published yet
 	step := func() {
 		if changed, _ := t.poll(); changed {
 			pending = true
 		}
-		if pending && publish(t.snap, terminal, time.Now()) == nil {
+		if pending && publishOwned(t.snap, terminal, time.Now(), owner, t.path) == nil {
 			pending = false
 		}
 	}
 
+	nextDiscovery := time.Now().Add(opts.Rediscover)
 	ticker := time.NewTicker(opts.Poll)
 	defer ticker.Stop()
 	for {
@@ -144,12 +147,17 @@ func monitor(ctx context.Context, pid int, cwd string, started time.Time, termin
 			return
 		case <-ticker.C:
 		}
-		if !certain {
-			// The path came from a guess; as soon as lsof knows better, switch.
-			if p := lsofRollout(pid, opts); p != "" {
-				certain = true
+		if !certain || !time.Now().Before(nextDiscovery) {
+			// /new and /resume may replace the rollout without replacing the PID.
+			nextDiscovery = time.Now().Add(opts.Rediscover)
+			p := lsofRollout(pid, opts)
+			if p != "" || certain {
 				if p != t.path {
 					t = &tailer{path: p}
+					pending = true
+				}
+				if p != "" {
+					certain = true
 				}
 			}
 		}
@@ -197,9 +205,9 @@ func (t *tailer) poll() (changed bool, err error) {
 	return !reflect.DeepEqual(before, t.snap), nil
 }
 
-// publish mirrors a snapshot into the terminal's labels and limits.json. It
+// publishOwned mirrors a snapshot into the terminal's labels and limits.json. It
 // returns an error if a write failed, so the caller can try again.
-func publish(s Snapshot, terminal string, now time.Time) error {
+func publishOwned(s Snapshot, terminal string, now time.Time, owner int, session string) error {
 	var errs []error
 	kv := map[string]string{}
 	if s.Model != "" {
@@ -208,6 +216,9 @@ func publish(s Snapshot, terminal string, now time.Time) error {
 	}
 	if s.HasCtx {
 		kv["poke.ctx"] = strconv.Itoa(s.CtxPct)
+	}
+	if owner > 0 {
+		kv = labels.Telemetry(owner, "codex", session, kv)
 	}
 	if len(kv) > 0 {
 		errs = append(errs, labels.Set(terminal, kv))

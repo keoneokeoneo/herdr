@@ -91,7 +91,7 @@ func Attach(terminal string) int {
 	}()
 	defer func() { _ = recover() }()
 	// lsof only: started is unknown, so scanning the sessions folder could pick another session.
-	monitor(run, fg.Pid, fg.Cwd, time.Now(), terminal, FindOpts{NoFallback: true}.withDefaults())
+	monitor(run, fg.Pid, fg.Cwd, time.Now(), terminal, FindOpts{NoFallback: true}.withDefaults(), fg.Pid)
 	return 0
 }
 

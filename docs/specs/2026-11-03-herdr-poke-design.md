@@ -42,6 +42,12 @@ The sections below are the v1 design. Where they differ from this list, this lis
 - **Usage labels** are "Session" (5h) and "Weekly". A window a provider never reports is
   hidden, not shown as "–". Keno's Codex plan reports weekly only.
   Both provider cards omit plan names; internal identifiers such as `prolite` are not displayed.
+- **Telemetry ownership:** model/effort/context snapshots are bound to the foreground
+  PID and provider; unverified legacy facts are hidden. The UI distinguishes unavailable
+  telemetry, waiting for session data, and waiting for context. Missing fields clear
+  previous session values. Codex follows rollout changes within one process on a
+  5-second check; Claude verifies the statusline's process ancestry before publication.
+  Existing Codex helper processes require a normal restart to publish the new metadata.
 - **Codex menu launch:** `programs.json` starts `herdr-poke codex -- codex --yolo --no-daemon` directly. The menu launcher does not expand zsh aliases. Existing sessions keep their original launch mode.
 - **Codex labels without the wrapper:** a Codex started by `hc run` or a script gets
   `herdr-poke codex --attach <t>`, probed by the mod every minute even when a Codex row retains model labels.

@@ -43,6 +43,7 @@ func TestStatuslineSubcommandAlwaysExitsZero(t *testing.T) {
 }
 
 func TestCodexSubcommandRunsTheCommandAfterDashes(t *testing.T) {
+	t.Setenv("HC_TERMINAL_ID", "")
 	var out, errOut bytes.Buffer
 	if code := run([]string{"codex", "--", "sh", "-c", "exit 4"}, strings.NewReader(""), &out, &errOut); code != 4 {
 		t.Errorf("exit code %d, want the child's 4", code)

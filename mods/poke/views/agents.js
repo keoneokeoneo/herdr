@@ -19,7 +19,7 @@ function subline(r, all) {
   }
   if (r.status === "blocked") return r.title || "Waiting for you";
   if (r.status === "done") return "New · not checked yet";
-  return [r.model, r.effort, r.ctx != null ? `ctx ${r.ctx}%` : null].filter(Boolean).join(" · ");
+  return [r.model, r.effort, r.ctx != null ? `ctx ${r.ctx}%` : null, r.telemetryNote].filter(Boolean).join(" · ");
 }
 
 function row(t, r, all, now) {
