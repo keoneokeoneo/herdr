@@ -15,7 +15,7 @@ mods/<name>/              Herdr가 불러오는 UI mod
 themes/<name>.json        Herdr가 불러오는 테마
 helpers/<name>/           선택 설치하는 헬퍼 프로그램
 scripts/setups.json       매니페스트: setup마다 필요한 리소스
-scripts/setup.py          선택 설치 도구 (list / install / status)
+scripts/setup.py          선택 설치 도구 (list / install / update / status)
 scripts/<name>/           setup 전용 빌드·설치·제거 도구
 tests/<name>/             setup 전용 테스트
 docs/modes/<name>.md      setup 전용 가이드

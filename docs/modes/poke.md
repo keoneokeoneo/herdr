@@ -19,7 +19,7 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | 창 구조 (블록, 크기, 어떤 view가 어디에 가는지, traffic lights) | `layouts/poke.json` (공유 블록 id를 `layouts/base.json`과 동일하게 유지; 테스트가 확인함) |
 | 색 | `themes/poke.json`, `mods/poke/views/ui.js` `C` (타입/chip 강조색) |
 | Codex 메뉴 실행 명령 | `programs.json` (`programs.codex.run`) |
-| 키 | `keys.json`, 섹션 `layout:poke` (`cmd-j`, `cmd-k`, `cmd-shift-o`는 base command) |
+| 키 | `keys.json`, 섹션 `layout:poke` (`cmd-j`, `cmd-k`, `cmd-shift-j`, `cmd-shift-o`는 base command) |
 | 블록이 보여 주는 view | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`, `camp`) |
 | 사이드바: pokeTokenBar 동료 카드 / 알 | `mods/poke/views/companion.js` |
 | 오른쪽 패널 Poke 탭 (Dex 그리드, 탭 타입 컨트롤) | `mods/poke/views/dex.js` |
@@ -110,7 +110,7 @@ Herdr는 모드에 `agents()`, `spaces()`, `terminals()`(상태, label, 포커�
 
 - 커밋은 저장소 이력을 따라 `type(scope): 한국어 명사형` 제목(`~/Documents/work/commit-convention.md`는
   `~/Documents/work` 아래에서만 적용)과 ~함/~됨으로 끝나는 본문 줄로 쓴다. 커밋과 PR에 AI 서명을 넣지 않는다.
-  `keoneokeoneo/herdr`(private)로의 push는 괜찮다.
+  `keoneokeoneo/herdr`는 공개 저장소이므로 비밀이나 개인 데이터를 커밋하지 않는다.
 - 문서는 `docs/specs/`와 `docs/plans/`에 둔다(도구가 다른 위치를 제안하더라도). 문서에 커밋 해시를 넣지 않는다.
 - pokeTokenBar 파일은 읽기 전용이다. `usage-cache.json`은 열거나 복호화하지 않는다.
 - `~/.claude/settings.json`, `~/.zshrc`, `~/.codex/config.toml`, Herdr의 `settings.json`을 수정하기 전에
@@ -177,7 +177,7 @@ launchd plist에는 독립된 소유권 journal이 있다. 제거는 설치된 �
 ## 통합 오른쪽 패널
 
 `panel-body`(`layouts/poke.json`에 있음)는 Usage / Changes / Files / Poke / Obsidian 중 하나를 보여 주며, 탭은
-`panel-tabs` 블록에 선언되어 있다. Usage, Changes, Files, Obsidian은 base의 것이고, Poke 탭(`poke-dex`)은
+`panel-tabs` 블록에 선언되어 있다. Usage는 base, Changes와 Files는 Herdr 기본 mod, Obsidian은 obsidian setup의 것이고, Poke 탭(`poke-dex`)은
 Dex다. 패널 버튼 또는 Cmd-K로 패널 전체를 숨기거나 표시하고, Cmd-Shift-O(`base.notes`, 하단 바가 처리)로
 Obsidian을 연다. 별도의 Notes 패널은 없다. Obsidian 리더는 접을 수 있는 폴더 트리를 가지며 vault/노트 이름을
 전체 경로 없이 보여 준다. [리더 가이드](obsidian.md)를 참고한다.
