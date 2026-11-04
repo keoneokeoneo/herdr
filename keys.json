@@ -56,10 +56,7 @@
     "ctrl-6": "space.select:6",
     "ctrl-7": "space.select:7",
     "ctrl-8": "space.select:8",
-    "ctrl-9": "space.select:9",
-    "cmd-j": "poke.jump",
-    "cmd-k": "layout.toggle:poke-panel",
-    "cmd-shift-o": "poke.notes"
+    "ctrl-9": "space.select:9"
   },
   "terminal": {
     "cmd-c": "terminal.copy",
@@ -71,5 +68,15 @@
     "cmd-left": "send:\u0001",
     "cmd-right": "send:\u0005",
     "cmd-backspace": "send:\u0015"
+  },
+  "layout:base": {
+    "cmd-j": "base.jump",
+    "cmd-k": "layout.toggle:panel",
+    "cmd-shift-o": "base.notes"
+  },
+  "layout:poke": {
+    "cmd-j": "base.jump",
+    "cmd-k": "layout.toggle:panel",
+    "cmd-shift-o": "base.notes"
   }
 }

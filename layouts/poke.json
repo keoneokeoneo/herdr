@@ -32,42 +32,43 @@
       "resizable": false,
       "children": [
         {
-          "id": "poke-brand",
+          "id": "brand",
           "type": "block",
           "size": {
             "px": 46
           },
           "window_drag": true,
           "content": {
-            "mod": "poke",
+            "mod": "base",
             "props": {
-              "view": "brand"
+              "view": "brand",
+              "logo": "mods/poke/brand/pokeball.svg"
             }
           }
         },
         {
-          "id": "poke-spaces",
+          "id": "spaces",
           "type": "block",
           "size": {
             "weight": 1
           },
           "min": 90,
           "content": {
-            "mod": "poke",
+            "mod": "base",
             "props": {
               "view": "spaces"
             }
           }
         },
         {
-          "id": "poke-agents",
+          "id": "agents",
           "type": "block",
           "size": {
             "weight": 1
           },
           "min": 90,
           "content": {
-            "mod": "poke",
+            "mod": "base",
             "props": {
               "view": "agents"
             }
@@ -87,7 +88,7 @@
           }
         },
         {
-          "id": "poke-footer",
+          "id": "footer",
           "type": "block",
           "size": {
             "px": 69
@@ -96,6 +97,19 @@
             "mod": "workspace-chrome",
             "props": {
               "footer": true
+            }
+          }
+        },
+        {
+          "id": "poke-host",
+          "type": "block",
+          "size": {
+            "px": 1
+          },
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "host"
             }
           }
         }
@@ -107,14 +121,14 @@
       "resizable": false,
       "children": [
         {
-          "id": "poke-tabs",
+          "id": "tabs",
           "type": "block",
           "size": {
             "px": 42
           },
           "window_drag": true,
           "content": {
-            "mod": "poke",
+            "mod": "base",
             "props": {
               "view": "tabs"
             }
@@ -146,7 +160,7 @@
                   },
                   "header": {
                     "content": {
-                      "mod": "poke",
+                      "mod": "base",
                       "props": {
                         "view": "pane"
                       }
@@ -159,7 +173,7 @@
               }
             },
             {
-              "id": "poke-panel",
+              "id": "panel",
               "type": "column",
               "size": {
                 "px": 620
@@ -168,31 +182,53 @@
               "max": 1100,
               "children": [
                 {
-                  "id": "poke-panel-tabs",
+                  "id": "panel-tabs",
                   "type": "block",
                   "size": {
                     "px": 44
                   },
                   "content": {
-                    "mod": "poke",
+                    "mod": "base",
                     "props": {
-                      "view": "paneltabs"
+                      "view": "paneltabs",
+                      "stack": "panel-body",
+                      "tabs": [
+                        [
+                          "usage",
+                          "Usage"
+                        ],
+                        [
+                          "changes",
+                          "Changes"
+                        ],
+                        [
+                          "files",
+                          "Files"
+                        ],
+                        [
+                          "poke-dex",
+                          "Poke"
+                        ],
+                        [
+                          "obsidian",
+                          "Obsidian"
+                        ]
+                      ]
                     }
                   }
                 },
                 {
-                  "id": "poke-panel-body",
+                  "id": "panel-body",
                   "type": "stack",
-                  "active": "poke-usage",
+                  "active": "usage",
                   "children": [
                     {
-                      "id": "poke-usage",
+                      "id": "usage",
                       "type": "block",
                       "content": {
-                        "mod": "poke",
+                        "mod": "base",
                         "props": {
-                          "view": "panel",
-                          "tab": "usage"
+                          "view": "panel"
                         }
                       }
                     },
@@ -202,27 +238,26 @@
                       "content": {
                         "mod": "poke",
                         "props": {
-                          "view": "panel",
-                          "tab": "dex"
+                          "view": "dex"
                         }
                       }
                     },
                     {
-                      "id": "poke-changes",
+                      "id": "changes",
                       "type": "block",
                       "content": {
                         "mod": "changes"
                       }
                     },
                     {
-                      "id": "poke-files",
+                      "id": "files",
                       "type": "block",
                       "content": {
                         "mod": "files"
                       }
                     },
                     {
-                      "id": "poke-obsidian",
+                      "id": "obsidian",
                       "type": "block",
                       "content": {
                         "mod": "obsidian",
@@ -238,13 +273,13 @@
           ]
         },
         {
-          "id": "poke-status",
+          "id": "status",
           "type": "block",
           "size": {
             "px": 32
           },
           "content": {
-            "mod": "poke",
+            "mod": "base",
             "props": {
               "view": "status"
             }
