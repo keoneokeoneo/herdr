@@ -24,9 +24,9 @@ in the table are relative to `mods/poke/`.
 | Sidebar: spaces list | `views/spaces.js` (folded: `rail()`) |
 | Sidebar: agents list | `views/agents.js` (folded: `railList()`) |
 | Sidebar: pokeTokenBar companion card / egg | `views/companion.js` |
-| Tab bar, right-panel toggle button | `views/tabs.js` |
+| Tab bar, panel toggle (Cmd-K), right-panel toggle button | `views/tabs.js` |
 | Pane header (avatar, status, model, ctx) | `views/pane.js` |
-| Right panel header tabs (Usage / Dex / Changes / Files) | `views/paneltabs.js`. The stack `poke-panel-body` is in the layout. Changes and Files are Herdr's shipped mods. |
+| Right panel header tabs (Usage / Changes / Files / Poke / Obsidian) | `views/paneltabs.js`. The stack `poke-panel-body` is in the layout. Changes and Files are Herdr's shipped mods. |
 | Usage cards, 14-day chart, Dex grid | `views/panel.js` |
 | Limit labels ("Session", "Weekly"), reading `limits.json` / `usage.json` | `views/store.js` |
 | Status bar | `views/status.js` (also hosts behaviours and the `jump` command) |
@@ -219,3 +219,13 @@ reorder are implemented for expanded spaces and tabs, not agent rows or rail spa
 Pane footer/dirty/ahead, review completion badges, partner-based terminal renaming,
 and a selectable by-repository type mode are deferred. Current scope is also recorded
 in the design's Current state section.
+
+## Unified right panel
+
+`poke-panel-body` shows one of Usage / Changes / Files / Poke / Obsidian. The former
+Dex view is labeled Poke. Utility views and custom views are peer tabs; the existing
+Usage implementation remains in place. The panel button or Cmd-K hides/shows the
+whole panel, and Cmd-Shift-O (`poke.notes`, hosted by the status view) opens Obsidian.
+There is no separate Notes panel. The Obsidian reader has a collapsible folder tree
+and shows vault/note names without full paths. Install with
+`bash scripts/obsidian/install.sh --poke`; see [the reader guide](obsidian.md).

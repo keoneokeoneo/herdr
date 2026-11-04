@@ -25,6 +25,7 @@ mods or reuse an existing theme; it does not need one of every resource.
 
 | Setup | Layout | Mod | Theme | Documentation |
 |---|---|---|---|---|
+| Obsidian | `layouts/obsidian.json` | `mods/obsidian/` | Reuses Poke | [Usage and installation](docs/modes/obsidian.md) |
 | Poke | `layouts/poke.json` | `mods/poke/` | `themes/poke.json` | [Development](docs/modes/poke.md) · [Installation](docs/modes/poke-setup.md) |
 
 ## Development

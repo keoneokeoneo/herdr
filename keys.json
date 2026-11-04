@@ -58,7 +58,8 @@
     "ctrl-8": "space.select:8",
     "ctrl-9": "space.select:9",
     "cmd-j": "poke.jump",
-    "cmd-k": "layout.toggle:poke-panel"
+    "cmd-k": "layout.toggle:poke-panel",
+    "cmd-shift-o": "poke.notes"
   },
   "terminal": {
     "cmd-c": "terminal.copy",

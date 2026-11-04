@@ -162,10 +162,10 @@
               "id": "poke-panel",
               "type": "column",
               "size": {
-                "px": 290
+                "px": 620
               },
-              "min": 260,
-              "max": 900,
+              "min": 520,
+              "max": 1100,
               "children": [
                 {
                   "id": "poke-panel-tabs",
@@ -219,6 +219,16 @@
                       "type": "block",
                       "content": {
                         "mod": "files"
+                      }
+                    },
+                    {
+                      "id": "poke-obsidian",
+                      "type": "block",
+                      "content": {
+                        "mod": "obsidian",
+                        "props": {
+                          "embedded": true
+                        }
                       }
                     }
                   ]

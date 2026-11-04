@@ -3,7 +3,7 @@ import { div } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme, layout, run } from "herdr";
 
-const TABS = [["poke-usage", "Usage"], ["poke-dex", "Dex"], ["poke-changes", "Changes"], ["poke-files", "Files"]];
+const TABS = [["poke-usage", "Usage"], ["poke-changes", "Changes"], ["poke-files", "Files"], ["poke-dex", "Poke"], ["poke-obsidian", "Obsidian"]];
 
 function find(node, id) {
   if (!node || typeof node !== "object") return null;

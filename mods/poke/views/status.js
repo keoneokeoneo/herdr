@@ -17,6 +17,11 @@ export function init(s, cx) {
 
 // Behaviours (Task 13) hook in here; commands reach only this copy.
 export function command(s, c, cx) {
+  if (c === "notes") {
+    run("layout.show", { id: "poke-panel" });
+    run("layout.select", { stack: "poke-panel-body", child: "poke-obsidian" });
+    return;
+  }
   s.onCommand?.(c, cx);
 }
 

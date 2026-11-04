@@ -1,0 +1,57 @@
+{
+  "id": "root",
+  "type": "column",
+  "titlebar": "none",
+  "traffic_lights": [
+    12,
+    12
+  ],
+  "theme": "poke",
+  "ui_font": "IBM Plex Sans KR",
+  "font": "Jetendard",
+  "font_size": 10,
+  "background": "canvas",
+  "children": [
+    {
+      "id": "obsidian-title",
+      "type": "block",
+      "size": {
+        "px": 44
+      },
+      "window_drag": true,
+      "content": {
+        "mod": "workspace-chrome"
+      }
+    },
+    {
+      "id": "obsidian-body",
+      "type": "row",
+      "gap": 8,
+      "padding": 8,
+      "children": [
+        {
+          "id": "main",
+          "type": "block",
+          "size": {
+            "weight": 2
+          },
+          "min": 250,
+          "content": {
+            "tab": "active"
+          }
+        },
+        {
+          "id": "obsidian-reader",
+          "type": "block",
+          "size": {
+            "weight": 3
+          },
+          "min": 520,
+          "content": {
+            "mod": "obsidian"
+          }
+        }
+      ]
+    }
+  ]
+}

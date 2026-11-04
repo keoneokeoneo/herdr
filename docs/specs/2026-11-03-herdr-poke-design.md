@@ -5,7 +5,12 @@ Readable version: https://claude.ai/artifact/6FnMqh5cpHSRHKiWziVrmb · Visual sp
 
 Where the prototype and this document disagree, this document wins.
 
-## Current state (updated 2026-11-03, after v1 shipped)
+## Current state (updated 2026-11-04, after v1 shipped)
+
+- The right panel now has peer tabs Usage / Changes / Files / Poke / Obsidian,
+  displaying one view at a time. Cmd-K toggles the panel; Cmd-Shift-O opens Obsidian.
+  The reader displays a collapsible vault folder tree and names without full paths.
+
 
 The sections below are the v1 design. Where they differ from this list, this list wins.
 `docs/guide.md` maps each item to files.
