@@ -32,6 +32,10 @@
   (`narrow()`)로 전환되어야 하므로, 사이드바 view를 건드릴 때는 두 너비를 모두 테스트한다.
 - **Herdr는 Dock에서 시작한다.** Claude 셸에서는 절대 시작하지 않는다. 거기서 시작한 서버는
   `CLAUDE_CODE_CHILD_SESSION=1`을 상속해 그 안의 모든 Claude가 transcript 저장을 멈춘다.
+  앱을 Dock에서 다시 실행해도 백그라운드의 `herdr-core` 서버와 터미널을 보관하는 `herdr-core hold` 프로세스는
+  그대로 살아 있으므로 표시가 사라지지 않고, 새 탭과 터미널도 계속 물려받는다. 터미널을 모두 닫지 않고 고치려면
+  `~/.zshrc`에 `[[ -o interactive && -n $HC_TERMINAL_ID ]] && unset CLAUDE_CODE_CHILD_SESSION`을 두고
+  이미 실행 중인 Claude만 다시 시작한다. 상속 여부는 `ps eww -p <hold pid>`로 확인한다.
 - **`hc` 서버의 PATH는 최소한이다**(nvm도 zsh alias도 없음). 따라서 `hc run`으로 시작하는 프로그램은 절대 경로나
   `~/.local/bin` shim이 필요하다.
 - **사용자의 다른 터미널은 절대 건드리지 않는다.**

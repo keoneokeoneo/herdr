@@ -12,7 +12,7 @@ setup의 구현을 바꾸기 전에 해당 setup의 가이드를 읽고, Herdr�
 |---|---|
 | Herdr 네이티브 리소스 | `layouts/<name>.json`, `mods/<name>/`, `themes/<name>.json` |
 | setup이 필요로 하는 리소스와 선행 조건 | `scripts/setups.json` |
-| 선택적 설치기 | `scripts/setup.py` (`npm run setup:list`, `setup:install`, `setup:status`) |
+| 선택적 설치기 | `scripts/setup.py` (`npm run setup:list`, `setup:install`, `setup:update`, `setup:status`) |
 | 선택적 setup 헬퍼 | `helpers/<name>/` (Poke의 헬퍼는 독립된 Go 모듈) |
 | setup 설치 도구 | `scripts/<name>/` |
 | JavaScript 및 설치기 테스트 | `tests/<name>/mod-lib/`, `tests/<name>/scripts/`, `tests/setup/` |
@@ -82,6 +82,9 @@ setup의 구현을 바꾸기 전에 해당 setup의 가이드를 읽고, Herdr�
 - 커밋 제목은 저장소 이력을 따라 `type(scope): 한국어 요약` 형식으로 쓰고, scope는 해당 setup 또는
   저장소로 한다. (`~/Documents/work/commit-convention.md`는 `~/Documents/work` 아래 작업에만 적용된다.)
   커밋과 PR에 AI 서명을 넣지 않는다.
+- 여러 에이전트(Claude, Codex)가 이 저장소를 동시에 쓰므로, 변경은 에이전트마다 별도 git worktree
+  (`.worktrees/<name>/`, git이 무시함)와 브랜치에서 하고 공유 체크아웃의 브랜치를 바꾸거나 파일을 되돌리지 않는다.
+  `setup:update` 뒤 `skipped` 줄은 다른 에이전트가 배포 중인 파일이므로 묻지 않고 `--force`하지 않는다.
 - 관련 없는 사용자 터미널은 절대 건드리지 않는다. Poke 고유의 시각·통합 규칙은 해당 가이드에 있으며,
   앞으로 만들 모든 setup의 요구 사항은 아니다.
 

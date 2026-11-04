@@ -53,3 +53,6 @@ layouts/.state/
 # install.sh backups
 *.herdr-poke-backup-*
 poke-assets/
+
+# Claude 전용 git worktree
+.worktrees/
