@@ -58,8 +58,12 @@ class InstallIntegrationTests(unittest.TestCase):
             helper.write_text('#!/bin/sh\nexit 0\n')
             helper.chmod(0o755)
             go = fakebin / 'go'
-            go.write_text('#!/bin/sh\ncp "$FAKE_HELPER" "$3"\nchmod 755 "$3"\n')
+            go.write_text('#!/bin/sh\nif [ "$1" = version ]; then echo "go version go1.27.3 darwin/arm64"; exit 0; fi\ncp "$FAKE_HELPER" "$3"\nchmod 755 "$3"\n')
             go.chmod(0o755)
+            for name in ['herdr-app', 'hc', 'claude', 'codex']:
+                tool = fakebin/name
+                tool.write_text('#!/bin/sh\necho "stub --no-daemon"\n')
+                tool.chmod(0o755)
             binary = home / '.local/bin/herdr-poke'
             binary.parent.mkdir(parents=True)
             binary.write_text('original binary')

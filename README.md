@@ -16,20 +16,22 @@ API reference. Both tools get the `herdr-poke-dev` skill from `.agents/skills/`.
 
 - Herdr: `brew install --cask herdr-app`
 - pokeTokenBar: `brew install --cask chattymin/tap/poke-token-bar` (read only; never edited)
-- Go: `brew install go`
+- Go matching `helper/go.mod` or newer: `brew install go`
 - Python 3 (installer), Jetendard terminal font (install separately)
 - nvm with an installed Node version for the optional hc node/npm/npx shims
-- Claude Code and the Codex CLI
+- Claude Code and a Codex CLI that supports `--no-daemon`
 
 ## Install
 
-1. Launch Herdr once so it creates `~/.config/herdr-app`.
-2. Put this repo there:
-   ```sh
-   cd ~/.config/herdr-app
-   git init && git remote add origin <repo url> && git fetch && git checkout -f main
-   ```
-3. Run `scripts/install.sh`. It
+1. Follow the [new Mac migration checklist](docs/plans/2026-11-04-machine-migration.md)
+   to back up existing Herdr settings and place the repo at `~/.config/herdr-app`.
+   Clone into a staging folder first; do not force-checkout over existing settings.
+   Keep `programs.json`: it makes menu-launched Codex use the wrapper and `--no-daemon`.
+2. Run `python3 scripts/preflight.py`. Required tools, the Go version from
+   `helper/go.mod`, and Codex `--no-daemon` support must pass. Node/nvm, Jetendard
+   and pokeTokenBar state produce optional-feature warnings. Login and live UI
+   verification remain manual. Close Claude sessions before installing.
+3. Run `bash scripts/install.sh`. It repeats preflight before any installation writes, then
    - builds `~/.local/bin/herdr-poke`,
    - backs up and edits `~/.claude/settings.json` (statusLine → `herdr-poke statusline`),
      `~/.zshrc` (`codex` runs through `herdr-poke codex -- codex --yolo --no-daemon`) and

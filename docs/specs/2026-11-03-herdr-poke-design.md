@@ -64,6 +64,10 @@ The sections below are the v1 design. Where they differ from this list, this lis
   lookup, not SQLite. Legacy fallback spans -0.5 to +10 seconds; `--no-daemon` and
   attach disable fallback. Assets are outside the mod. Repository publishing is
   permitted by the guide; the old local-only restriction below is historical.
+- **Migration preflight:** installation requires runnable Herdr/hc, Claude/Codex,
+  the local Go version required by `helper/go.mod`, and Codex `--no-daemon` support
+  before installation writes. Node/nvm, fonts and companion state are optional-feature
+  warnings; login and new-machine UI validation remain manual.
 - **Install/undo:** creates missing config, adds the wrapper alias and PATH, refuses
   custom aliases, journals before configuration edits, and records installed-file
   ownership. Uninstall restores owned files, preserves user replacements and leaves

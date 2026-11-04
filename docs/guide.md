@@ -43,6 +43,8 @@ in the table are relative to `mods/poke/`.
 | Sprites, cries, names, GIF normalisation | `helper/internal/assets` (`assets.go`, `normalize.go`) |
 | 14-day usage aggregation (launchd every 10 min) | `helper/internal/usage` |
 | State files and locks | `helper/internal/state` (`~/.local/state/herdr-poke/`) |
+| Installation prerequisites | `scripts/preflight.py` (read-only installation check), `tests/scripts/test_preflight.py` |
+| New Mac migration | `docs/plans/2026-11-04-machine-migration.md` |
 | Install and undo | `scripts/install.sh`, `scripts/uninstall.sh`, `scripts/settings_edit.py` (configuration journal), `scripts/install_files.py` (installed-file ownership/backups), tests in `tests/scripts/` |
 
 Seen is a deduplicated snapshot of partners on open agent sessions across spaces.
@@ -142,6 +144,13 @@ names go to `~/.config/herdr-app/poke-assets/`, which the mod reads as
 - UI text is English. Only the Pokémon are pixel art. The theme stays dark and calm.
 
 ## Outside the repo (what a new machine needs)
+
+Use `docs/plans/2026-11-04-machine-migration.md` for backup, safe checkout placement,
+external settings and post-migration verification. `python3 scripts/preflight.py`
+checks required CLIs, the local Go version and Codex `--no-daemon` support before
+installation. Node/nvm, Jetendard and pokeTokenBar state produce warnings. It does
+not verify login or live UI. `install.sh` runs it before any installation writes;
+`HERDR_POKE_DRY=1` still writes files and is for isolated tests, not a read-only check.
 
 `scripts/install.sh` sets up most of this; check it after a migration. Close Claude
 sessions before running it, because Claude may rewrite its settings concurrently.

@@ -14,11 +14,15 @@ stamp="$(date +%Y%m%d%H%M%S)-$$"
 dry="${HERDR_POKE_DRY:-0}"
 export HERDR_APP_HOME="$app" HERDR_POKE_STATE="$state"
 
+# Prerequisites must pass before journals, builds, backups or settings are written.
+command -v python3 >/dev/null 2>&1 || { echo "abort: install Python 3 and expose python3 on PATH" >&2; exit 1; }
+python3 "$root/scripts/preflight.py"
+
 python3 "$root/scripts/install_files.py" prepare "$bin"
 "$root/scripts/build.sh"
 python3 "$root/scripts/install_files.py" record "$bin"
 
-# Every command the edits below depend on must work before anything is touched.
+# Smoke-test the built helper before editing configuration (not a Codex CLI check).
 for probe in "codex -- true" "usage"; do
   # shellcheck disable=SC2086
   if ! "$bin" $probe >/dev/null 2>&1; then
