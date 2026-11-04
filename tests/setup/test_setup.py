@@ -111,13 +111,24 @@ class SetupTests(unittest.TestCase):
         with patch.dict(os.environ, env):
             self.assertEqual(S.main(["update"]), 1)  # nothing installed yet
             self.install(["obsidian"])
-            (self.app / "mods/obsidian/main.js").write_text("stale")
+            (self.app / "mods/obsidian/main.js").unlink()  # missing: nothing of anyone's to keep
             with patch.object(S, "install", wraps=S.install) as spy:
                 self.assertEqual(S.main(["update"]), 0)
             self.assertEqual(spy.call_args.args[0], ["obsidian"])
             self.assertFalse(spy.call_args.kwargs["run_installers"])
         self.assertEqual((self.app / "mods/obsidian/main.js").read_bytes(), (REPO / "mods/obsidian/main.js").read_bytes())
         self.assertFalse((self.app / "mods/base").exists())
+
+    def test_files_changed_outside_the_installer_are_kept_unless_forced(self):
+        # another session deployed its own work in progress: an update must not clobber it
+        self.install(["obsidian"])
+        live = self.app / "mods/obsidian/main.js"
+        live.write_text("someone else's work")
+        summary = self.install(["obsidian"])
+        self.assertEqual(live.read_text(), "someone else's work")
+        self.assertIn("mods/obsidian/main.js", summary["skipped"])
+        self.install(["obsidian"], force=True)
+        self.assertEqual(live.read_bytes(), (REPO / "mods/obsidian/main.js").read_bytes())
 
     def test_in_place_checkout_copies_nothing(self):
         summary = S.install(["base"], REPO, REPO, self.state, MANIFEST, dry=True, run_installers=False)

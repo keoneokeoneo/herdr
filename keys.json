@@ -72,11 +72,13 @@
   "layout:base": {
     "cmd-j": "base.jump",
     "cmd-k": "layout.toggle:panel",
-    "cmd-shift-o": "base.notes"
+    "cmd-shift-o": "base.notes",
+    "cmd-shift-j": "base.review"
   },
   "layout:poke": {
     "cmd-j": "base.jump",
     "cmd-k": "layout.toggle:panel",
-    "cmd-shift-o": "base.notes"
+    "cmd-shift-o": "base.notes",
+    "cmd-shift-j": "base.review"
   }
 }

@@ -2,7 +2,7 @@
 """Selective installer for this repository's setups (see scripts/setups.json).
 
   setup.py list
-  setup.py install <name>... [--select <layout>] [--no-installer]
+  setup.py install <name>... [--select <layout>] [--no-installer] [--force]
   setup.py status
 
 Each setup lists the mods, layouts and themes it needs, the setups it requires, and the
@@ -118,18 +118,25 @@ def _backup(path, rel, state, stamp):
     shutil.copy2(path, target)
 
 
-def install(names, source, app, state, manifest, dry=False, run_installers=True, select=None):
+def install(names, source, app, state, manifest, dry=False, run_installers=True, select=None, force=False):
     source, app, state = Path(source).resolve(), Path(app).resolve(), Path(state)
     order = resolve(names, manifest)
     in_place = source == app
     stamp = time.strftime("%Y%m%d%H%M%S")
-    copied, kept, journal = [], [], _journal(state)
+    copied, kept, skipped, journal = [], [], [], _journal(state)
     for name in order:
         fingerprints = {}
         for rel in setup_files(name, manifest, source):
             src, dst = source / rel, app / rel
             fingerprints[rel] = digest(src)
             if in_place or digest(src) == digest(dst):
+                continue
+            # A file we installed that has since changed was edited or deployed by someone else
+            # (another session's work in progress): keep it and say so, unless forced.
+            before = journal["installed"].get(name, {}).get("files", {}).get(rel)
+            if dst.exists() and before and digest(dst) != before and not force:
+                skipped.append(rel)
+                fingerprints[rel] = before
                 continue
             if dst.exists():
                 _backup(dst, rel, state, stamp)
@@ -160,7 +167,7 @@ def install(names, source, app, state, manifest, dry=False, run_installers=True,
                     subprocess.run(["bash", str(source / installer)], check=True)
         if select:
             subprocess.run(["herdr-app", "do", "layout.switch", json.dumps({"name": select})], check=False)
-    return {"order": order, "copied": copied, "kept": kept}
+    return {"order": order, "copied": copied, "kept": kept, "skipped": skipped}
 
 
 def _paths():
@@ -187,20 +194,24 @@ def main(argv=None):
         return 0
     if command == "update":
         # Re-copy what is already installed (after a git pull or an edit); installers do not run again.
+        force = "--force" in argv
         names = list(_journal(state)["installed"])
         if not names:
             print("nothing installed yet; use: setup.py install <name>...", file=sys.stderr)
             return 1
         summary = install(names, ROOT, app, state, manifest, dry=os.environ.get("HERDR_SETUP_DRY") == "1",
-                          run_installers=False)
+                          run_installers=False, force=force)
         print("updated: " + ", ".join(summary["order"]))
         for rel in summary["copied"]:
             print(f"copied   {rel}")
         for line in summary["kept"]:
             print(f"kept     {line}")
+        for rel in summary["skipped"]:
+            print(f"skipped  {rel} (changed outside the installer; --force replaces it)")
         return 0
     if command == "install":
         select = None
+        force = False
         run_installers = True
         names = []
         while argv:
@@ -209,14 +220,16 @@ def main(argv=None):
                 select = argv.pop(0) if argv else None
             elif a == "--no-installer":
                 run_installers = False
+            elif a == "--force":
+                force = True
             else:
                 names.append(a)
         if not names:
-            print("usage: setup.py install <name>... [--select <layout>] [--no-installer]", file=sys.stderr)
+            print("usage: setup.py install <name>... [--select <layout>] [--no-installer] [--force]", file=sys.stderr)
             return 2
         try:
             summary = install(names, ROOT, app, state, manifest, dry=os.environ.get("HERDR_SETUP_DRY") == "1",
-                              run_installers=run_installers, select=select)
+                              run_installers=run_installers, select=select, force=force)
         except ValueError as e:
             print(f"error: {e}", file=sys.stderr)
             return 2
@@ -225,6 +238,8 @@ def main(argv=None):
             print(f"copied   {rel}")
         for line in summary["kept"]:
             print(f"kept     {line}")
+        for rel in summary["skipped"]:
+            print(f"skipped  {rel} (changed outside the installer; --force replaces it)")
         return 0
     print("usage: setup.py list | install <name>... | update | status", file=sys.stderr)
     return 2

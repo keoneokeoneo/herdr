@@ -1,3 +1,5 @@
+import { ago } from './format.js';
+
 export const URG = { blocked: 0, working: 1, done: 2, idle: 3 };
 export const TYPES = ['grass', 'fire', 'water', 'electric', 'psychic', 'normal'];
 const M = 60e3;
@@ -82,3 +84,12 @@ export const stackAgents = (list) => byUrgency(list.filter((a) => a.status !== '
 
 // The finished agent to look at next (oldest first); viewing it clears its "new" mark.
 export const nextDone = (agents) => [...agents].filter((a) => a.status === 'done').sort((a, b) => a.since - b.since)[0] ?? null;
+
+// What the time on an agent row measures: how long it has been in its current state.
+export function sinceText(status, ms) {
+  const t = ago(ms);
+  if (status === 'working') return `Working for ${t}`;
+  if (status === 'blocked') return `Waiting for you for ${t}`;
+  if (status === 'done') return `Finished ${t} ago`;
+  return `Idle for ${t}`;
+}

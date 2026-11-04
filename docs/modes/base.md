@@ -38,7 +38,7 @@ python3 scripts/setup.py install base --select base
 레이아웃 id: `sidebar`, `brand`, `spaces`, `agents`, `footer`, `work`, `tabs`, `work-body`,
 `main`, `panel` (`panel-tabs`, `panel-body`에 `usage`, `changes`, `files`, `obsidian`), `status`.
 Command (표시 중인 복사본에 닿으며, 하단 바 복사본이 이를 실행한다): `base.jump` (나를 기다리는 다음 agent를
-오래된 순으로 포커스)와 `base.notes` (패널을 Obsidian 탭으로 표시).
+오래된 순으로 포커스), `base.review` (가장 오래된 끝난 agent를 포커스), `base.notes` (패널을 Obsidian 탭으로 표시).
 
 ## 사용량 데이터 계약
 
@@ -87,10 +87,13 @@ Base는 agent 아바타와 탭 타입 pill을 그리며, 무언가 제공하면 
 
 - 보조 텍스트 색 `muted`·`dim`은 배경과 chrome 위에서 4.5:1 이상을 유지한다(`tests/base/mod-lib/theme.test.mjs`).
 - 막대는 항상 provider 색을 유지한다. 한도가 60% 이상이면 퍼센트 숫자를 accent로, 80% 이상이면 blocked 색과 `⚠`로 표시한다(패널과 하단 바 공통).
-- 창이 80%를 넘거나 리셋 전에 100%에 닿을 것으로 예측되면 `notify`로 한 번 알린다. 키에 `resets_at`이 들어 있어 새 창마다 다시 알릴 수 있다(`limitAlerts`, 하단 바가 30초마다 확인).
+- 창이 80%를 넘거나 리셋 전에 100%에 닿을 것으로 예측되면 `notify`로 한 번 알린다. 키에 `resets_at`이 들어 있어 새 창마다 다시 알릴 수 있다(`limitAlerts`, 하단 바가 렌더할 때마다 확인하고 task 안에서 `notify`를 호출한다. 타이머 콜백에서 바로 부르면 알림이 뜨지 않았다).
 - 끝난 agent가 있으면 하단 바에 "Review new" 버튼이 생기고, 가장 오래된 것을 연다.
 - 단축키가 있는 컨트롤(패널 토글 ⌘K, jump ⌘J, Obsidian 탭 ⌘⇧O)은 툴팁으로 단축키를 보여 준다. 14일 막대는 툴팁으로 날짜와 수치를 보여 준다.
 - 접힌 사이드바에서도 idle 얼굴은 `+N` 하나로 접힌다.
+- 한도 카드는 비어 있는 이유를 한 줄로 알린다: 쓰는 쪽이 없음(Claude statusline 또는 herdr-poke 헬퍼), 또는 5h 한도가 없는 플랜(`limitNote`).
+- agent 행의 시간은 현재 상태가 이어진 시간이며, 툴팁이 그 뜻을 말한다(`sinceText`).
+- `base.review`(`cmd-shift-j`)는 가장 오래된 끝난 agent를 연다.
 - 현재 속도 예측은 창의 10%가 지난 뒤에만 보이며, 리셋 전에 100%에 닿을 때만 "limit in …"으로 경고한다.
 - 14일 평균은 사용량이 있는 날만으로 계산한다.
 - 기본 번호 이름("1", "2")의 탭과 agent 행은 세션 제목, 없으면 스페이스 이름과 다른 폴더 이름으로 표시한다.
