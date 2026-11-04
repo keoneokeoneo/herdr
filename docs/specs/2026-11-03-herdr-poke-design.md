@@ -50,6 +50,9 @@ The sections below are the v1 design. Where they differ from this list, this lis
 - **Fonts:** terminal `Jetendard` at 10, UI `IBM Plex Sans KR`. The theme uses the One
   Double Dark ANSI palette.
 - The egg state (no active companion) has its own static card.
+- **pokeTokenBar sync:** companion sprite, Dex copies and evolution/level toasts follow
+  a watch on pokeTokenBar's folder (state file and `sprites/` only), so they appear
+  within about a second. A 5-minute timer covers a missed or refused watch.
 - **Post-review corrections:** missing cries/names retry independently of sprite
   presence. Dex caches shiny separately and normalizes only newly copied GIFs.
   Status bar uses Session/Weekly and omits windows the provider does not report.

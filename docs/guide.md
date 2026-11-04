@@ -180,15 +180,15 @@ It does not undo the deliberately manual permission settings or external skills.
 | Attach health probe | 60 seconds per Codex | One helper; held flock exits before querying hc |
 | Attach foreground validation | 5 seconds per live attach | One bounded `hc get`; failure exits for later retry |
 | Rollout discovery / tail | about 1 second | `lsof` until found; then incremental file reads |
-| Companion asset + list | 30 seconds | Two helper executions; no unchanged file rewrite |
-| Dex + names | 60 seconds | Two helper executions; only new variant GIFs normalized |
+| Companion + Dex copy, evolution/level toasts | PTB folder watch (`companion-state.json`, `sprites/`) + 300 seconds | Three helper executions per run, coalesced; no unchanged file rewrite; only new variant GIFs normalized |
 | Limits/usage/Dex load | filtered folder events + 15 seconds | Suppresses unchanged notify; concurrent loads coalesced |
 | Status/panel time labels | 60 seconds | Countdown/expiry refresh |
 | Agent/pane elapsed labels | 20 seconds per initialized view | Timers continue in hidden views |
 | Companion card / events | 30 seconds + card folder watch | Reads PTB state; initial defaults lookup once |
 | Usage aggregation | launchd every 600 seconds | Incremental log reads, but directory discovery walks log roots |
 
-At steady state asset jobs start six helpers per minute, plus retries and attach
+Asset jobs start three helpers each time pokeTokenBar writes its state (every few
+minutes) and on the 5-minute fallback, plus partner fetches, retries and attach
 probes. Claude statusline also runs two git commands normally (three on detached
 HEAD), each with a two-second timeout. CPU impact has not been remeasured.
 

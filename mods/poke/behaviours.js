@@ -1,10 +1,11 @@
 // Things that happen, not things drawn. Runs once, in the status bar's copy.
-import { hc, exec, home, appHome, run, shared, setShared, playSound, notify } from "herdr";
+import { hc, exec, home, appHome, run, shared, setShared, playSound, notify, watchFolder } from "herdr";
 import { rows } from "./views/data.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
 import { excluded, pickPartner, activePartners } from "./lib/partner.js";
 import { waiting, cryFor, retryDue, assetsMissing } from "./lib/model.js";
 import { say } from "./lib/voice.js";
+import { ptbChanged, coalesce } from "./lib/sync.js";
 
 const HP = () => `${home()}/.local/bin/herdr-poke`;
 const cap = (s) => (s ? s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "");
@@ -17,6 +18,7 @@ async function refreshAssets() {
     // setShared re-renders every view, so only when the list really changed.
     if (Array.isArray(list) && JSON.stringify(list) !== JSON.stringify(shared("poke.sprites") ?? [])) setShared("poke.sprites", list);
   } catch {}
+  await refreshNames(); // a partner fetch also adds to names.json
 }
 
 function syncSeen(all) {
@@ -37,12 +39,23 @@ export function start(s, cx) {
   s.jumpAt = -1;
   s.onCommand = (c) => command(s, c);
 
-  const assets = (cx) => cx.spawn(async () => { await exec(HP(), ["assets", "--companion"]).catch(() => null); await refreshAssets(); });
-  assets(cx);
-  cx.timer.every(30000, assets);
-  const dexSync = (cx) => cx.spawn(async () => { await syncDex(); await refreshNames(); });
-  dexSync(cx);
-  cx.timer.every(60000, dexSync);
+  // Companion sprite, Dex copies and evolution/level toasts follow pokeTokenBar's
+  // folder as it changes. The slow timer only covers a missed or refused watch.
+  const ptbSync = coalesce(async () => {
+    await exec(HP(), ["assets", "--companion"]).catch(() => null);
+    await exec(HP(), ["assets", "--dex"]).catch(() => null);
+    await refreshAssets();
+    await companionDiff(s);
+  });
+  ptbSync();
+  cx.timer.every(300000, () => { ptbSync(); });
+  cx.spawn(async () => {
+    for (;;) {
+      const paths = await watchFolder(PTB_DIR()).catch(() => null);
+      if (!paths) return; // watch refused: the timer carries on alone
+      if (ptbChanged(paths, PTB_DIR())) ptbSync();
+    }
+  });
 
   const tick = (cx) => cx.spawn(async () => { await step(s); });
   tick(cx);
@@ -50,9 +63,6 @@ export function start(s, cx) {
   const evening = () => { const h = new Date().getHours(); const on = h >= 18 || h < 6; if (shared("poke.evening") !== on) setShared("poke.evening", on); };
   evening();
   cx.timer.every(60000, evening);
-  const ptb = (cx) => cx.spawn(async () => { await companionDiff(s); });
-  ptb(cx);
-  cx.timer.every(30000, ptb);
 }
 
 function attach(t) {
@@ -110,8 +120,6 @@ async function companionDiff(s) {
   if (now.id !== was.id) {
     const [p, q] = await Promise.all([speciesName(was.id), speciesName(now.id)]);
     notify({ title: say(now.nature, "evoE", p, q), level: "success", timeout: 8000 });
-    await exec(HP(), ["assets", "--companion"]).catch(() => null);
-    await refreshAssets();
   } else if (now.level > was.level) {
     notify({ title: say(now.nature, "level", await speciesName(now.id), now.level), level: "info", timeout: 5000 });
   }
@@ -126,12 +134,6 @@ function command(s, c) {
   } else if (c === "reroll") {
     setShared("poke.typeSeed", ((Number(shared("poke.typeSeed") ?? 7)) * 7 + 13) % 9973);
   }
-}
-
-// Caught Pokémon: copy pokeTokenBar's own sprite (shiny when caught shiny) as dex-<id>[-shiny].gif|png.
-async function syncDex() {
-  await exec(HP(), ["assets", "--dex"]).catch(() => null);
-  await refreshAssets();
 }
 
 // Partner names for the Dex grid, from the helper's names.json.
