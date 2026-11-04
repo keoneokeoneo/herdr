@@ -3,18 +3,18 @@
 A read-only native Herdr mod for local Markdown vaults. Requires macOS, Python 3
 and Herdr with `TextView.markdown`. Obsidian does not need to be running.
 
-## Poke integration (recommended)
+## Base integration (recommended)
 
 ```sh
-bash scripts/obsidian/install.sh --poke
-herdr-app do layout.switch '{"name":"poke"}'
+python3 scripts/setup.py install base obsidian
+herdr-app do layout.switch '{"name":"base"}'
 ```
 
-The right side is one panel with peer tabs: **Usage / Changes / Files / Poke /
-Obsidian**. Only one tab's contents are visible. The top-right panel button or
-**Cmd-K** hides/shows the whole panel; **Cmd-Shift-O** opens the Obsidian tab.
-The reader's **×** closes the whole panel. Tab switching and closing retain the
-current note, search and expanded folders within the same layout.
+The right side is one panel with peer tabs: **Usage / Changes / Files / Obsidian** (Poke's layout
+adds a **Poke** tab). Only one tab's contents are visible. The top-right panel button or
+**Cmd-K** hides/shows the whole panel; **Cmd-Shift-O** opens the Obsidian tab. The reader's **×**
+closes the whole panel. Tab switching and closing retain the current note, search and expanded
+folders within the same layout.
 
 The reader shows the vault name, a collapsible folder tree and note titles without
 full paths. Expand folders to browse; searching expands matching paths. An empty
@@ -22,15 +22,14 @@ search restores the entire indexed tree, rather than the first 200 notes.
 **Open in Obsidian** opens the current note in the desktop application using its
 [official URI](https://obsidian.md/help/uri). It does not launch until clicked.
 
-The optional `--poke` install updates the Poke layout, tab bar, panel tabs and command host, and merges only
-the new shortcut into installed keys. An existing conflicting shortcut is kept.
-Backups live under `data/obsidian/backups/<timestamp>/`. This expects Poke already
-installed; it does not install Poke's helper or shell integrations.
+The keys live in the `layout:base` and `layout:poke` sections of `keys.json`; the installer adds
+only missing bindings and keeps (and reports) a different binding you already have. See
+[Base](base.md) for the panel and layout ids. Obsidian needs nothing from Poke.
 
 ## Standalone layout
 
 ```sh
-bash scripts/obsidian/install.sh
+python3 scripts/setup.py install obsidian   # or: bash scripts/obsidian/install.sh
 herdr-app do layout.switch '{"name":"obsidian"}'
 ```
 
@@ -45,7 +44,7 @@ Enter a title, relative path or body search and press Enter or **Search**. Empty
 search browses the folder tree. Click a note to read Markdown, follow wiki links or relative
 Markdown links, use **←** to return, and **Refresh** to reload a changed note.
 **Search** also refreshes the file list. HTTP(S) links open in the default browser.
-Use **Back to Poke** to return to Poke; existing Cmd-Shift-L cycles layouts.
+Use **Back** to switch to the `base` layout; existing Cmd-Shift-L cycles layouts.
 The mod accepts `obsidian.search`, `obsidian.vault:<folder>` and
 `obsidian.note:<relative path>` commands through `herdr-app do` for keyboard or
 CLI integration. `pane.go` focuses its search input.
@@ -62,16 +61,17 @@ Reads are restricted to Markdown files inside the selected vault. Files over
 1 MiB are rejected; the tree indexes at most 20,000 notes; nonempty searches display at most 200
 results (filename matches first). Search runs on submit, not every keystroke.
 
-The installer copies only this mod/layout and the Poke theme, backing up changed
-existing files beside them. It does not alter keys, shell settings, launchd,
-Obsidian settings or the current layout. Runtime state lives in Herdr's shared
+The installer (`scripts/setup.py install obsidian`) copies only this mod, its layout and the
+shared `themes/base.json`, backing up changed existing files beside them. It does not alter keys,
+shell settings, launchd, Obsidian settings or the current layout, and it needs neither Base nor Poke. Runtime state lives in Herdr's shared
 storage. To remove, switch to another layout, delete `mods/obsidian` and
-`layouts/obsidian.json` from the app home; retain the shared Poke theme.
+`layouts/obsidian.json` from the app home; retain the shared base theme.
 
 ## Verification
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/obsidian/scripts
+npm test
 herdr-app check mods/obsidian
 herdr-app status
 ```

@@ -1,80 +1,76 @@
 # Poke — guide for whoever changes it (human or LLM)
 
-Read `docs/guide.md` for repository conventions first, then open only the files the change touches. The product intent and
-the original decisions are in `docs/specs/2026-11-03-herdr-poke-design.md`. Its
-"Current state" section lists what changed after v1. Herdr's own API reference is the
-generated `AGENTS.md` at the repo root, with `herdr.d.ts` and `gpui-kit.d.ts`. That file
-runs to about 1000 lines, so search it for the API you need. Don't read it top to
+Read `docs/guide.md` for repository conventions first, then open only the files the change touches. Poke is the
+persona layer on top of **base** (`docs/modes/base.md`): it adds the pokeTokenBar companion, the
+Dex tab, partner sprites and cries. Base owns the sidebar, tab bar, usage bar and right panel, and
+works without Poke; Poke requires base. The product intent and the original decisions are in
+`docs/specs/2026-11-03-herdr-poke-design.md` (its "Current state" section lists what changed after
+v1); the split into layers is in `docs/specs/2026-11-04-layer-separation-design.md`. Herdr's own API
+reference is the generated `AGENTS.md` at the repo root, with `herdr.d.ts` and `gpui-kit.d.ts`.
+That file runs to about 1000 lines, so search it for the API you need. Don't read it top to
 bottom, and never edit it: Herdr rewrites it on every start.
 
 ## What lives where
 
 When installed, the repo root is Herdr's home, `~/.config/herdr-app`. `.gitignore` lists everything
-Herdr writes, so `git status` shows only our files. Paths beginning with `views/`
-in the table are relative to `mods/poke/`.
+Herdr writes, so `git status` shows only our files.
 
 | To change… | Look at |
 |---|---|
-| Window structure (blocks, sizes, which view goes where, fonts, traffic lights) | `layouts/poke.json` |
-| Colours | `themes/poke.json` (`ansi` and the main UI `colors`), `mods/poke/views/ui.js` `C` (type/chip accents) |
+| Window structure (blocks, sizes, which view goes where, traffic lights) | `layouts/poke.json` (keep its shared block ids equal to `layouts/base.json`; a test checks it) |
+| Colours | `themes/poke.json`, `mods/poke/views/ui.js` `C` (type/chip accents) |
 | Codex menu launch command | `programs.json` (`programs.codex.run`) |
-| Keys | `keys.json` (`cmd-j` → `poke.jump`, `cmd-k` → right panel, `cmd-b` → sidebar) |
-| Which view a block shows | `mods/poke/main.js` (`props.view` → module) |
-| Sidebar top: logo, search, fold button | `views/brand.js` (`narrow()`, `toggleSidebar()` are shared with the other sidebar views) |
-| Sidebar: spaces list | `views/spaces.js` (folded: `rail()`) |
-| Sidebar: agents list | `views/agents.js` (folded: `railList()`) |
-| Sidebar: pokeTokenBar companion card / egg | `views/companion.js` |
-| Tab bar, panel toggle (Cmd-K), right-panel toggle button | `views/tabs.js` |
-| Pane header (avatar, status, model, ctx) | `views/pane.js` |
-| Right panel header tabs (Usage / Changes / Files / Poke / Obsidian) | `views/paneltabs.js`. The stack `poke-panel-body` is in the layout. Changes and Files are Herdr's shipped mods. |
-| Usage cards, 14-day chart, Dex grid | `views/panel.js` |
-| Limit labels ("Session", "Weekly"), reading `limits.json` / `usage.json` | `views/store.js` |
-| Status bar | `views/status.js` (also hosts behaviours and the `jump` command) |
-| Avatars, pills, sprite lookup, GIF redraw | `views/ui.js` (`avatar`, `sprite`, `alive`, `pill`) |
-| Agent rows (Herdr data → what views draw; provider; labels) | `views/data.js` |
-| Things that happen: partner assignment, cries, Dex sync, Codex attach, evening dim | `mods/poke/behaviours.js` |
-| Pure logic (urgency, groups, chips, partner pick, growth formula, formatting) | `mods/poke/lib/*.js`, with tests in `tests/poke/mod-lib/` |
-| Session ownership and complete telemetry snapshots | `helpers/poke/internal/labels/session.go`, `mods/poke/lib/telemetry.js` |
+| Keys | `keys.json`, section `layout:poke` (`cmd-j`, `cmd-k`, `cmd-shift-o` are base commands) |
+| Which view a block shows | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`) |
+| Sidebar: pokeTokenBar companion card / egg | `mods/poke/views/companion.js` |
+| Right panel Poke tab (Dex grid, tab-type controls) | `mods/poke/views/dex.js` |
+| Things that happen: partner assignment, cries, Dex sync, level/evolution toasts, evening dim | `mods/poke/behaviours.js`, started by the invisible `poke-host` block (`mods/poke/views/host.js`) |
+| Agent rows the persona reads (status and partner label) | `mods/poke/views/rows.js` |
+| Sprites, pills, GIF redraw | `mods/poke/views/ui.js` (`sprite`, `alive`, `pill`) |
+| Pure logic (partner pick, growth formula, cries, defaults) | `mods/poke/lib/`, with tests in `tests/poke/mod-lib/` |
+| Sidebar, tabs, pane header, bottom bar, Usage tab, panel tabs, avatars | **base**: `docs/modes/base.md` |
+| Session ownership and complete telemetry snapshots | `helpers/poke/internal/labels/session.go`, `mods/base/lib/telemetry.js` |
 | Label caching, failure backoff, `hc label` timeout | `helpers/poke/internal/labels/labels.go` |
 | CLI dispatch and helper build | `helpers/poke/main.go`, `scripts/poke/build.sh` |
-| Mod registration and bundled UI fonts | `mods/poke/mod.json`, `mods/poke/fonts/` |
+| Mod registration | `mods/poke/mod.json` (bundled UI fonts are in `mods/base/fonts/`) |
 | Node entry points for hc | `scripts/poke/nvm-shim` |
-| Claude statusline → labels and limits | `helpers/poke/internal/claude` |
 | Codex → labels and limits (wrapper and `--attach`) | `helpers/poke/internal/codex` (`wrap.go`, `attach.go`, `find.go`, `rollout.go`) |
 | Sprites, cries, names, GIF normalisation | `helpers/poke/internal/assets` (`assets.go`, `normalize.go`) |
 | 14-day usage aggregation (launchd every 10 min) | `helpers/poke/internal/usage` |
-| State files and locks | `helpers/poke/internal/state` (`~/.local/state/herdr-poke/`) |
+| State files and locks | `helpers/poke/internal/state` (`~/.local/state/herdr-poke/`; the usage contract is `~/.local/state/herdr-app/usage/`) |
 | Installation prerequisites | `scripts/poke/preflight.py` (read-only installation check), `tests/poke/scripts/test_preflight.py` |
 | New Mac migration | `docs/plans/2026-11-04-machine-migration.md` |
 | Install and undo | `scripts/poke/install.sh`, `scripts/poke/uninstall.sh`, `scripts/poke/settings_edit.py` (configuration journal), `scripts/poke/install_files.py` (installed-file ownership/backups), tests in `tests/poke/scripts/` |
+| Selective install of the setups | `scripts/setups.json`, `scripts/setup.py`, `tests/setup/test_setup.py` |
 
 Seen is a deduplicated snapshot of partners on open agent sessions across spaces.
 The existing 2-second behaviour tick replaces it only when membership changes.
 
 ## Data flow in one paragraph
 
-Herdr gives the mod `agents()`, `spaces()`, `terminals()` (status, labels, focus). The Go
-helper `~/.local/bin/herdr-poke` adds what Herdr lacks:
-- For Claude, `statusline` runs as Claude's statusLine command.
-- For Codex, the `codex -- …` wrapper (the zsh alias) does it. A Codex started any other
-  way gets periodic `codex --attach <t>` probes from `behaviours.js`, even if old
+Herdr gives the mods `agents()`, `spaces()`, `terminals()` (status, labels, focus). The Go
+helper `~/.local/bin/herdr-poke` adds what Herdr lacks, for Codex:
+- the `codex -- …` wrapper (the zsh alias) mirrors a Codex session. A Codex started any other
+  way gets periodic `codex --attach <t>` probes from `mods/base/behaviours.js`, even if old
   model labels remain. Local bare Codex foreground processes are supported; the
   helper cannot inspect a remote machine's PID or files.
 
-Both publish complete terminal snapshots (`poke.model`, `poke.effort`, `poke.ctx`)
-with `poke.owner` (foreground PID), `poke.provider` and `poke.session`, and
-`~/.local/state/herdr-poke/limits.json`. `usage` writes `usage.json`. Sprites, cries and
-names go to `~/.config/herdr-app/poke-assets/`, which the mod reads as
-`poke-assets/<file>`. pokeTokenBar's folder
+It publishes complete terminal snapshots (`poke.model`, `poke.effort`, `poke.ctx`) with
+`poke.owner` (foreground PID), `poke.provider` and `poke.session`, and the limits file
+`~/.local/state/herdr-app/usage/codex.json`. `usage` writes `daily.json` in the same folder.
+Claude's limits come from the global Claude statusline, which Poke no longer touches; Claude rows
+therefore have no model, effort or context. Sprites, cries and names go to
+`~/.config/herdr-app/poke-assets/`, which the mods read as `poke-assets/<file>`, and Poke
+publishes the file list as shared `poke.sprites` so base can draw avatars. pokeTokenBar's folder
 (`~/Library/Application Support/PokeTokenBar`) is read only.
 
 ## Gotchas (each one cost real time)
 
 - **Hot reload:** Herdr reloads a mod whenever any non-hidden file inside
   `mods/<name>/` is written. Anything written at runtime goes in `poke-assets/` or
-  `~/.local/state/herdr-poke/`. Writing into `mods/poke/` at runtime loops the reload
+  `~/.local/state/herdr-poke/` or `~/.local/state/herdr-app/usage/`. Writing into `mods/poke/` at runtime loops the reload
   until QuickJS runs out of memory.
-- **GIFs advance only when the window redraws.** `ui.js` `alive()` wraps a sprite in a
+- **GIFs advance only when the window redraws.** `mods/poke/views/ui.js` `alive()` (and the copy in `mods/base/views/ui.js`) wraps a sprite in a
   sub-pixel native `.loop()` so it keeps animating. Static PNGs bypass this loop.
   An earlier local observation was about 3% CPU; this is not a measured budget
   across machines or sprite counts.
@@ -111,24 +107,23 @@ names go to `~/.config/herdr-app/poke-assets/`, which the mod reads as
   Label backoff returns an error until publication can retry; latest Codex limit
   comparison and replacement happen under the same lock.
 - **Telemetry ownership:** the UI hides snapshots without a matching foreground PID
-  and provider. Claude statusline checks `hc get` and process ancestry under a bounded
-  timeout before publishing; a delayed old statusline cannot claim a replacement
-  Claude. Codex rechecks its open rollout every 5 seconds for in-process session
+  and provider. The Codex wrapper checks `hc get` and process ancestry under a bounded
+  timeout before publishing, so a delayed old process cannot claim a replacement
+  session. Codex rechecks its open rollout every 5 seconds for in-process session
   switches, clearing missing fields when it switches. PID reuse is not a process
   start-time identity check; unsupported/legacy snapshots are shown as unavailable.
   Rebuilding the helper does not upgrade an already-running Codex wrapper/attach
   process. Existing wrappers need a normal restart after the user finishes their
-  session; do not interrupt their work to upgrade. Claude picks up the new binary
-  on its next statusline invocation.
+  session; do not interrupt their work to upgrade.
 - **Codex needs `--no-daemon`.** Without it, `lsof` can't tie the process to its
   rollout and `HC_TERMINAL_ID` is lost.
 
 ## How to verify a change
 
-1. `herdr-app check mods/poke` must print `check passed`. `herdr-app status` must show
+1. `herdr-app check mods/poke` and `herdr-app check mods/base` must print `check passed`. `herdr-app status` must show
    `"errors": []`.
-2. Logic: `npm test` (mod `lib/`) and `cd helpers/poke && go test ./...`. Installer:
-   `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/poke/scripts`.
+2. Logic: `npm test` (mod `lib/`, layouts, docs) and `cd helpers/poke && go test ./...`. Installer:
+   `npm run test:poke:scripts`; selective installer: `npm run test:setup`.
    Installer integration uses a temporary HOME and a stub builder; launchd and
    the live app are excluded. Fix with a failing test first.
 3. Visual: `herdr-app shot out.png` saves the last frame without the macOS traffic
@@ -145,10 +140,10 @@ names go to `~/.config/herdr-app/poke-assets/`, which the mod reads as
 
 ## Rules
 
-- Commits follow `~/.claude/commit-convention.md`: `type(herdr-poke): 한국어 명사형` title,
+- Commits follow the repo history: `type(scope): 한국어 명사형` title (`~/Documents/work/commit-convention.md` applies only under `~/Documents/work`),
   body lines ending in ~함/~됨. No AI signature in commits or PRs. Pushing to
   `keoneokeoneo/herdr` (private) is fine.
-- Docs go in `docs/specs/` and `docs/plans/`, never `docs/superpowers/`. No commit
+- Docs go in `docs/specs/` and `docs/plans/` (whatever location a tool suggests). No commit
   hashes in docs.
 - pokeTokenBar files are read only. Never open or decrypt its `usage-cache.json`.
 - Back up before editing `~/.claude/settings.json`, `~/.zshrc`, `~/.codex/config.toml` or
@@ -164,9 +159,9 @@ installation. Node/nvm, Jetendard and pokeTokenBar state produce warnings. It do
 not verify login or live UI. `install.sh` runs it before any installation writes;
 `HERDR_POKE_DRY=1` still writes files and is for isolated tests, not a read-only check.
 
-`scripts/poke/install.sh` sets up most of this; check it after a migration. Close Claude
-sessions before running it, because Claude may rewrite its settings concurrently.
-Missing configuration files are created. An absent Codex alias is added; an exact
+`scripts/poke/install.sh` sets up most of this; check it after a migration. It first installs
+`base` and `poke` through `scripts/setup.py`. It never edits the global Claude `statusLine`. Missing
+configuration files are created. An absent Codex alias is added; an exact
 old alias is replaced; custom or duplicate aliases abort rather than being overwritten.
 The installer adds a managed `~/.local/bin` PATH line to `.zshrc`.
 
@@ -185,7 +180,7 @@ It does not undo the deliberately manual permission settings or external skills.
 | Terminal font Jetendard | macOS fonts | manual; not bundled |
 | Node versions and default selection | `${NVM_DIR:-~/.nvm}` | install nvm/Node first; shims require it |
 | Helper binary | `~/.local/bin/herdr-poke` | install.sh |
-| Claude statusLine → `herdr-poke statusline` | `~/.claude/settings.json` | install.sh (manifest) |
+| Claude limits file (the global statusline writes `claude.json`) | `~/.claude/statusline/` | manual; not in this repo, see `docs/modes/base.md` |
 | `alias codex='herdr-poke codex -- codex --yolo --no-daemon'` | `~/.zshrc` | install.sh (manifest) |
 | Herdr sounds off | Herdr `settings.json` | install.sh (manifest) |
 | launchd usage job `dev.keno.herdr-poke.usage` | `~/Library/LaunchAgents/` | install.sh |
@@ -198,11 +193,11 @@ It does not undo the deliberately manual permission settings or external skills.
 | Work | Interval / trigger | Cost and scope |
 |---|---|---|
 | Agent transitions, partner assignment | 2 seconds | Reads Herdr rows; no unconditional notify |
-| Attach health probe | 60 seconds per Codex | One helper; held flock exits before querying hc |
+| Attach health probe (base status bar copy) | 60 seconds per Codex | One helper; held flock exits before querying hc |
 | Attach foreground validation | 5 seconds per live attach | One bounded `hc get`; failure exits for later retry |
 | Rollout discovery / tail | about 1 second | `lsof` until found; then incremental reads + open-rollout recheck every 5 seconds |
 | Companion + Dex copy, evolution/level toasts | PTB folder watch (`companion-state.json`, `sprites/`) + 300 seconds | Three helper executions per run, coalesced; no unchanged file rewrite; only new variant GIFs normalized |
-| Limits/usage/Dex load | filtered folder events + 15 seconds | Suppresses unchanged notify; concurrent loads coalesced |
+| Limits/usage load (base) and Dex load (Poke) | filtered folder events + 15 seconds | Suppresses unchanged notify; concurrent loads coalesced |
 | Status/panel time labels | 60 seconds | Countdown/expiry refresh |
 | Agent/pane elapsed labels | 20 seconds per initialized view | Timers continue in hidden views |
 | Companion card / events | 30 seconds + card folder watch | Filtered/coalesced reads; defaults lookup every 30 seconds; notify only on visible changes |
@@ -210,9 +205,7 @@ It does not undo the deliberately manual permission settings or external skills.
 
 Asset jobs start three helpers each time pokeTokenBar writes its state (every few
 minutes) and on the 5-minute fallback, plus partner fetches, retries and attach
-probes. Claude statusline also runs two git commands normally (three on detached
-HEAD), each with a two-second timeout, plus a bounded `hc get`/process-ancestry check
-for telemetry ownership. CPU impact has not been remeasured.
+probes. CPU impact has not been remeasured.
 
 The brand button folds to a rail; `cmd-b` hides the sidebar. Double-click rename and
 reorder are implemented for expanded spaces and tabs, not agent rows or rail spaces.
@@ -222,10 +215,9 @@ in the design's Current state section.
 
 ## Unified right panel
 
-`poke-panel-body` shows one of Usage / Changes / Files / Poke / Obsidian. The former
-Dex view is labeled Poke. Utility views and custom views are peer tabs; the existing
-Usage implementation remains in place. The panel button or Cmd-K hides/shows the
-whole panel, and Cmd-Shift-O (`poke.notes`, hosted by the status view) opens Obsidian.
-There is no separate Notes panel. The Obsidian reader has a collapsible folder tree
-and shows vault/note names without full paths. Install with
-`bash scripts/obsidian/install.sh --poke`; see [the reader guide](obsidian.md).
+`panel-body` (in `layouts/poke.json`) shows one of Usage / Changes / Files / Poke / Obsidian; the tabs
+are declared on the `panel-tabs` block. Usage, Changes, Files and Obsidian are base's; the Poke tab
+(`poke-dex`) is the Dex. The panel button or Cmd-K hides/shows the whole panel, and Cmd-Shift-O
+(`base.notes`, handled by the bottom bar) opens Obsidian. There is no separate Notes panel. The Obsidian
+reader has a collapsible folder tree and shows vault/note names without full paths; see
+[the reader guide](obsidian.md).
