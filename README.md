@@ -44,6 +44,43 @@ What each install touches:
   job, the `codex` shell alias, a managed PATH line and Herdr's sounds setting. Read its
   installation guide first; it is the only setup that edits shell and app settings.
 
+## Quick start (for other people)
+
+You need Herdr installed and started once, so that `~/.config/herdr-app` exists, plus
+Python 3 and Node.js for the installer and tests. Nothing here replaces your own files silently:
+the installer backs up whatever it would overwrite and never changes a key binding you already have.
+
+```sh
+git clone git@github.com:keoneokeoneo/herdr.git && cd herdr
+npm run setup:list                        # what exists, what it requires
+npm run setup:install -- base --select base
+```
+
+That gives you the neutral shell (sidebar, tab bar, usage bar, right panel). Add more only if you want it:
+
+| I want | Run | Needs |
+|---|---|---|
+| A vault reader | `npm run setup:install -- obsidian` | the Obsidian app and a vault |
+| Pokémon partners | `npm run setup:install -- poke` | macOS, Go; it also edits `~/.zshrc`, `programs.json` and `settings.json` (read the [installation guide](docs/modes/poke-setup.md) first) |
+
+The usage bar shows nothing until something writes the usage files. The UI only reads them, so you can
+feed it from any tool. Each file is one JSON document in `~/.local/state/herdr-app/usage/`:
+
+```json
+{ "plan": "pro", "windows": [
+    { "minutes": 300,   "used": 13, "resets_at": 1793791800 },
+    { "minutes": 10080, "used": 27, "resets_at": 1794121200 } ],
+  "updated": 1793775748 }
+```
+
+Name it `claude.json` or `codex.json` (`used` is a percentage, `resets_at` and `updated` are epoch seconds;
+`300` is the 5-hour window, `10080` the weekly one). A window whose reset time has passed is shown as "–".
+`daily.json` holds per-day token totals; the exact rules are in the [Base guide](docs/modes/base.md).
+Without Poke's helper, Codex limits and daily totals stay empty unless you write those files yourself.
+
+To remove a setup, delete its mod, layout and theme files from `~/.config/herdr-app` and switch layout
+(`Cmd-Shift-L`); `setup:status` shows what the installer recorded.
+
 ## Choose what to install
 
 ```sh
