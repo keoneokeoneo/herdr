@@ -17,8 +17,11 @@ test('closing the embedded reader hides the neutral panel; Back leads to base', 
   assert.ok(src.includes("'Back'"));
 });
 
-test('the installer copies the neutral theme and does not patch Poke files', async () => {
+test('the installer is the manifest-driven setup tool and obsidian needs only the neutral theme', async () => {
   const sh = await read('scripts/obsidian/install.sh');
-  assert.ok(sh.includes('themes/base.json'));
+  assert.ok(sh.includes('setup.py') && sh.includes('install obsidian'));
   assert.equal(/poke/i.test(sh), false);
+  const entry = JSON.parse(await read('scripts/setups.json')).obsidian;
+  assert.deepEqual(entry.requires, []);
+  assert.deepEqual(entry.themes, ['base']);
 });

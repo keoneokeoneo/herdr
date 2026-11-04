@@ -1,0 +1,29 @@
+{
+  "base": {
+    "title": "Base: sidebar, tab bar, usage bar and right panel",
+    "requires": [],
+    "mods": ["base"],
+    "layouts": ["base"],
+    "themes": ["base"],
+    "keys_layouts": ["base"],
+    "installer": null
+  },
+  "obsidian": {
+    "title": "Obsidian: read-only local vault reader",
+    "requires": [],
+    "mods": ["obsidian"],
+    "layouts": ["obsidian"],
+    "themes": ["base"],
+    "keys_layouts": [],
+    "installer": null
+  },
+  "poke": {
+    "title": "Poke: Pokémon partners, Dex and companion on top of Base",
+    "requires": ["base"],
+    "mods": ["poke"],
+    "layouts": ["poke"],
+    "themes": ["poke"],
+    "keys_layouts": ["poke"],
+    "installer": "scripts/poke/install.sh"
+  }
+}

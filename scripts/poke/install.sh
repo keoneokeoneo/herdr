@@ -18,6 +18,10 @@ export HERDR_APP_HOME="$app" HERDR_POKE_STATE="$state"
 command -v python3 >/dev/null 2>&1 || { echo "abort: install Python 3 and expose python3 on PATH" >&2; exit 1; }
 python3 "$root/scripts/poke/preflight.py"
 
+# Resource files (mods, layouts, themes) and layout key bindings for poke and the base it requires.
+# The installer step is skipped here: this script is that installer.
+HERDR_SETUP_DRY="$dry" python3 "$root/scripts/setup.py" install poke --no-installer
+
 python3 "$root/scripts/poke/install_files.py" prepare "$bin"
 "$root/scripts/poke/build.sh"
 python3 "$root/scripts/poke/install_files.py" record "$bin"
