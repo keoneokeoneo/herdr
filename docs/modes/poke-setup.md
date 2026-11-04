@@ -1,68 +1,63 @@
-# Poke — installation
+# Poke — 설치
 
-A calm, dark work setup for Herdr: a layout and a persona mod on top of [Base](base.md) that show every Claude Code and
-Codex session at a glance — who needs you, who is working, how much of the 5h and weekly
-limits are left — with a random Pokémon partner on each session and your pokeTokenBar
-companion in the sidebar. Only the Pokémon are pixel art. Poke requires Base; you can install
-Base (and Obsidian) without it, see the README.
+Herdr용 차분한 다크 작업 setup. [Base](base.md) 위에 얹는 레이아웃과 페르소나 모드로, 모든 Claude Code와 Codex
+세션을 한눈에 보여 준다: 누가 나를 필요로 하는지, 누가 작업 중인지, 5h와 주간 한도가 얼마나 남았는지. 각 세션에는
+무작위 Pokémon 파트너가 붙고, 사이드바에는 pokeTokenBar companion이 표시된다. 픽셀 아트는 Pokémon뿐이다. Poke는
+Base를 필요로 하며, Base(와 Obsidian)만 Poke 없이 설치할 수도 있다. README를 참고한다.
 
-## Changing it
+## 변경하기
 
-Start with `docs/guide.md` and `docs/modes/poke.md`: a map from each part of the window to its files, the gotchas,
-how to verify, and what lives outside the repo. Claude Code loads it through `CLAUDE.md`.
-Codex loads it through `AGENTS.override.md`; Herdr's generated `AGENTS.md` stays as the
-API reference. Both tools get the `herdr-poke-dev` skill from `.agents/skills/`.
+`docs/guide.md`와 `docs/modes/poke.md`부터 시작한다. 창의 각 부분에서 해당 파일로의 지도, 함정, 검증 방법,
+저장소 밖에 있는 것이 담겨 있다. Claude Code는 `CLAUDE.md`를 통해 이를 로드한다. Codex는
+`AGENTS.override.md`를 통해 로드하며, Herdr가 생성하는 `AGENTS.md`는 API 참조로 남는다. 두 도구 모두
+`.agents/skills/`의 `herdr-poke-dev` 스킬을 사용한다.
 
-## Prerequisites
+## 선행 조건
 
 - Herdr: `brew install --cask herdr-app`
-- pokeTokenBar: `brew install --cask chattymin/tap/poke-token-bar` (read only; never edited)
-- Go matching `helpers/poke/go.mod` or newer: `brew install go`
-- Python 3 (installer), Jetendard terminal font (install separately)
-- nvm with an installed Node version for the optional hc node/npm/npx shims
-- Claude Code and a Codex CLI that supports `--no-daemon`
+- pokeTokenBar: `brew install --cask chattymin/tap/poke-token-bar` (읽기 전용; 절대 수정하지 않음)
+- `helpers/poke/go.mod`에 맞는 Go 또는 그 이상: `brew install go`
+- Python 3 (설치기), Jetendard 터미널 폰트 (별도 설치)
+- 선택적인 hc node/npm/npx shim을 위해 Node 버전이 설치된 nvm
+- Claude Code와 `--no-daemon`을 지원하는 Codex CLI
 
-## Install
+## 설치
 
-1. Follow the [new Mac migration checklist](../plans/2026-11-04-machine-migration.md)
-   to back up existing Herdr settings and place the repo at `~/.config/herdr-app`.
-   Clone into a staging folder first; do not force-checkout over existing settings.
-   Keep `programs.json`: it makes menu-launched Codex use the wrapper and `--no-daemon`.
-2. Run `python3 scripts/poke/preflight.py`. Required tools, the Go version from
-   `helpers/poke/go.mod`, and Codex `--no-daemon` support must pass. Node/nvm, Jetendard
-   and pokeTokenBar state produce optional-feature warnings. Login and live UI
-   verification remain manual.
-3. Run `bash scripts/poke/install.sh` (the same as `python3 scripts/setup.py install poke`). It repeats
-   preflight before any installation writes, then
-   - installs the `base` and `poke` mods, layouts, themes and the `layout:` key bindings
-     (`scripts/setup.py`; nothing is copied when the repo already is `~/.config/herdr-app`),
-   - builds `~/.local/bin/herdr-poke`,
-   - backs up and edits `~/.zshrc` (`codex` runs through `herdr-poke codex -- codex --yolo --no-daemon`)
-     and Herdr's `settings.json` (Herdr's own attention sounds off; partners' cries replace them).
-     It never edits `~/.claude/settings.json`: Claude's limits come from your global statusline,
-     see [Base](base.md),
-   - copies the companion sprite, collects 14 days of usage, adds a launchd job
-     (`dev.keno.herdr-poke.usage`, every 10 min) and switches Herdr to the `poke` layout.
-4. Open a new zsh. Start Herdr from the Dock, not from inside a Claude session
-   (a Herdr launched from Claude passes `CLAUDE_CODE_CHILD_SESSION` to its terminals and
-   their transcripts stop saving).
+1. [새 Mac 이전 체크리스트](../plans/2026-11-04-machine-migration.md)에 따라 기존 Herdr 설정을 백업하고 저장소를
+   `~/.config/herdr-app`에 둔다. 먼저 스테이징 폴더에 clone하고, 기존 설정 위에 강제로 checkout하지 않는다.
+   `programs.json`은 유지한다. 메뉴에서 실행한 Codex가 래퍼와 `--no-daemon`을 쓰도록 한다.
+2. `python3 scripts/poke/preflight.py`를 실행한다. 필수 도구, `helpers/poke/go.mod`의 Go 버전, Codex
+   `--no-daemon` 지원은 통과해야 한다. Node/nvm, Jetendard, pokeTokenBar 상태는 선택 기능에 대한 경고를 낸다.
+   로그인과 실제 UI 검증은 수동으로 남는다.
+3. `bash scripts/poke/install.sh`를 실행한다(`python3 scripts/setup.py install poke`와 동일). 설치 쓰기 전에
+   preflight를 다시 실행한 뒤 다음을 수행한다.
+   - `base`와 `poke` 모드, 레이아웃, 테마, `layout:` 키 바인딩을 설치한다
+     (`scripts/setup.py`; 저장소가 이미 `~/.config/herdr-app`이면 아무것도 복사하지 않음).
+   - `~/.local/bin/herdr-poke`를 빌드한다.
+   - `~/.zshrc`(`codex`가 `herdr-poke codex -- codex --yolo --no-daemon`을 거쳐 실행됨)와 Herdr의
+     `settings.json`(Herdr 자체의 주의 알림 사운드를 끔; 파트너의 울음소리가 대신함)을 백업하고 수정한다.
+     `~/.claude/settings.json`은 절대 수정하지 않는다. Claude의 한도는 전역 statusline에서 오며,
+     [Base](base.md)를 참고한다.
+   - companion 스프라이트를 복사하고, 14일치 사용량을 수집하고, launchd 작업
+     (`dev.keno.herdr-poke.usage`, 10분마다)을 추가하고, Herdr를 `poke` 레이아웃으로 전환한다.
+4. 새 zsh를 연다. Herdr는 Dock에서 시작하고, Claude 세션 안에서 시작하지 않는다(Claude에서 실행한 Herdr는
+   `CLAUDE_CODE_CHILD_SESSION`을 터미널에 넘겨 그 transcript 저장이 멈춘다).
 
-Keys (layout `poke`, same as `base`): `⌘J` next session waiting for you (oldest first), `⌘K`
-show/hide the right panel, `⌘⇧O` Obsidian tab, `⌃1–9` spaces.
+키(레이아웃 `poke`, `base`와 동일): `⌘J` 나를 기다리는 다음 세션(오래된 순), `⌘K` 오른쪽 패널 표시/숨김,
+`⌘⇧O` Obsidian 탭, `⌃1–9` space.
 
-## Undo
+## 되돌리기
 
-`scripts/poke/uninstall.sh` uses the configuration and installed-file journals, not the
-newest whole-file backup. It restores original settings and owned files, preserving
-later user replacements and unjournaled legacy files. The current layout, repo,
-assets, runtime state and backups stay. Manual security defaults and external review
-skills are not removed. See `docs/guide.md` for recovery and migration details.
+`scripts/poke/uninstall.sh`는 가장 최근의 전체 파일 백업이 아니라 설정 journal과 설치 파일 journal을 사용한다.
+원래 설정과 소유한 파일을 복원하며, 이후 사용자가 교체한 파일과 journal에 없는 레거시 파일은 보존한다.
+현재 레이아웃, 저장소, 에셋, 런타임 상태, 백업은 그대로 남는다. 수동으로 둔 보안 기본값과 외부 리뷰 스킬은
+제거되지 않는다. 복구와 이전의 세부 사항은 `docs/guide.md`를 참고한다.
 
-## Troubleshooting
+## 문제 해결
 
-- `herdr-app status` — errors from layouts and mods.
-- `*.error` files next to a layout or mod name what failed to load.
-- `ctrl-alt-shift-escape` resets Herdr to its default layout if the window is unusable.
-- `herdr-app check mods/poke` and `herdr-app check mods/base` — compile the mods without reloading.
-- Helper state lives in `~/.local/state/herdr-poke/`; the usage data the UI reads is in
-  `~/.local/state/herdr-app/usage/` (`claude.json`, `codex.json`, `daily.json`).
+- `herdr-app status` — 레이아웃과 모드의 오류.
+- 레이아웃이나 모드 이름 옆의 `*.error` 파일에 로드에 실패한 내용이 적혀 있다.
+- 창을 쓸 수 없으면 `ctrl-alt-shift-escape`로 Herdr를 기본 레이아웃으로 초기화한다.
+- `herdr-app check mods/poke`와 `herdr-app check mods/base` — 리로드 없이 모드를 컴파일한다.
+- 헬퍼 상태는 `~/.local/state/herdr-poke/`에 있고, UI가 읽는 사용량 데이터는
+  `~/.local/state/herdr-app/usage/`(`claude.json`, `codex.json`, `daily.json`)에 있다.
