@@ -6,6 +6,7 @@ import { pill, spritePath, alive, C } from "./ui.js";
 import { progress } from "../lib/companion.js";
 import { tokensM } from "../lib/format.js";
 import { narrow } from "./brand.js";
+import { coalesce, companionChanged } from "../lib/sync.js";
 
 const DIR = () => `${home()}/Library/Application Support/PokeTokenBar`;
 const cap = (s) => (s ? s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "");
@@ -45,19 +46,37 @@ async function load(s) {
   };
 }
 
+// A missing preference means pokeTokenBar's default; other failures retain the
+// last usable value. Recheck on the timer because defaults live outside PTB_DIR.
+async function refreshDifficulty(s) {
+  const r = await exec("defaults", ["read", "io.github.chattymin.poketokenbar", "growthDifficulty"]).catch(() => null);
+  const d = Number(r?.stdout?.trim());
+  if (r?.code === 0 && Number.isFinite(d) && d > 0) s.difficulty = d;
+  else if (r?.code !== 0 && /domain\/default pair of \(io\.github\.chattymin\.poketokenbar, growthDifficulty\) does not exist/i.test(r?.stderr ?? "")) s.difficulty = 1;
+}
+
 export function init(s, cx) {
   s.difficulty = 1;
-  cx.timer.every(30000, (cx) => cx.spawn(async (cx) => { await load(s); cx.notify(); }));
-  cx.spawn(async (cx) => {
-    const r = await exec("defaults", ["read", "io.github.chattymin.poketokenbar", "growthDifficulty"]).catch(() => null);
-    const d = Number(r?.stdout?.trim());
-    if (r?.code === 0 && d > 0) s.difficulty = d;
-    await load(s); cx.notify();
-    // A rejected watch (folder missing, watch refused) must not spin: fall back to the timer.
+  let checkDifficulty = true;
+  let previous;
+  const refresh = coalesce(async () => {
+    if (checkDifficulty) {
+      checkDifficulty = false;
+      await refreshDifficulty(s);
+    }
+    await load(s);
+    const next = JSON.stringify(s.missing ? ["missing"] : s.egg ? ["egg", s.egg, !!s.eggImg] : ["companion", s.c]);
+    if (next !== previous) { previous = next; cx.notify(); }
+  });
+  cx.spawn(refresh);
+  cx.timer.every(30000, (cx) => { checkDifficulty = true; cx.spawn(refresh); });
+  cx.spawn(async () => {
+    // Missing/refused watch falls back to the timer. Keep listening during a
+    // load; coalesce schedules one follow-up so mid-load events are not lost.
     for (;;) {
-      const ok = await watchFolder(DIR()).then(() => true, () => false);
-      if (!ok) return;
-      await load(s); cx.notify();
+      const paths = await watchFolder(DIR()).catch(() => null);
+      if (!paths) return;
+      if (companionChanged(paths, DIR())) refresh();
     }
   });
 }

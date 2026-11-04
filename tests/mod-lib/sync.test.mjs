@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ptbChanged, coalesce } from '../../mods/poke/lib/sync.js';
+import { ptbChanged, companionChanged, coalesce } from '../../mods/poke/lib/sync.js';
 
 const D = '/Users/k/Library/Application Support/PokeTokenBar';
 
@@ -47,4 +47,13 @@ test('coalesce keeps working after the job throws', async () => {
   await go();
   await go();
   assert.equal(runs, 2);
+});
+
+
+test('companionChanged includes snapshots, details and egg sprites without waking for unrelated files', () => {
+  for (const file of ['companion-state.json', 'last-snapshot.json', 'pokemon-details-v1', 'pokemon-details-v1/1.json', 'sprites/egg.png'])
+    assert.equal(companionChanged([`${D}/${file}`], D), true, file);
+  assert.equal(companionChanged([D], D), true);
+  assert.equal(companionChanged([`${D}/usage-cache.json`, `${D}/last-snapshot.backup.json`], D), false);
+  assert.equal(companionChanged(null, D), false);
 });

@@ -14,6 +14,19 @@ export function ptbChanged(paths, dir) {
   });
 }
 
+// The companion card also reads today's snapshot and species details. These
+// events should not run the heavier companion/Dex asset sync above.
+export function companionChanged(paths, dir) {
+  if (ptbChanged(paths, dir)) return true;
+  if (!paths?.length) return false;
+  const d = trim(dir);
+  return paths.some((raw) => {
+    const p = trim(raw);
+    return p === `${d}/last-snapshot.json` || p === `${d}/pokemon-details-v1`
+      || p.startsWith(`${d}/pokemon-details-v1/`);
+  });
+}
+
 // Wraps an async job so concurrent triggers never overlap: a trigger that
 // arrives mid-run asks for exactly one more run after the current one.
 export function coalesce(job) {

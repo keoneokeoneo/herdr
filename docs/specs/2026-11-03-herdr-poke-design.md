@@ -16,6 +16,9 @@ The sections below are the v1 design. Where they differ from this list, this lis
   sprite into the circle; no crop, no zoom.
 - **Animation:** every sprite animates (companion, all agents, Dex), not only working
   agents. GIF sprites are wrapped in a sub-pixel native loop; static PNGs do not request animation redraws.
+- **Companion refresh:** relevant state/snapshot/details/sprite events are coalesced;
+  unchanged visible data does not redraw. Growth difficulty is re-read every
+  30 seconds, preserving the last good value on read failure.
 - **Sidebar:**
   - The brand row is a pokeball and "Herdr", with search and a fold button.
   - Folded, the sidebar becomes a 92px rail:

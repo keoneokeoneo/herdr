@@ -193,7 +193,7 @@ It does not undo the deliberately manual permission settings or external skills.
 | Limits/usage/Dex load | filtered folder events + 15 seconds | Suppresses unchanged notify; concurrent loads coalesced |
 | Status/panel time labels | 60 seconds | Countdown/expiry refresh |
 | Agent/pane elapsed labels | 20 seconds per initialized view | Timers continue in hidden views |
-| Companion card / events | 30 seconds + card folder watch | Reads PTB state; initial defaults lookup once |
+| Companion card / events | 30 seconds + card folder watch | Filtered/coalesced reads; defaults lookup every 30 seconds; notify only on visible changes |
 | Usage aggregation | launchd every 600 seconds | Incremental log reads, but directory discovery walks log roots |
 
 Asset jobs start three helpers each time pokeTokenBar writes its state (every few
