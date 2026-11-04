@@ -186,3 +186,16 @@ func TestLabelsFailureBacksOff(t *testing.T) {
 		t.Fatalf("a failing hc must not be called again within FailBackoff; calls = %q", got)
 	}
 }
+
+func TestBackoffKeepsPublishPending(t *testing.T) {
+	_, fail := fakeHC(t, "")
+	if err := os.WriteFile(fail, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if Set("retry", map[string]string{"poke.model": "m"}) == nil {
+		t.Fatal("expected initial failure")
+	}
+	if Set("retry", map[string]string{"poke.model": "m"}) == nil {
+		t.Fatal("backoff must not report publication success")
+	}
+}

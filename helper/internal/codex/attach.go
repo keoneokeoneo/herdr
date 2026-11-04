@@ -60,28 +60,34 @@ func Attach(terminal string) int {
 		fmt.Fprintln(os.Stderr, "usage: herdr-poke codex --attach <terminal>")
 		return 2
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	out, err := exec.CommandContext(ctx, "hc", "get", terminal, "--json").Output()
-	cancel()
-	if err != nil {
-		return 0
-	}
-	fg, ok := parseForeground(out)
-	if !ok {
-		return 0
-	}
+
+	// Take the lock before querying hc: periodic health probes of a live mirror are cheap.
 	release, ok := tryTerminalLock(terminal)
 	if !ok {
 		return 0
 	}
 	defer release()
-
+	fg, ok := getForeground(terminal)
+	if !ok {
+		return 0
+	}
 	run, stop := context.WithCancel(context.Background())
+	defer stop()
 	go func() {
-		for syscall.Kill(fg.Pid, 0) == nil {
-			time.Sleep(2 * time.Second)
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-run.Done():
+				return
+			case <-ticker.C:
+				current, ok := getForeground(terminal)
+				if !ok || current.Pid != fg.Pid || current.Cwd != fg.Cwd {
+					stop()
+					return
+				}
+			}
 		}
-		stop()
 	}()
 	defer func() { _ = recover() }()
 	// lsof only: started is unknown, so scanning the sessions folder could pick another session.
@@ -89,3 +95,14 @@ func Attach(terminal string) int {
 	return 0
 }
 
+func getForeground(terminal string) (foreground, bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "hc", "get", terminal, "--json")
+	cmd.WaitDelay = 100 * time.Millisecond
+	out, err := cmd.Output()
+	if err != nil {
+		return foreground{}, false
+	}
+	return parseForeground(out)
+}

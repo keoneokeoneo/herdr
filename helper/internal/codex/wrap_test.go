@@ -345,3 +345,21 @@ func TestPublishLimitsSkipsStaleAndOlder(t *testing.T) {
 		t.Errorf("mixed publish = %+v, want only the weekly window", got)
 	}
 }
+
+func TestWrapSkipsMirrorWhenTerminalLockHeld(t *testing.T) {
+	t.Setenv("HERDR_POKE_STATE", t.TempDir())
+	t.Setenv("HC_TERMINAL_ID", "locked")
+	release, ok := tryTerminalLock("locked")
+	if !ok {
+		t.Fatal("lock")
+	}
+	defer release()
+	called := false
+	opts := FindOpts{Lsof: func(int) ([]string, error) { called = true; return nil, nil }}
+	if code := wrap([]string{"true"}, opts); code != 0 {
+		t.Fatalf("child failed: %d", code)
+	}
+	if called {
+		t.Fatal("mirror ran without owning terminal lock")
+	}
+}

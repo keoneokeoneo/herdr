@@ -300,3 +300,25 @@ func TestMergeLimitsKeepsLargerUsedForSameReset(t *testing.T) {
 		t.Fatalf("new window not taken: %+v", g)
 	}
 }
+
+func TestUpdateLimitsLatestConcurrent(t *testing.T) {
+	useTempState(t)
+	var wg sync.WaitGroup
+	for i := 1; i <= 30; i++ {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			if err := UpdateLimitsLatest("codex", ProviderLimits{Updated: int64(n), Windows: []Window{{Minutes: 300, Used: float64(n)}}}); err != nil {
+				t.Error(err)
+			}
+		}(i)
+	}
+	wg.Wait()
+	var all map[string]ProviderLimits
+	if err := ReadJSON("limits.json", &all); err != nil {
+		t.Fatal(err)
+	}
+	if all["codex"].Updated != 30 {
+		t.Fatalf("latest lost: %+v", all)
+	}
+}

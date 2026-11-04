@@ -88,6 +88,8 @@ func wrap(args []string, opts FindOpts) int {
 		if terminal != "" {
 			if release, ok := tryTerminalLock(terminal); ok {
 				defer release()
+			} else {
+				return // another mirror owns this terminal; the child still runs
 			}
 		}
 		monitor(ctx, cmd.Process.Pid, cwd, started, terminal, opts)
@@ -233,13 +235,5 @@ func publishLimits(l state.ProviderLimits, now time.Time) error {
 	}
 	l.Windows = live
 
-	var all map[string]state.ProviderLimits
-	if state.ReadJSON("limits.json", &all) == nil {
-		if cur, ok := all[limitsProvider]; ok {
-			if cur.Updated > l.Updated || (cur.Updated == l.Updated && reflect.DeepEqual(cur, l)) {
-				return nil
-			}
-		}
-	}
-	return state.UpdateLimits(limitsProvider, l)
+	return state.UpdateLimitsLatest(limitsProvider, l)
 }

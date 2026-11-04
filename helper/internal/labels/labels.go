@@ -41,7 +41,7 @@ func Set(terminal string, kv map[string]string) error {
 	cache := map[string]string{}
 	_ = state.ReadJSON(cacheName(terminal), &cache) // missing or corrupt: nothing cached
 	if until, err := time.Parse(time.RFC3339Nano, cache[failKey]); err == nil && time.Now().Before(until) {
-		return nil
+		return fmt.Errorf("hc label %s: retry after %s", terminal, until.Format(time.RFC3339Nano))
 	}
 
 	var args []string

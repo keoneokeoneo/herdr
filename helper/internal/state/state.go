@@ -191,3 +191,24 @@ func sameWindows(a, b []Window) bool {
 	}
 	return true
 }
+
+// UpdateLimitsLatest compares and writes under one lock, including concurrent sessions.
+func UpdateLimitsLatest(provider string, l ProviderLimits) error {
+	return WithLock("limits.lock", func() error {
+		all := map[string]ProviderLimits{}
+		_ = ReadJSON(limitsFile, &all)
+		if all == nil {
+			all = map[string]ProviderLimits{}
+		}
+		if old, ok := all[provider]; ok {
+			if old.Updated > l.Updated {
+				return nil
+			}
+			if old.Updated == l.Updated && old.Plan == l.Plan && sameWindows(old.Windows, l.Windows) {
+				return nil
+			}
+		}
+		all[provider] = l
+		return WriteJSON(limitsFile, all)
+	})
+}

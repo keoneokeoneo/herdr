@@ -33,7 +33,7 @@ export function start(s, cx) {
   s.prev = new Map();      // address → last status
   s.pending = new Set();   // addresses being labelled
   s.tried = new Map();     // partner id → asset retry backoff
-  s.attachTried = new Map(); // codex terminal → attach retry backoff
+  s.attachTried = new Map(); // codex terminal → next health probe
   s.jumpAt = -1;
   s.onCommand = (c) => command(s, c);
 
@@ -72,14 +72,18 @@ async function step(s) {
     if (r.partnerSet && assetsMissing(r.partner, sprites, shared("poke.names")) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
-    // A Codex started without the wrapper (hc run, scripts) has no model/ctx: mirror it after the fact.
+    // Probe every Codex periodically, including one with stale labels after a mirror crash.
     // The helper exits at once when the terminal is already mirrored, so a retry is cheap.
-    if (r.provider === "codex" && !r.model && retryDue(s.attachTried, r.address, Date.now())) attach(r.address);
+    if (r.provider === "codex" && Date.now() >= (s.attachTried.get(r.address) ?? 0)) {
+      s.attachTried.set(r.address, Date.now() + 60000);
+      attach(r.address);
+    }
     s.prev.set(r.address, r.status);
   }
   const live = new Set(all.map((r) => r.address));
   for (const k of s.prev.keys()) if (!live.has(k)) s.prev.delete(k);
   for (const k of s.pending) if (!live.has(k)) s.pending.delete(k);
+  for (const k of s.attachTried.keys()) if (!live.has(k)) s.attachTried.delete(k);
 }
 
 async function assign(s, r) {
