@@ -3,7 +3,7 @@ import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { theme, run } from "herdr";
 import { rows } from "./data.js";
-import { keepFresh, loadUsage, STATE_DIR, win } from "./store.js";
+import { keepFresh, loadUsage, STATE_DIR, WIN_LABEL } from "./store.js";
 import { pctOrDash, tokensM } from "../lib/format.js";
 import { waiting } from "../lib/model.js";
 import { start } from "../behaviours.js";
@@ -25,7 +25,7 @@ function prov(t, name, icon, p, now) {
   return h_flex().gap(6).items_center()
     .child(image(icon).w(13).h(13).flex_none())
     .child(div().text_color(t.muted).child(name))
-    .child(div().text_color(t.foreground).child(`5h ${pctOrDash(win(p, 300), now)} · wk ${pctOrDash(win(p, 10080), now)}`));
+    .child(div().text_color(t.foreground).child((p?.windows ?? []).filter((w) => w.minutes === 300 || w.minutes === 10080).map((w) => `${WIN_LABEL(w.minutes)} ${pctOrDash(w, now)}`).join(" · ") || "–"));
 }
 
 export function render(s, cx) {
