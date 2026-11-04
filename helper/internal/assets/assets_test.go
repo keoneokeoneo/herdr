@@ -579,3 +579,20 @@ func TestRunCLIFailureExitsNonZeroButPrintsSprite(t *testing.T) {
 		t.Errorf("out %q err %q", out.String(), errOut.String())
 	}
 }
+
+func TestDexKeepsShinyArtSeparate(t *testing.T) {
+	c := Config{Home: t.TempDir(), PTBDir: t.TempDir()}
+	os.MkdirAll(filepath.Join(c.PTBDir, "sprites"), 0755)
+	os.WriteFile(filepath.Join(c.PTBDir, "sprites", "6-s.png"), []byte("ordinary"), 0600)
+	os.WriteFile(filepath.Join(c.PTBDir, "sprites", "6-shs.png"), []byte("shiny"), 0600)
+	os.WriteFile(filepath.Join(c.PTBDir, "companion-state.json"), []byte(`{"dex":[{"finalID":6},{"finalID":6,"isShiny":true}]}`), 0600)
+	if err := Dex(c); err != nil {
+		t.Fatal(err)
+	}
+	for name, want := range map[string]string{"dex-6.png": "ordinary", "dex-6-shiny.png": "shiny"} {
+		b, err := os.ReadFile(filepath.Join(c.Dir(), name))
+		if err != nil || string(b) != want {
+			t.Fatalf("%s: %q %v", name, b, err)
+		}
+	}
+}

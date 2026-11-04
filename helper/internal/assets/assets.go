@@ -338,7 +338,7 @@ func List(c Config) ([]string, error) {
 
 // ---- command line ----
 
-const usageText = "usage: herdr-poke assets <pokemon id> | --companion | --list | --normalize\n"
+const usageText = "usage: herdr-poke assets <pokemon id> | --companion | --list | --normalize | --dex\n"
 
 // Run is `herdr-poke assets ...`.
 //
@@ -352,6 +352,12 @@ func Run(args []string, c Config, stdout, stderr io.Writer) int {
 		return 2
 	}
 	switch arg := args[0]; {
+	case arg == "--dex":
+		if err := Dex(c); err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		return 0
 	case arg == "--list":
 		names, err := List(c)
 		if err != nil {
@@ -481,3 +487,65 @@ func isPNG(b []byte) bool { return bytes.HasPrefix(b, []byte("\x89PNG")) }
 
 // notText accepts anything that is not an HTML or JSON error page.
 func notText(b []byte) bool { return b[0] != '<' && b[0] != '{' }
+
+// Dex copies each caught variant once, normalizing only newly copied GIFs.
+// Missing source art is retried on the next sync; existing variants are immutable.
+func Dex(c Config) error {
+	b, err := os.ReadFile(filepath.Join(c.PTBDir, "companion-state.json"))
+	if err != nil {
+		return err
+	}
+	var st struct {
+		Dex []struct {
+			FinalID int   `json:"finalID"`
+			BaseID  int   `json:"baseID"`
+			Chain   []int `json:"chainOrder"`
+			Shiny   bool  `json:"isShiny"`
+		} `json:"dex"`
+	}
+	if err := json.Unmarshal(b, &st); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(c.Dir(), 0755); err != nil {
+		return err
+	}
+	for _, d := range st.Dex {
+		id := d.FinalID
+		if id == 0 && len(d.Chain) > 0 {
+			id = d.Chain[len(d.Chain)-1]
+		}
+		if id == 0 {
+			id = d.BaseID
+		}
+		if id <= 0 {
+			continue
+		}
+		key := "dex-" + strconv.Itoa(id)
+		prefs := []string{"a.gif", "s.png"}
+		if d.Shiny {
+			key += "-shiny"
+			prefs = []string{"sha.gif", "shs.png"}
+		}
+		if has(c.Dir(), key+".gif") || has(c.Dir(), key+".png") {
+			continue
+		}
+		for _, suffix := range prefs {
+			src, err := os.ReadFile(filepath.Join(c.PTBDir, "sprites", strconv.Itoa(id)+"-"+suffix))
+			if err != nil {
+				continue
+			}
+			if strings.HasSuffix(suffix, ".gif") {
+				out, _, err := normalizeGIF(src)
+				if err != nil {
+					continue
+				}
+				src = out
+			}
+			if err := writeFileAtomic(filepath.Join(c.Dir(), key+filepath.Ext(suffix)), src); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	return nil
+}

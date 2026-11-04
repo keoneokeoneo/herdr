@@ -21,7 +21,7 @@ commands:
   codex        run Codex under herdr-poke: herdr-poke codex -- <codex args>
                or mirror one started elsewhere: herdr-poke codex --attach <terminal>
   usage        aggregate 14-day token usage into usage.json
-  assets       fetch Pokemon and companion assets: assets <id> | --companion | --list
+  assets       fetch Pokemon and companion assets: assets <id> | --companion | --list | --dex | --normalize
 `
 
 func main() {

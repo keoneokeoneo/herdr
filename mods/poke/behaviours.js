@@ -124,20 +124,9 @@ function command(s, c) {
   }
 }
 
-// Caught Pokémon: copy pokeTokenBar's own sprite (shiny when caught shiny) as dex-<id>.gif|png.
+// Caught Pokémon: copy pokeTokenBar's own sprite (shiny when caught shiny) as dex-<id>[-shiny].gif|png.
 async function syncDex() {
-  const st = await readJSON(`${PTB_DIR()}/companion-state.json`);
-  const list = (st?.dex ?? []).map((d) => `${d.finalID ?? d.chainOrder?.at(-1) ?? d.baseID}:${d.isShiny ? 1 : 0}`);
-  if (!list.length) return;
-  const script = `src="$1"; dst="$2"; shift 2; mkdir -p "$dst"
-for e in "$@"; do id=\${e%%:*}; sh=\${e##*:}
-  { [ -f "$dst/dex-$id.gif" ] || [ -f "$dst/dex-$id.png" ]; } && continue
-  if [ "$sh" = 1 ]; then c="sha.gif a.gif shs.png s.png"; else c="a.gif s.png"; fi
-  for x in $c; do [ -f "$src/$id-$x" ] && { cp -p "$src/$id-$x" "$dst/dex-$id.\${x##*.}"; break; }; done
-done`;
-  await exec("sh", ["-c", script, "sh", `${PTB_DIR()}/sprites`, `${appHome()}/poke-assets`, ...list]).catch(() => null);
-  // Copied GIFs keep pokeTokenBar's uneven frames: square them so the box never stretches one.
-  await exec(HP(), ["assets", "--normalize"]).catch(() => null);
+  await exec(HP(), ["assets", "--dex"]).catch(() => null);
   await refreshAssets();
 }
 
