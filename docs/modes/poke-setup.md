@@ -5,9 +5,8 @@ Herdr용 차분한 다크 작업 setup. [Base](base.md) 위에 얹는 레이아�
 무작위 Pokémon 파트너가 붙고, 사이드바에는 pokeTokenBar companion이 표시된다. 픽셀 아트는 Pokémon뿐이다. Poke는
 Base를 필요로 하며, Base(와 Obsidian)만 Poke 없이 설치할 수도 있다. README를 참고한다.
 
-Poke 탭에는 세션별 포켓몬이 함께 있는 정원 미니맵도 포함된다. Active 옆 `Garden: On / Off`로
-표시를 선택하고, 미니맵이나 `Expand`로 큰 창을 연다. 포켓몬 클릭은 해당 세션으로 이동하며
-`Close ×`는 큰 창만 닫는다. 별도 설치는 필요 없다. [사용 방법](poke.md#poké-garden)을 참고한다.
+Poke 레이아웃 하단에는 세션별 파트너가 걸어 다니는 띠가 있다. 포켓몬 클릭은 해당 세션으로 이동한다.
+별도 설치는 필요 없다. [사용 방법](poke.md#파트너-띠)을 참고한다.
 
 ## 변경하기
 

@@ -273,6 +273,21 @@
           ]
         },
         {
+          "id": "poke-strip",
+          "type": "block",
+          "size": {
+            "px": 112
+          },
+          "min": 80,
+          "max": 200,
+          "content": {
+            "mod": "poke",
+            "props": {
+              "view": "strip"
+            }
+          }
+        },
+        {
           "id": "status",
           "type": "block",
           "size": {

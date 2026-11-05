@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 const root = new URL('../../../', import.meta.url);
 const read = async (p) => readFile(new URL(p, root), 'utf8');
 const json = async (p) => JSON.parse(await read(p));
-const PERSONA = ['poke-companion', 'poke-dex', 'poke-host'];
+const PERSONA = ['poke-companion', 'poke-dex', 'poke-host', 'poke-strip'];
 const SHIPPED = ['workspace-chrome', 'changes', 'files'];
 
 function walk(node, fn) {

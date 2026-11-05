@@ -1,5 +1,5 @@
-// How a Garden partner moves: pure planning, no drawing. Each partner wanders
-// around its own spot (an offset in px within ±range), so the garden layout
+// How a strip partner moves: pure planning, no drawing. Each partner wanders
+// around its own spot (an offset in px within ±range), so the strip layout
 // stays put and only the walk is animated (natively, with transition("left")).
 
 export const SLEEP_AFTER = 3 * 60_000; // idle this long (tab unchanged): lies down

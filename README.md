@@ -47,18 +47,16 @@ settings.json             공용 앱 설정
   `codex` 셸 alias, 관리되는 PATH 한 줄. 셸 설정을 수정하는 유일한
   setup이므로 설치 가이드를 먼저 읽어 주세요.
 
-## Poké Garden
+## 파트너 띠
 
-Poke 탭 하단의 정원 미니맵에서 모든 space의 에이전트 세션을 한눈에 볼 수 있습니다.
-같은 포켓몬이라도 세션마다 한 마리씩 표시하며, 상태가 바뀌면 말풍선과 상태명이 바뀝니다.
+Poke 레이아웃의 하단 바 위에 에이전트 세션마다 파트너 포켓몬이 한 마리씩 걸어 다니는 띠가 있습니다.
+사이드바와 Dex의 Active에 보이는 것과 같은 포켓몬입니다.
 
-- Active 옆 **Garden: On / Off**로 미니맵을 표시하거나 숨깁니다. 기본값은 On이며 선택은 저장됩니다.
-- 미니맵이나 **Expand**를 클릭하면 최대 1,000×700px의 정원 창이 열립니다. 많은 세션은 스크롤해서 봅니다.
-- 큰 창에서 포켓몬에 마우스를 올리면 세션 상세가 보이고, 클릭하면 해당 터미널로 이동합니다.
-- **Close ×**로 창을 닫아도 미니맵은 남습니다. 미니맵을 꺼도 이미 열린 창은 유지됩니다.
+- Working은 걷고, Idle은 가끔 산책하다 3분 넘게 쉬면 누워 잡니다(`zZ`).
+- Needs you는 멈춰서 `!`, Done은 `✓`를 띄웁니다.
+- 포켓몬을 클릭하면 해당 세션으로 이동하고, 마우스를 올리면 세션 상세가 보입니다.
 
-Working은 작업 중, Needs you는 입력 대기, Done은 아직 확인하지 않은 완료, Idle은 다음 작업 대기입니다.
-추가 설치 없이 Poke에 포함되며, 동작과 구현 위치는 [Poke 가이드](docs/modes/poke.md#poké-garden)에 있습니다.
+추가 설치 없이 Poke에 포함되며, 동작과 구현 위치는 [Poke 가이드](docs/modes/poke.md#파트너-띠)에 있습니다.
 
 ## 다른 사람을 위한 빠른 시작
 
@@ -142,6 +140,6 @@ npm run preflight:poke          # Poke 설치 전 읽기 전용 점검
 코드는 [MIT](LICENSE)입니다. `mods/base/fonts/`의 IBM Plex 글꼴은
 [SIL Open Font License 1.1](mods/base/fonts/OFL.txt)을 따릅니다. Pokémon은 Nintendo, Creature Inc.,
 GAME FREAK inc.의 상표이며, 이 프로젝트는 이들과 관련이 없는 비공식 개인 프로젝트입니다. 레포에는
-포켓몬 스프라이트 파일이 들어 있지 않습니다. Garden의 걷기 그림은 실행 중에
+포켓몬 스프라이트 파일이 들어 있지 않습니다. 파트너 띠의 걷기 그림은 실행 중에
 [PMDCollab SpriteCollab](https://github.com/PMDCollab/SpriteCollab)(CC BY-NC 4.0, 스프라이트별 작가 표기는
 해당 저장소)에서 받아 헬퍼가 잘라 씁니다.

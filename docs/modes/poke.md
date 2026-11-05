@@ -20,13 +20,13 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | 색 | `themes/poke.json`, `mods/poke/views/ui.js` `C` (타입/chip 강조색) |
 | Codex 메뉴 실행 명령 | `programs.json` (`programs.codex.run`) |
 | 키 | `keys.json`, 섹션 `layout:poke` (`cmd-j`, `cmd-k`, `cmd-shift-j`, `cmd-shift-o`는 base command) |
-| 블록이 보여 주는 view | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`, `camp`) |
+| 블록이 보여 주는 view | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`, `strip`) |
 | 사이드바: pokeTokenBar 동료 카드 / 알 | `mods/poke/views/companion.js` |
 | 오른쪽 패널 Poke 탭 (Dex 그리드, 탭 타입 컨트롤) | `mods/poke/views/dex.js` |
 | 일어나는 일: 파트너 배정, Dex 동기화, 레벨/진화 토스트, 저녁 어둡게 | `mods/poke/behaviours.js`, 보이지 않는 `poke-host` 블록(`mods/poke/views/host.js`)이 시작 |
 | 페르소나가 읽는 agent 행 (상태와 파트너 label) | `mods/poke/views/rows.js` |
-| Garden 미니맵과 확장 창 (하나의 정원과 세션 파트너) | `mods/poke/views/camp.js`, `mods/poke/lib/camp.js` |
-| Garden 걷기 계획 (상태별 이동, 낮잠, 자세) | `mods/poke/lib/walk.js` |
+| 하단 파트너 띠 (세션별 파트너, 클릭 이동) | `mods/poke/views/strip.js`, `mods/poke/lib/strip.js` |
+| 걷기 계획 (상태별 이동, 낮잠, 자세) | `mods/poke/lib/walk.js` |
 | 스프라이트, pill, GIF 다시 그리기 | `mods/poke/views/ui.js` (`sprite`, `alive`, `pill`) |
 | 순수 로직 (파트너 선택, 성장 공식, 에셋 재시도, 기본값) | `mods/poke/lib/`, 테스트는 `tests/poke/mod-lib/` |
 | 사이드바, 탭, pane 헤더, 하단 바, Usage 탭, 패널 탭, 아바타 | **base**: `docs/modes/base.md` |
@@ -37,7 +37,7 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | hc용 Node 진입점 | `scripts/poke/nvm-shim` |
 | Codex → label과 한도 (래퍼와 `--attach`) | `helpers/poke/internal/codex` (`wrap.go`, `attach.go`, `find.go`, `rollout.go`) |
 | 스프라이트, 이름, GIF 정규화 | `helpers/poke/internal/assets` (`assets.go`, `normalize.go`) |
-| Garden 걷기 GIF (PMD 시트 자르기) | `helpers/poke/internal/assets/walk.go` (`herdr-poke assets --walk <id>`) |
+| 파트너 띠 걷기 GIF (PMD 시트 자르기) | `helpers/poke/internal/assets/walk.go` (`herdr-poke assets --walk <id>`) |
 | 14일 사용량 집계 (launchd 10분마다) | `helpers/poke/internal/usage` |
 | 상태 파일과 lock | `helpers/poke/internal/state` (`~/.local/state/herdr-poke/`; 사용량 계약은 `~/.local/state/herdr-app/usage/`) |
 | 설치 선행 조건 | `scripts/poke/preflight.py` (읽기 전용 설치 점검), `tests/poke/scripts/test_preflight.py` |
@@ -184,36 +184,22 @@ Dex다. 패널 버튼 또는 Cmd-K로 패널 전체를 숨기거나 표시하고
 Obsidian을 연다. 별도의 Notes 패널은 없다. Obsidian 리더는 접을 수 있는 폴더 트리를 가지며 vault/노트 이름을
 전체 경로 없이 보여 준다. [리더 가이드](obsidian.md)를 참고한다.
 
-## Poké Garden
+## 파트너 띠
 
-Poke 하단에 실시간 미니맵이 표시된다. 미니맵이나 `Expand`를 누르면 큰 창이
-열리며, 닫으면 미니맵은 그대로 남는다. 모든 space의 agent를
-세션당 한 마리씩 하나의 잔디 정원에 표시한다. 상태별 구역은 없으며 Working은 밝기가 바뀌는
-점 말풍선, Needs you는 !, Done은 체크, Idle은 z로 표현한다. 상태 변경 시 위치는 유지하며,
-세션 추가/종료 시 주소 순서에 따라 재배치될 수 있다. hover는 세션 상세, 클릭은 세션 이동이다.
-기존 Active는 종별 중복 제거지만 정원은 같은 종도 세션별로 유지한다. 미배정/에셋 누락은 ?,
-알 수 없는 상태는 Unknown으로 표시한다. Herdr live 데이터를 사용한다.
-`herdr-app do poke.camp`로도 연다. `Close ×`로 닫고 헤더를 드래그해서 옮긴다.
-같은 버튼을 다시 눌러도 중복되지 않는다. 많은 세션과 작은 창에서는 정원을 스크롤한다.
-창 크기는 최대 1,000×700 논리 px이며 작은 앱에서는 너비 88% / 높이 80% 이내로 줄어든다.
-앱의 확대 배율은 다른 UI와 동일하게 적용된다.
+`layouts/poke.json`의 `poke-strip` 블록(112px, 하단 바 바로 위)이 `props.view: "strip"`을 보여 준다.
+모든 space의 agent 세션마다 그 세션의 파트너(`poke.partner` label, 사이드바·Dex와 같은 포켓몬)가 한 마리씩
+자기 칸(최대 200px) 안에서 걸어 다닌다. 칸 순서는 주소순이라 상태가 바뀌어도 자리가 섞이지 않고, 세션이
+늘거나 줄면 칸이 다시 나뉘며 미끄러지듯 옮겨 간다. 클릭은 `agent.focus`, hover는 세션 상세다.
 
-큰 창은 96px 스프라이트, 14px 세션 이름, 13px 상태명을 사용한다. 숫자 기본 탭 이름은
-세션 제목으로 대체한다. Done은 보지 않은 완료, Idle은 다음 작업 대기, Blocked는 입력 대기로
-설명하며 실제 작업 내용을 추측하지 않는다.
+Working은 자주 걷고, Idle은 가끔 산책하며, 탭이 3분 넘게 변하지 않은 Idle(`changed_at`이 null이면 Herdr
+시작 전부터 쉬던 것)은 누워 자고 `zZ` Napping으로 표시한다. Needs you는 멈춰서 깜박이는 `!`, Done은 `✓`를
+띄운다. 이름표는 탭 이름(숫자 기본 이름이면 세션 제목)과 상태 색 점이다. 파트너가 없거나 에셋이 없으면 `?`.
 
-### 걷기와 낮잠
+걷기 그림은 PMDCollab SpriteCollab 시트(CC BY-NC 4.0)를 헬퍼가 잘라 만든
+`poke-assets/walk-<id>-{r,l,idle,sleep}.gif`이며, 네 GIF는 같은 정사각형 박스와 같은 발 위치를 공유한다.
+`-r.gif`가 마지막에 쓰여 완성 표시가 된다. PMD에 없는 종은 `walk-<id>.none`을 남기고 BW 스프라이트로
+제자리에 서 있다. 파트너가 배정되면 behaviours가 1분→30분 백오프로 `assets --walk`를 부른다.
 
-파트너는 자기 자리를 중심으로 걸어 다닌다(큰 창 ±40px, 미니맵 ±14px). Working은 자주 걷고, Idle은 가끔
-산책하며, 탭이 3분 넘게 변하지 않은 Idle(`changed_at`이 null이면 Herdr 시작 전부터 쉬던 것)은 누워 자고
-`zZ` Napping으로 표시한다. Needs you와 Done은 제자리에 멈춘다. 걷기 그림은 PMDCollab SpriteCollab 시트
-(CC BY-NC 4.0)를 헬퍼가 잘라 만든 `poke-assets/walk-<id>-{r,l,idle,sleep}.gif`이며, 네 GIF는 같은 정사각형
-박스와 같은 발 위치를 공유한다. `-r.gif`가 마지막에 쓰여 완성 표시가 된다. PMD에 없는 종은
-`walk-<id>.none`을 남기고 기존 BW 스프라이트로 제자리에 서 있다. 파트너가 배정되면 behaviours가 1분→30분
-백오프로 `assets --walk`를 부른다.
-
-움직임은 view마다 250ms 타이머가 다음 구간만 계획하고, 이동 자체는 네이티브 `transition("left")`가 한다.
-자세나 기분이 바뀔 때만 notify하며, 미니맵 타이머는 Garden: Off일 때 아무것도 하지 않는다.
-
-Active 옆 Garden: On/Off는 미니맵 표시를 제어한다. 기본값은 On이며 선택은
-`poke.gardenEnabled` shared 값으로 앱 재시작 후에도 유지한다. 이미 연 큰 창은 유지한다.
+250ms 타이머(`lib/strip.js`의 `stripTicker`)가 다음 구간만 계획하고, 이동 자체는 네이티브
+`transition("left")`가 한다. 자세, 기분, 목표 지점, 세션 구성이 바뀔 때만 notify한다. 띠 너비는
+`on_size_change`로 받으며 확대 배율로 나눠 쓴다.

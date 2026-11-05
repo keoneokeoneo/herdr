@@ -7,17 +7,9 @@ Where the prototype and this document disagree, this document wins.
 
 ## Current state (updated 2026-11-05, after v1 shipped)
 
-- **Garden walks:** partners with PMD walking art wander around their garden spot (working walks, idle strolls, idle 3+ min naps as "Napping"); blocked/done stand. The earlier "no micro-animation" rule for the garden is replaced.
+- **Partner strip replaces the Garden:** the Garden minimap, its window, `poke.camp` and `poke.gardenEnabled` are removed. A 112px strip above the status bar shows each agent session's partner (the same `poke.partner` as the sidebar and Dex) walking in its own column with PMD walking art: working walks, idle strolls, idle 3+ min naps ("Napping"); blocked shows `!`, done `✓`. Click goes to the session.
 - **No cries:** partner cries are removed (helper no longer downloads MP3s, the mod plays no sound). Herdr's own attention sounds are used again; the installer no longer mutes them and undoes an earlier mute it still owns. The Notifications line below is history.
-- **Poké Garden:** Poke has a live garden minimap. Clicking it or Expand opens one
-  continuous garden in a movable window; closing it leaves the minimap available. Each agent
-  session has its own partner; bubbles and readable labels show Working / Needs you / Done / Idle.
-  Hover for details, click to focus. Status
-  changes preserve placement. Unknown states and missing partners have explicit fallbacks.
-  Live reads add no polling timer.
-  Garden: On/Off persists minimap visibility; the expanded window stays independent.
-  Window size is capped at 1000×700 logical px and shrinks for smaller app windows.
-
+- **Poké Garden (removed 2026-11-05):** a garden minimap and window existed briefly; replaced by the partner strip above.
 - The right panel now has peer tabs Usage / Changes / Files / Poke / Obsidian,
   displaying one view at a time. Cmd-K toggles the panel; Cmd-Shift-O opens Obsidian.
   The reader displays a collapsible vault folder tree and names without full paths.
@@ -116,7 +108,7 @@ This project turns Herdr into a calm, cute workspace that makes "who needs me / 
 
 ## Non-goals (v1)
 
-- Garden was deferred in v1 and is now implemented as described in Current state above.
+- Garden was deferred in v1, built, then replaced by the partner strip (see Current state).
 - Extra gamification (quests, badges, combos, eggs, wild encounters, trainer card); review battle (HP/VS); messenger, evolution forecast, token weather.
 - Partner evolution — partners are random and never evolve.
 - An "error / tests failed" state. Herdr's app `Status` is `working | blocked | done | idle`; v1 uses exactly those. ⌘J targets `blocked`.

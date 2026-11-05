@@ -1,4 +1,4 @@
-// Poke's behaviours: partner assignment, Garden walking art, pokeTokenBar sync, evening flag, level/evolution toasts.
+// Poke's behaviours: partner assignment, the strip's walking art, pokeTokenBar sync, evening flag, level/evolution toasts.
 // Things that happen, not things drawn. Runs once, in the persona host's copy.
 import { hc, exec, home, appHome, shared, setShared, notify, watchFolder } from "herdr";
 import { personaRows } from "./views/rows.js";
@@ -77,7 +77,7 @@ async function step(s) {
     if (r.partnerSet && assetsMissing(r.partner, sprites, shared("poke.names")) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
-    // The Garden's walking art (PMD sheets cut by the helper); a species without any is marked once.
+    // The partner strip's walking art (PMD sheets cut by the helper); a species without any is marked once.
     if (r.partnerSet && walkMissing(r.partner, sprites) && retryDue(s.walkTried, r.partner, Date.now())) {
       exec(HP(), ["assets", "--walk", String(r.partner)]).then(refreshAssets, () => null);
     }
