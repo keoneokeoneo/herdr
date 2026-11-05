@@ -41,11 +41,12 @@ type Config struct {
 	PTBDir      string // pokeTokenBar's Application Support folder (read only)
 	SpriteBase  string // <base>/versions/generation-v/black-white/animated/<id>.gif and <base>/<id>.png
 	SpeciesBase string // <base>/<id>
+	PMDBase     string // <base>/<0025>/AnimData.xml and <Anim>-Anim.png (walking art)
 	Client      *http.Client
 }
 
 // ConfigFromEnv reads HERDR_APP_HOME (default ~/.config/herdr-app) and, for
-// tests, HERDR_POKE_SPRITE_BASE, HERDR_POKE_SPECIES_BASE
+// tests, HERDR_POKE_SPRITE_BASE, HERDR_POKE_SPECIES_BASE, HERDR_POKE_PMD_BASE
 // and HERDR_POKE_PTB_DIR.
 func ConfigFromEnv() Config {
 	home, err := os.UserHomeDir()
@@ -63,6 +64,7 @@ func ConfigFromEnv() Config {
 		PTBDir:      env("HERDR_POKE_PTB_DIR", filepath.Join(home, "Library", "Application Support", "PokeTokenBar")),
 		SpriteBase:  env("HERDR_POKE_SPRITE_BASE", defaultSpriteBase),
 		SpeciesBase: env("HERDR_POKE_SPECIES_BASE", defaultSpeciesBase),
+		PMDBase:     env("HERDR_POKE_PMD_BASE", defaultPMDBase),
 	}
 }
 
@@ -322,15 +324,28 @@ func List(c Config) ([]string, error) {
 
 // ---- command line ----
 
-const usageText = "usage: herdr-poke assets <pokemon id> | --companion | --list | --normalize | --dex\n"
+const usageText = "usage: herdr-poke assets <pokemon id> | --walk <pokemon id> | --companion | --list | --normalize | --dex\n"
 
 // Run is `herdr-poke assets ...`.
 //
 //	assets <id>        fetch sprite and name; print the sprite path
+//	assets --walk <id> cut the Garden's walking art (or mark the species as having none)
 //	assets --companion copy the active companion's sprite; print its path
 //	assets --list      print the asset file names as a JSON array
 //	assets --normalize square every GIF in the folder; print how many changed
 func Run(args []string, c Config, stdout, stderr io.Writer) int {
+	if len(args) == 2 && args[0] == "--walk" {
+		id, err := strconv.Atoi(args[1])
+		if err != nil {
+			fmt.Fprint(stderr, usageText)
+			return 2
+		}
+		if err := EnsureWalk(c, id); err != nil {
+			fmt.Fprintf(stderr, "herdr-poke assets: %v\n", err)
+			return 1
+		}
+		return 0
+	}
 	if len(args) != 1 {
 		fmt.Fprint(stderr, usageText)
 		return 2

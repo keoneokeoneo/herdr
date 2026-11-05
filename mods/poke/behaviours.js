@@ -1,4 +1,4 @@
-// Poke's behaviours: partner assignment, cries, pokeTokenBar sync, evening flag, level/evolution toasts.
+// Poke's behaviours: partner assignment, Garden walking art, pokeTokenBar sync, evening flag, level/evolution toasts.
 // Things that happen, not things drawn. Runs once, in the persona host's copy.
 import { hc, exec, home, appHome, shared, setShared, notify, watchFolder } from "herdr";
 import { personaRows } from "./views/rows.js";
@@ -6,6 +6,7 @@ import { readJSON, PTB_DIR } from "./views/store.js";
 import { typeModeInit } from "./lib/defaults.js";
 import { excluded, pickPartner, activePartners } from "./lib/partner.js";
 import { retryDue, assetsMissing } from "./lib/assets.js";
+import { walkMissing } from "./lib/walk.js";
 import { say } from "./lib/voice.js";
 import { ptbChanged, coalesce } from "./lib/sync.js";
 
@@ -36,6 +37,7 @@ async function speciesName(id) {
 export function start(s, cx) {
   s.pending = new Set();   // addresses being labelled
   s.tried = new Map();     // partner id → asset retry backoff
+  s.walkTried = new Map(); // partner id → walking-art retry backoff
 
   // Companion sprite, Dex copies and evolution/level toasts follow pokeTokenBar's
   // folder as it changes. The slow timer only covers a missed or refused watch.
@@ -74,6 +76,10 @@ async function step(s) {
     // A partner whose sprite or name never arrived (offline, API hiccup) is fetched again, with backoff.
     if (r.partnerSet && assetsMissing(r.partner, sprites, shared("poke.names")) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
+    }
+    // The Garden's walking art (PMD sheets cut by the helper); a species without any is marked once.
+    if (r.partnerSet && walkMissing(r.partner, sprites) && retryDue(s.walkTried, r.partner, Date.now())) {
+      exec(HP(), ["assets", "--walk", String(r.partner)]).then(refreshAssets, () => null);
     }
   }
   const live = new Set(all.map((r) => r.address));

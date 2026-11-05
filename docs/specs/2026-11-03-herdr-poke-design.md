@@ -7,6 +7,7 @@ Where the prototype and this document disagree, this document wins.
 
 ## Current state (updated 2026-11-05, after v1 shipped)
 
+- **Garden walks:** partners with PMD walking art wander around their garden spot (working walks, idle strolls, idle 3+ min naps as "Napping"); blocked/done stand. The earlier "no micro-animation" rule for the garden is replaced.
 - **No cries:** partner cries are removed (helper no longer downloads MP3s, the mod plays no sound). Herdr's own attention sounds are used again; the installer no longer mutes them and undoes an earlier mute it still owns. The Notifications line below is history.
 - **Poké Garden:** Poke has a live garden minimap. Clicking it or Expand opens one
   continuous garden in a movable window; closing it leaves the minimap available. Each agent

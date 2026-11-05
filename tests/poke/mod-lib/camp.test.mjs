@@ -74,3 +74,17 @@ test('expanded garden stays compact on large displays and fits small windows', a
   assert.deepEqual(gardenWindowSize({ width: 1920, height: 2130 }), { width: 1000, height: 700 });
   assert.deepEqual(gardenWindowSize({ width: 800, height: 600 }), { width: 704, height: 480 });
 });
+
+test('each visitor carries its tab change time from spaces()', () => {
+  const spaces = [{ tabs: [{ id: 'tabA', changed_at: 123 }, { id: 'tabB', changed_at: null }] }];
+  const g = campGroups([agent('t1', 'idle', { tab: 'tabA' }), agent('t2', 'idle', { tab: 'tabB' }), agent('t3', 'idle', { tab: 'gone' })], [], spaces);
+  assert.deepEqual(g.idle.map((r) => r.changedAt), [123, null, null]);
+});
+
+test('a long-idle partner naps, a fresh idle one waits', async () => {
+  const { campState } = await import('../../../mods/poke/lib/camp.js');
+  assert.equal(campState('idle', true).label, 'Napping');
+  assert.equal(campState('idle', true).mark, 'zZ');
+  assert.equal(campState('idle', false).label, 'Idle');
+  assert.equal(campState('working', true).label, 'Working', 'only idle partners nap');
+});

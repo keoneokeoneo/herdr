@@ -142,4 +142,6 @@ npm run preflight:poke          # Poke 설치 전 읽기 전용 점검
 코드는 [MIT](LICENSE)입니다. `mods/base/fonts/`의 IBM Plex 글꼴은
 [SIL Open Font License 1.1](mods/base/fonts/OFL.txt)을 따릅니다. Pokémon은 Nintendo, Creature Inc.,
 GAME FREAK inc.의 상표이며, 이 프로젝트는 이들과 관련이 없는 비공식 개인 프로젝트입니다. 레포에는
-포켓몬 스프라이트 파일이 들어 있지 않습니다.
+포켓몬 스프라이트 파일이 들어 있지 않습니다. Garden의 걷기 그림은 실행 중에
+[PMDCollab SpriteCollab](https://github.com/PMDCollab/SpriteCollab)(CC BY-NC 4.0, 스프라이트별 작가 표기는
+해당 저장소)에서 받아 헬퍼가 잘라 씁니다.

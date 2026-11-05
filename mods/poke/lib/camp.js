@@ -5,16 +5,18 @@ export function gardenWindowSize(viewport) {
 }
 
 // A fresh snapshot: visitors are sessions, not deduplicated species.
-export function campGroups(agents, terminals) {
+export function campGroups(agents, terminals, spaces = []) {
   const groups = { blocked: [], working: [], done: [], idle: [], unknown: [] };
   const byAddress = new Map(terminals.map((t) => [t.address, t]));
+  const changed = new Map(spaces.flatMap((s) => s.tabs ?? []).map((t) => [t.id, t.changed_at ?? null]));
   for (const a of agents) {
     const raw = byAddress.get(a.address)?.labels?.['poke.partner'];
     const id = Number(raw);
     const partner = raw != null && raw !== '' && Number.isInteger(id) && id >= 1 && id <= MAX_SPECIES ? id : null;
     const key = Object.hasOwn(groups, a.status) ? a.status : 'unknown';
     groups[key].push({ address: a.address, partner, status: a.status,
-      name: a.tab_name && !/^\d+$/.test(a.tab_name) ? a.tab_name : a.title || a.address, space: a.space_name || '' });
+      name: a.tab_name && !/^\d+$/.test(a.tab_name) ? a.tab_name : a.title || a.address, space: a.space_name || '',
+      changedAt: changed.get(a.tab) ?? null });
   }
   return groups;
 }
@@ -33,6 +35,9 @@ const CAMP_STATES = {
   idle: { label: 'Idle', detail: 'Waiting for the next task', mark: 'z', tone: 'normal' },
   unknown: { label: 'Unknown', detail: 'Status unavailable', mark: '?', tone: 'psychic' },
 };
-export function campState(status) {
+const NAPPING = { label: 'Napping', detail: 'Idle for a while', mark: 'zZ', tone: 'normal' };
+// `asleep`: an idle partner whose tab has been still long enough to lie down (lib/walk.js moodOf).
+export function campState(status, asleep = false) {
+  if (status === 'idle' && asleep) return NAPPING;
   return CAMP_STATES[Object.hasOwn(CAMP_STATES, status) ? status : 'unknown'];
 }

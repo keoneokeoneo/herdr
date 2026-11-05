@@ -1,9 +1,60 @@
 // One shared garden. State lives on each partner, not in separate panels.
-import { div } from 'gpui-kit';
+import { div, image } from 'gpui-kit';
 import { h_flex, v_flex } from 'gpui-base';
-import { agents, terminals, shared, run, openOverlay, closeOverlay, props } from 'herdr';
+import { agents, terminals, spaces, shared, run, openOverlay, closeOverlay, props } from 'herdr';
 import { campGroups, gardenVisitors, campState, gardenWindowSize } from '../lib/camp.js';
-import { sprite, C } from './ui.js';
+import { walkArt, moodOf, planStep, pose } from '../lib/walk.js';
+import { sprite, alive, C } from './ui.js';
+
+const visitorsNow = () => gardenVisitors(campGroups(agents(), terminals(), spaces()));
+
+// Partners with walking art wander around their own spot: a script tick only
+// plans legs (and redraws when a pose or mood changes); the walk itself is a
+// native transition. Without the art a partner stands still as before.
+const BIG = { range: 40, speed: { walk: 60, stroll: 26 } };
+const MINI = { range: 14, speed: { walk: 30, stroll: 13 } };
+
+function stepWalkers(s, opts, now) {
+  s.walk ??= new Map();
+  const files = shared('poke.sprites') ?? [];
+  const live = new Set();
+  let key = '';
+  for (const row of visitorsNow()) {
+    live.add(row.address);
+    const mood = moodOf(row.status, row.changedAt, now);
+    const prev = s.walk.get(row.address);
+    const plan = walkArt(row.partner, files) ? planStep(prev?.plan ?? null, mood, now, Math.random, opts) : null;
+    s.walk.set(row.address, { plan, mood });
+    key += `${row.address}:${mood}:${plan ? `${pose(plan, mood, now)}@${plan.to}` : '-'};`;
+  }
+  for (const k of s.walk.keys()) if (!live.has(k)) s.walk.delete(k);
+  if (key === s.walkKey) return false;
+  s.walkKey = key;
+  return true;
+}
+
+// Called from a view's init: the expanded window, or the Dex tab for the minimap.
+export function initWalkers(s, cx, mini = false, enabled = () => true) {
+  const opts = mini ? MINI : BIG;
+  stepWalkers(s, opts, Date.now());
+  cx.timer.every(250, (cx) => { if (enabled() && stepWalkers(s, opts, Date.now())) cx.notify(); });
+}
+
+// The partner's figure: walking art in its current pose, sliding to its planned
+// spot, else the still sprite.
+// `shadow`: an oval under the feet that walks along (the still sprite's is drawn by the stage).
+function figure(s, row, size, fallback, shadow = null) {
+  const w = s?.walk?.get(row.address);
+  const art = walkArt(row.partner, shared('poke.sprites') ?? []);
+  if (!art || !w?.plan) return sprite(row.partner, size) ?? fallback;
+  const src = art[pose(w.plan, w.mood, Date.now())];
+  const el = div().id(`walk-${row.address}`).relative().flex_none().w(size).h(size).left(w.plan.to)
+    .transition('left', { duration: Math.max(1, w.plan.dur), easing: 'linear' });
+  if (shadow) el.child(shadow);
+  return el.child(div().absolute().left(0).top(0).child(alive(image(src).w(size).h(size).flex_none(), src)));
+}
+const walking = (s, row) => !!(s?.walk?.get(row.address)?.plan && walkArt(row.partner, shared('poke.sprites') ?? []));
+const asleep = (s, row) => s?.walk?.get(row.address)?.mood === 'sleep';
 
 export function openCamp() {
   return openOverlay({ mod: 'poke', props: { view: 'camp' }, kind: 'window',
@@ -58,16 +109,16 @@ function garden(height, mini = false) {
   return ground;
 }
 
-function visitor(row, names) {
-  const { label, mark, tone, detail: explanation } = campState(row.status);
+function visitor(s, row, names) {
+  const { label, mark, tone, detail: explanation } = campState(row.status, asleep(s, row));
   const color = C[tone];
   const species = row.partner == null ? 'Partner arriving…' : names[row.partner] ?? `#${row.partner}`;
   const detail = `${row.name} · ${row.space} · ${row.address} — ${species}: ${explanation}`;
-  // Keep the sprite still: subpixel positional loops made the original art look soft.
-  const face = sprite(row.partner, 96) ?? div().size(96).flex().items_center()
-    .justify_center().text_size(32).text_color('#e1e7d9').child('?');
-  const stage = div().relative().w(120).h(112).flex().items_center().justify_center()
-    .child(oval(24, 94, 72, 14, '#10271b75')).child(face);
+  const face = figure(s, row, 96, div().size(96).flex().items_center()
+    .justify_center().text_size(32).text_color('#e1e7d9').child('?'), oval(12, 86, 72, 14, '#10271b75'));
+  const stage = div().relative().w(120).h(112).flex().items_center().justify_center();
+  if (!walking(s, row)) stage.child(oval(24, 94, 72, 14, '#10271b75'));
+  stage.child(face);
   let badge = div().absolute().top(0).right(0).px(8).py(2).rounded(8)
     .bg(row.status === 'blocked' ? '#eed289' : '#172c25')
     .text_size(16).font_weight(700).text_color(row.status === 'blocked' ? '#463b20' : color).child(mark);
@@ -84,17 +135,17 @@ function visitor(row, names) {
 }
 
 // The compact garden remains in the Poke tab when the expanded window closes.
-export function minimap() {
-  const visitors = gardenVisitors(campGroups(agents(), terminals()));
+export function minimap(s) {
+  const visitors = visitorsNow();
   const rows = Math.max(1, Math.ceil(visitors.length / 4));
   const height = Math.max(300, 110 + rows * 76);
   const scene = garden(height, true).id('garden-minimap').rounded(12).cursor_pointer()
     .tooltip('Open the garden for session names and details').on_click(openCamp);
   for (const [i, row] of visitors.entries()) {
-    const state = campState(row.status);
+    const state = campState(row.status, asleep(s, row));
     scene.child(div().absolute().left(`${8 + i % 4 * 22}%`).top(60 + Math.floor(i / 4) * 76 + (i % 2) * 8)
       .w(54).h(65).tooltip(`${row.name} · ${state.label}`)
-      .child(sprite(row.partner, 48) ?? div().size(48).text_center().text_size(22).text_color('#e1e7d9').child('?'))
+      .child(figure(s, row, 48, div().size(48).text_center().text_size(22).text_color('#e1e7d9').child('?')))
       .child(div().absolute().right(0).top(0).px(4).rounded(5).bg('#182e24').text_size(12)
         .text_color(C[state.tone]).child(state.mark)));
   }
@@ -110,13 +161,17 @@ export function minimap() {
     .child(div().text_size(11).text_color('#a8bca4').child('Live view · Click to expand'));
 }
 
-export function render() {
-  const groups = campGroups(agents(), terminals());
+export function init(s, cx) {
+  initWalkers(s, cx);
+}
+
+export function render(s) {
+  const groups = campGroups(agents(), terminals(), spaces());
   const visitors = gardenVisitors(groups);
   const height = Math.max(620, 220 + Math.ceil(visitors.length / 4) * 200);
   const scene = garden(height);
   const names = shared('poke.names') ?? {};
-  for (const row of visitors) scene.child(visitor(row, names));
+  for (const row of visitors) scene.child(visitor(s, row, names));
   if (!visitors.length) scene.child(div().absolute().top(220).left('20%').w('60%').text_center()
     .text_size(13).text_color('#c0cdb7').child('A quiet garden. Start an agent to welcome a partner.'));
   const legend = h_flex().flex_wrap().gap(14).items_center();

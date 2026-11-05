@@ -3,7 +3,7 @@ import { div } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
 import { theme, shared, setShared } from "herdr";
 import { sprite } from "./ui.js";
-import { minimap } from "./camp.js";
+import { minimap, initWalkers } from "./camp.js";
 import { readJSON, PTB_DIR } from "./store.js";
 
 async function loadDex(s) {
@@ -18,6 +18,7 @@ export function init(s, cx) {
   const load = (cx) => cx.spawn(async (cx) => { await loadDex(s); cx.notify(); });
   load(cx);
   cx.timer.every(15000, load);
+  initWalkers(s, cx, true, () => shared("poke.gardenEnabled") !== false);
 }
 
 function tile(t, key, fallbackId, label, shiny) {
@@ -70,5 +71,5 @@ export function render(s, cx) {
   const t = theme();
   return v_flex().size_full().gap(12).px(12).pt(4).pb(12).bg(t.chrome).border_l_1().border_color(t.border).overflow_y_scroll()
     .child(dex(t, s))
-    .child(shared("poke.gardenEnabled") !== false ? minimap() : div());
+    .child(shared("poke.gardenEnabled") !== false ? minimap(s) : div());
 }
