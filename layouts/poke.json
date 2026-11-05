@@ -176,9 +176,9 @@
               "id": "panel",
               "type": "column",
               "size": {
-                "px": 620
+                "px": 420
               },
-              "min": 520,
+              "min": 320,
               "max": 1100,
               "children": [
                 {
