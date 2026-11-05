@@ -3,7 +3,7 @@
 // Working partners walk, idle ones stroll and nap, blocked and done ones stop and
 // show a mark. Click one to go to its session.
 import { div, image } from "gpui-kit";
-import { h_flex } from "gpui-base";
+import { h_flex, v_flex } from "gpui-base";
 import { agents, terminals, spaces, theme, shared, settings, run } from "herdr";
 import { stripRows, slots, partnerState, stripTicker, providerIcon } from "../lib/strip.js";
 import { walkArt, pose } from "../lib/walk.js";
@@ -11,7 +11,7 @@ import { sprite, alive, alpha, C } from "./ui.js";
 
 const SIZE = 64;        // sprite box
 const SLOT_CAP = 200;   // widest column per partner
-const GROUND = 36;      // the grass band along the bottom, px
+const GROUND = 50;      // the grass band along the bottom, px (feet stand on its edge)
 // A night meadow under the calm Poke theme: a dusk sky over a grass band.
 const SKY = ["#1b1d26", "#1c2027"];
 const GRASS = { band: "#1f2c27", edge: "#2b3f34", tuft: "#3a5444", shadow: "#0e1a1466" };
@@ -59,15 +59,19 @@ function badge(state, status, t) {
   return el;
 }
 
-// A name tag on the grass: which agent (Claude / Codex icon, else a status dot) and the
-// session name, in a soft pill whose border carries the status colour.
-function tag(row, colW, t, hovered) {
-  const dot = t[row.status] ?? t.idle ?? t.muted;
+// A two-line name tag on the grass: which agent (Claude / Codex icon) and the session
+// name, then a status dot and the status in its colour.
+function tag(row, state, colW, t, hovered) {
+  const dot = state.mark === "zZ" ? t.idle ?? t.muted : t[row.status] ?? t.idle ?? t.muted;
   const icon = providerIcon(row.provider);
-  return h_flex().max_w(colW - 10).h(18).px(7).gap(5).items_center().rounded_full()
-    .bg(alpha(t.canvas ?? "#1b1d26", "cc")).border_1().border_color(hovered ? alpha(t.accent, "99") : alpha(dot, "66"))
-    .child(icon ? image(icon).flex_none().w(11).h(11) : div().flex_none().size(6).rounded_full().bg(dot))
-    .child(div().truncate().text_size(10.5).font_weight(500).text_color(hovered ? t.foreground : t.muted).child(row.name));
+  return v_flex().max_w(colW - 10).px(8).py(3).gap(1).rounded(9)
+    .bg(alpha(t.canvas ?? "#1b1d26", "d9")).border_1().border_color(hovered ? alpha(t.accent, "99") : alpha(dot, "55"))
+    .child(h_flex().gap(5).items_center()
+      .child(icon ? image(icon).flex_none().w(11).h(11) : div().flex_none().w(11))
+      .child(div().truncate().text_size(10.5).font_weight(600).text_color(hovered ? t.foreground : t.muted).child(row.name)))
+    .child(h_flex().gap(5).items_center()
+      .child(div().flex_none().w(11).flex().justify_center().child(div().size(6).rounded_full().bg(dot)))
+      .child(div().truncate().text_size(9.5).text_color(dot).child(state.label)));
 }
 
 function partner(s, row, home, colW, names, t) {
@@ -78,7 +82,7 @@ function partner(s, row, home, colW, names, t) {
   const detail = `${row.name} · ${who} · ${row.space} — ${species}: ${state.detail}`;
   const offset = w?.plan?.to ?? 0;
   const hovered = s.hover === row.address;
-  return div().id(`strip-${row.address}`).absolute().top(8).left(home + offset - colW / 2).w(colW)
+  return div().id(`strip-${row.address}`).absolute().top(6).left(home + offset - colW / 2).w(colW)
     .transition("left", { duration: Math.max(1, w?.plan?.dur ?? 0), easing: "linear" })
     .flex().flex_col().items_center().gap(2)
     .cursor_pointer().tooltip(detail).accessibility_label(detail)
@@ -86,7 +90,7 @@ function partner(s, row, home, colW, names, t) {
     .on_click(() => run("agent.focus", { terminal: row.address }))
     .child(badge(state, row.status, t))
     .child(figure(s, row, t))
-    .child(tag(row, colW, t, hovered));
+    .child(tag(row, state, colW, t, hovered));
 }
 
 export function render(s) {
@@ -109,7 +113,7 @@ export function render(s) {
     root.child(div().absolute().left(x).bottom(GROUND - 1 + (i % 3)).w(2).h(5 + (i % 4)).rounded_full().bg(GRASS.tuft));
   }
   if (!rows.length) {
-    return root.child(div().absolute().top(44).w_full().text_center().text_size(12).text_color(t.dim)
+    return root.child(div().absolute().top(50).w_full().text_center().text_size(12).text_color(t.dim)
       .child("No agents yet. Each agent you start brings its partner here."));
   }
   if (s.width > 0) rows.forEach((row, i) => root.child(partner(s, row, homes[i], colW, names, t)));

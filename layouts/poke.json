@@ -276,7 +276,7 @@
           "id": "poke-strip",
           "type": "block",
           "size": {
-            "px": 128
+            "px": 140
           },
           "min": 80,
           "max": 200,
