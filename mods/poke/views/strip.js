@@ -5,13 +5,13 @@
 import { div, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { agents, terminals, spaces, theme, shared, settings, run } from "herdr";
-import { stripRows, slots, partnerState, stripTicker } from "../lib/strip.js";
+import { stripRows, slots, partnerState, stripTicker, providerIcon } from "../lib/strip.js";
 import { walkArt, pose } from "../lib/walk.js";
 import { sprite, alive, alpha, C } from "./ui.js";
 
 const SIZE = 64;        // sprite box
 const SLOT_CAP = 200;   // widest column per partner
-const GROUND = 30;      // the grass band along the bottom, px
+const GROUND = 36;      // the grass band along the bottom, px
 // A night meadow under the calm Poke theme: a dusk sky over a grass band.
 const SKY = ["#1b1d26", "#1c2027"];
 const GRASS = { band: "#1f2c27", edge: "#2b3f34", tuft: "#3a5444", shadow: "#0e1a1466" };
@@ -59,12 +59,14 @@ function badge(state, status, t) {
   return el;
 }
 
-// A name tag on the grass: status dot and session name in a soft pill.
+// A name tag on the grass: which agent (Claude / Codex icon, else a status dot) and the
+// session name, in a soft pill whose border carries the status colour.
 function tag(row, colW, t, hovered) {
   const dot = t[row.status] ?? t.idle ?? t.muted;
-  return h_flex().max_w(colW - 10).h(18).px(8).gap(5).items_center().rounded_full()
-    .bg(alpha(t.canvas ?? "#1b1d26", "cc")).border_1().border_color(hovered ? alpha(t.accent, "99") : alpha(dot, "40"))
-    .child(div().flex_none().size(6).rounded_full().bg(dot))
+  const icon = providerIcon(row.provider);
+  return h_flex().max_w(colW - 10).h(18).px(7).gap(5).items_center().rounded_full()
+    .bg(alpha(t.canvas ?? "#1b1d26", "cc")).border_1().border_color(hovered ? alpha(t.accent, "99") : alpha(dot, "66"))
+    .child(icon ? image(icon).flex_none().w(11).h(11) : div().flex_none().size(6).rounded_full().bg(dot))
     .child(div().truncate().text_size(10.5).font_weight(500).text_color(hovered ? t.foreground : t.muted).child(row.name));
 }
 
@@ -72,12 +74,13 @@ function partner(s, row, home, colW, names, t) {
   const w = s.ticker.get(row.address);
   const state = partnerState(row.status, w?.mood === "sleep");
   const species = row.partner == null ? "Partner arriving…" : names[row.partner] ?? `#${row.partner}`;
-  const detail = `${row.name} · ${row.space} — ${species}: ${state.detail}`;
+  const who = { claude: "Claude", codex: "Codex" }[row.provider] ?? "Agent";
+  const detail = `${row.name} · ${who} · ${row.space} — ${species}: ${state.detail}`;
   const offset = w?.plan?.to ?? 0;
   const hovered = s.hover === row.address;
-  return div().id(`strip-${row.address}`).absolute().top(2).left(home + offset - colW / 2).w(colW)
+  return div().id(`strip-${row.address}`).absolute().top(8).left(home + offset - colW / 2).w(colW)
     .transition("left", { duration: Math.max(1, w?.plan?.dur ?? 0), easing: "linear" })
-    .flex().flex_col().items_center()
+    .flex().flex_col().items_center().gap(2)
     .cursor_pointer().tooltip(detail).accessibility_label(detail)
     .on_hover((over, cx) => { const next = over ? row.address : s.hover === row.address ? null : s.hover; if (next !== s.hover) { s.hover = next; cx.notify(); } })
     .on_click(() => run("agent.focus", { terminal: row.address }))
@@ -106,7 +109,7 @@ export function render(s) {
     root.child(div().absolute().left(x).bottom(GROUND - 1 + (i % 3)).w(2).h(5 + (i % 4)).rounded_full().bg(GRASS.tuft));
   }
   if (!rows.length) {
-    return root.child(div().absolute().top(36).w_full().text_center().text_size(12).text_color(t.dim)
+    return root.child(div().absolute().top(44).w_full().text_center().text_size(12).text_color(t.dim)
       .child("No agents yet. Each agent you start brings its partner here."));
   }
   if (s.width > 0) rows.forEach((row, i) => root.child(partner(s, row, homes[i], colW, names, t)));

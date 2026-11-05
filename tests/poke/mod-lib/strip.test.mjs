@@ -66,3 +66,19 @@ test('the ticker only reports a change when a pose, mood, spot or the cast chang
   assert.equal(tick.step(walking, files, plan.start + plan.dur), true, 'arrives and stands');
   assert.equal(tick.get('t2'), undefined, 'gone rows are forgotten');
 });
+
+test('each row says which agent it is: Claude, Codex, or another agent', () => {
+  const rows = stripRows([
+    agent('t1', 'idle', { app: 'claude-code' }),
+    agent('t2', 'idle', { app: null, program: { key: 'codex' } }),
+    agent('t3', 'idle', { app: 'pi', program: { key: 'agent' } }),
+  ], []);
+  assert.deepEqual(rows.map((r) => r.provider), ['claude', 'codex', 'agent']);
+});
+
+test('providerIcon names the shipped icon, or null for other agents', async () => {
+  const { providerIcon } = await import('../../../mods/poke/lib/strip.js');
+  assert.equal(providerIcon('claude'), 'icons/claude.svg');
+  assert.equal(providerIcon('codex'), 'icons/codex.svg');
+  assert.equal(providerIcon('agent'), null);
+});

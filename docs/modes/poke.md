@@ -188,14 +188,15 @@ Obsidian을 연다. 별도의 Notes 패널은 없다. Obsidian 리더는 접을 
 
 ## 파트너 띠
 
-`layouts/poke.json`의 `poke-strip` 블록(112px, 하단 바 바로 위)이 `props.view: "strip"`을 보여 준다.
+`layouts/poke.json`의 `poke-strip` 블록(128px, 하단 바 바로 위)이 `props.view: "strip"`을 보여 준다.
 모든 space의 agent 세션마다 그 세션의 파트너(`poke.partner` label, 사이드바·Dex와 같은 포켓몬)가 한 마리씩
 자기 칸(최대 200px) 안에서 걸어 다닌다. 칸 순서는 주소순이라 상태가 바뀌어도 자리가 섞이지 않고, 세션이
 늘거나 줄면 칸이 다시 나뉘며 미끄러지듯 옮겨 간다. 클릭은 `agent.focus`, hover는 세션 상세다.
 
 Working은 자주 걷고, Idle은 가끔 산책하며, 탭이 3분 넘게 변하지 않은 Idle(`changed_at`이 null이면 Herdr
 시작 전부터 쉬던 것)은 누워 자고 `zZ` Napping으로 표시한다. Needs you는 멈춰서 깜박이는 `!`, Done은 `✓`를
-띄운다. 이름표는 탭 이름(숫자 기본 이름이면 세션 제목)과 상태 색 점이다. 파트너가 없거나 에셋이 없으면 `?`.
+띄운다. 이름표는 Claude/Codex 아이콘(Herdr 기본 `icons/claude.svg`, `icons/codex.svg`; 그 밖의 agent는 상태 색 점)과
+탭 이름(숫자 기본 이름이면 세션 제목)이며, 테두리가 상태 색이다. 파트너가 없거나 에셋이 없으면 `?`.
 
 걷기 그림은 PMDCollab SpriteCollab 시트(CC BY-NC 4.0)를 헬퍼가 잘라 만든
 `poke-assets/walk-<id>-{r,l,idle,sleep}.gif`이며, 네 GIF는 같은 정사각형 박스와 같은 발 위치를 공유한다.

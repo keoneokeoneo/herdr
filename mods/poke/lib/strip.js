@@ -3,6 +3,12 @@
 import { MAX_SPECIES } from './partner.js';
 import { walkArt, moodOf, planStep, pose } from './walk.js';
 
+// Which agent runs in the session (as base's sidebar tells them apart), and its shipped icon.
+const PROVIDER = { 'claude-code': 'claude', claude: 'claude', codex: 'codex' };
+const ICONS = { claude: 'icons/claude.svg', codex: 'icons/codex.svg' };
+export const providerOf = (a) => PROVIDER[a.app] ?? PROVIDER[a.program?.key] ?? 'agent';
+export const providerIcon = (provider) => ICONS[provider] ?? null;
+
 // Rows sorted by address, never by status, so activity changes don't reshuffle the strip.
 export function stripRows(agents, terminals, spaces = []) {
   const byAddress = new Map(terminals.map((t) => [t.address, t]));
@@ -12,7 +18,7 @@ export function stripRows(agents, terminals, spaces = []) {
     const id = Number(raw);
     const partner = raw != null && raw !== '' && Number.isInteger(id) && id >= 1 && id <= MAX_SPECIES ? id : null;
     return {
-      address: a.address, pane: a.pane || null, partner, status: a.status,
+      address: a.address, pane: a.pane || null, partner, status: a.status, provider: providerOf(a),
       name: a.tab_name && !/^\d+$/.test(a.tab_name) ? a.tab_name : a.title || a.address,
       space: a.space_name || '', changedAt: changed.get(a.tab) ?? null,
     };

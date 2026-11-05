@@ -7,7 +7,7 @@ Where the prototype and this document disagree, this document wins.
 
 ## Current state (updated 2026-11-05, after v1 shipped)
 
-- **Partner strip replaces the Garden:** the Garden minimap, its window, `poke.camp` and `poke.gardenEnabled` are removed. A 112px strip above the status bar shows each agent session's partner (the same `poke.partner` as the sidebar and Dex) walking in its own column with PMD walking art: working walks, idle strolls, idle 3+ min naps ("Napping"); blocked shows `!`, done `✓`. Click goes to the session.
+- **Partner strip replaces the Garden:** the Garden minimap, its window, `poke.camp` and `poke.gardenEnabled` are removed. A 128px strip above the status bar shows each agent session's partner (the same `poke.partner` as the sidebar and Dex) walking in its own column with PMD walking art: working walks, idle strolls, idle 3+ min naps ("Napping"); blocked shows `!`, done `✓`. Click goes to the session.
 - **No cries:** partner cries are removed (helper no longer downloads MP3s, the mod plays no sound). Herdr's own attention sounds are used again; the installer no longer mutes them and undoes an earlier mute it still owns. The Notifications line below is history.
 - **Poké Garden (removed 2026-11-05):** a garden minimap and window existed briefly; replaced by the partner strip above.
 - The right panel now has peer tabs Usage / Changes / Files / Poke / Obsidian,
