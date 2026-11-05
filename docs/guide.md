@@ -61,8 +61,9 @@ setup의 구현을 바꾸기 전에 해당 setup의 가이드를 읽고, Herdr�
 섹션에 둔다(해당 레이아웃이 표시되는 동안 Herdr가 그 섹션을 적용한다). `global`에는 일반 바인딩만 둔다.
 선택적 설치기는 setup에 빠진 바인딩만 추가하고, 다른 바인딩을 덮어쓰지 않는다.
 
-`programs.json`은 현재 Codex를 `herdr-poke`를 거쳐 실행하고, 앱 사운드는 Poke의 울음소리를 위해 꺼져 있다.
-이 두 파일과 `~/.zshrc`는 `poke` setup을 설치할 때만 수정된다. 다른 레이아웃을 선택해도 이 변경은 되돌아가지
+`programs.json`은 현재 Codex를 `herdr-poke`를 거쳐 실행한다. 앱 사운드는 Herdr 기본값을 따른다
+(Poke는 더 이상 울음소리를 내지 않으며, 예전 설치가 꺼 둔 사운드는 재설치 때 되돌린다).
+`programs.json`과 `~/.zshrc`는 `poke` setup을 설치할 때만 수정된다. 다른 레이아웃을 선택해도 이 변경은 되돌아가지
 않는다. Poke는 전역 Claude `statusLine`을 수정하지 않는다. Claude의 한도는 전역 statusline이 기록한다
 (`docs/modes/base.md` 참고).
 

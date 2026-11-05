@@ -44,7 +44,7 @@ settings.json             공용 앱 설정
   설치돼 있을 때 채워집니다. 자세한 내용은 Base 가이드에 있습니다.
 - **obsidian**: 자기 mod, 레이아웃과 공용 base 테마. 그 외에는 건드리지 않습니다.
 - **poke**: base에 더해 페르소나 mod와 레이아웃, `herdr-poke` 헬퍼, launchd 사용량 작업,
-  `codex` 셸 alias, 관리되는 PATH 한 줄, Herdr 사운드 설정. 셸과 앱 설정을 수정하는 유일한
+  `codex` 셸 alias, 관리되는 PATH 한 줄. 셸 설정을 수정하는 유일한
   setup이므로 설치 가이드를 먼저 읽어 주세요.
 
 ## Poké Garden
@@ -142,4 +142,4 @@ npm run preflight:poke          # Poke 설치 전 읽기 전용 점검
 코드는 [MIT](LICENSE)입니다. `mods/base/fonts/`의 IBM Plex 글꼴은
 [SIL Open Font License 1.1](mods/base/fonts/OFL.txt)을 따릅니다. Pokémon은 Nintendo, Creature Inc.,
 GAME FREAK inc.의 상표이며, 이 프로젝트는 이들과 관련이 없는 비공식 개인 프로젝트입니다. 레포에는
-포켓몬 스프라이트나 울음소리 파일이 들어 있지 않습니다.
+포켓몬 스프라이트 파일이 들어 있지 않습니다.

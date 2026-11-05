@@ -1,8 +1,8 @@
 # Poke — 변경하는 사람(사람 또는 LLM)을 위한 가이드
 
 저장소 규칙은 먼저 `docs/guide.md`를 읽고, 그다음 변경이 건드리는 파일만 연다. Poke는 **base**
-(`docs/modes/base.md`) 위에 얹는 페르소나 계층으로, pokeTokenBar 동료(companion), Dex 탭, 파트너 스프라이트,
-울음소리를 추가한다. 사이드바, 탭 바, 사용량 바, 오른쪽 패널은 base가 담당하며 Poke 없이도 동작한다. Poke는
+(`docs/modes/base.md`) 위에 얹는 페르소나 계층으로, pokeTokenBar 동료(companion), Dex 탭, 파트너 스프라이트를
+추가한다. 사이드바, 탭 바, 사용량 바, 오른쪽 패널은 base가 담당하며 Poke 없이도 동작한다. Poke는
 base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-03-herdr-poke-design.md`에 있고(그 문서의
 "Current state" 섹션에 v1 이후 달라진 점이 나열되어 있음), 계층 분리는
 `docs/specs/2026-11-04-layer-separation-design.md`에 있다. Herdr 자체의 API 참조는 저장소 루트에 생성되는
@@ -23,11 +23,11 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | 블록이 보여 주는 view | `mods/poke/main.js` (`props.view`: `companion`, `dex`, `host`, `camp`) |
 | 사이드바: pokeTokenBar 동료 카드 / 알 | `mods/poke/views/companion.js` |
 | 오른쪽 패널 Poke 탭 (Dex 그리드, 탭 타입 컨트롤) | `mods/poke/views/dex.js` |
-| 일어나는 일: 파트너 배정, 울음소리, Dex 동기화, 레벨/진화 토스트, 저녁 어둡게 | `mods/poke/behaviours.js`, 보이지 않는 `poke-host` 블록(`mods/poke/views/host.js`)이 시작 |
+| 일어나는 일: 파트너 배정, Dex 동기화, 레벨/진화 토스트, 저녁 어둡게 | `mods/poke/behaviours.js`, 보이지 않는 `poke-host` 블록(`mods/poke/views/host.js`)이 시작 |
 | 페르소나가 읽는 agent 행 (상태와 파트너 label) | `mods/poke/views/rows.js` |
 | Garden 미니맵과 확장 창 (하나의 정원과 세션 파트너) | `mods/poke/views/camp.js`, `mods/poke/lib/camp.js` |
 | 스프라이트, pill, GIF 다시 그리기 | `mods/poke/views/ui.js` (`sprite`, `alive`, `pill`) |
-| 순수 로직 (파트너 선택, 성장 공식, 울음소리, 기본값) | `mods/poke/lib/`, 테스트는 `tests/poke/mod-lib/` |
+| 순수 로직 (파트너 선택, 성장 공식, 에셋 재시도, 기본값) | `mods/poke/lib/`, 테스트는 `tests/poke/mod-lib/` |
 | 사이드바, 탭, pane 헤더, 하단 바, Usage 탭, 패널 탭, 아바타 | **base**: `docs/modes/base.md` |
 | 세션 소유권과 완전한 telemetry 스냅샷 | `helpers/poke/internal/labels/session.go`, `mods/base/lib/telemetry.js` |
 | label 캐싱, 실패 백오프, `hc label` 타임아웃 | `helpers/poke/internal/labels/labels.go` |
@@ -35,7 +35,7 @@ base를 필요로 한다. 제품 의도와 최초 결정은 `docs/specs/2026-11-
 | 모드 등록 | `mods/poke/mod.json` (번들된 UI 폰트는 `mods/base/fonts/`) |
 | hc용 Node 진입점 | `scripts/poke/nvm-shim` |
 | Codex → label과 한도 (래퍼와 `--attach`) | `helpers/poke/internal/codex` (`wrap.go`, `attach.go`, `find.go`, `rollout.go`) |
-| 스프라이트, 울음소리, 이름, GIF 정규화 | `helpers/poke/internal/assets` (`assets.go`, `normalize.go`) |
+| 스프라이트, 이름, GIF 정규화 | `helpers/poke/internal/assets` (`assets.go`, `normalize.go`) |
 | 14일 사용량 집계 (launchd 10분마다) | `helpers/poke/internal/usage` |
 | 상태 파일과 lock | `helpers/poke/internal/state` (`~/.local/state/herdr-poke/`; 사용량 계약은 `~/.local/state/herdr-app/usage/`) |
 | 설치 선행 조건 | `scripts/poke/preflight.py` (읽기 전용 설치 점검), `tests/poke/scripts/test_preflight.py` |
@@ -57,7 +57,7 @@ Herdr는 모드에 `agents()`, `spaces()`, `terminals()`(상태, label, 포커�
 헬퍼는 완전한 터미널 스냅샷(`poke.model`, `poke.effort`, `poke.ctx`)을 `poke.owner`(포그라운드 PID),
 `poke.provider`, `poke.session`과 함께 게시하고, 한도 파일 `~/.local/state/herdr-app/usage/codex.json`도
 게시한다. `usage`는 같은 폴더에 `daily.json`을 쓴다. Claude의 한도는 전역 Claude statusline에서 오며 Poke는
-더 이상 이를 건드리지 않는다. 따라서 Claude 행에는 모델, effort, context가 없다. 스프라이트, 울음소리, 이름은
+더 이상 이를 건드리지 않는다. 따라서 Claude 행에는 모델, effort, context가 없다. 스프라이트와 이름은
 `~/.config/herdr-app/poke-assets/`에 저장되며 모드는 이를 `poke-assets/<file>`로 읽고, Poke는 파일 목록을
 공유 `poke.sprites`로 게시해 base가 아바타를 그릴 수 있게 한다. pokeTokenBar의 폴더
 (`~/Library/Application Support/PokeTokenBar`)는 읽기 전용이다.
@@ -145,7 +145,7 @@ launchd plist에는 독립된 소유권 journal이 있다. 제거는 설치된 �
 | 헬퍼 바이너리 | `~/.local/bin/herdr-poke` | install.sh |
 | Claude 한도 파일 (전역 statusline이 `claude.json`을 씀) | `~/.claude/statusline/` | 수동; 이 저장소에 없음, `docs/modes/base.md` 참고 |
 | `alias codex='herdr-poke codex -- codex --yolo --no-daemon'` | `~/.zshrc` | install.sh (manifest) |
-| Herdr 사운드 끄기 | Herdr `settings.json` | install.sh (manifest) |
+| (예전 설치) Herdr 사운드 끄기 되돌림 | Herdr `settings.json` | install.sh (manifest에 기록이 있을 때만) |
 | launchd 사용량 작업 `dev.keno.herdr-poke.usage` | `~/Library/LaunchAgents/` | install.sh |
 | hc용 node/npm/npx shim | `~/.local/libexec/nvm-shim`, `~/.local/bin/{node,npm,npx}` | install.sh |
 | 어디서도 권한 프롬프트 없음: Codex `approval_policy="never"`, `sandbox_mode="danger-full-access"`; Claude `permissions.defaultMode="bypassPermissions"` | `~/.codex/config.toml`, `~/.claude/settings.json` | 수동, 의도적으로 (보안 설정) |

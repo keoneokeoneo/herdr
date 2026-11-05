@@ -5,8 +5,9 @@ Readable version: https://claude.ai/artifact/6FnMqh5cpHSRHKiWziVrmb · Visual sp
 
 Where the prototype and this document disagree, this document wins.
 
-## Current state (updated 2026-11-04, after v1 shipped)
+## Current state (updated 2026-11-05, after v1 shipped)
 
+- **No cries:** partner cries are removed (helper no longer downloads MP3s, the mod plays no sound). Herdr's own attention sounds are used again; the installer no longer mutes them and undoes an earlier mute it still owns. The Notifications line below is history.
 - **Poké Garden:** Poke has a live garden minimap. Clicking it or Expand opens one
   continuous garden in a movable window; closing it leaves the minimap available. Each agent
   session has its own partner; bubbles and readable labels show Working / Needs you / Done / Idle.

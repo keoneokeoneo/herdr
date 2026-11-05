@@ -1,5 +1,5 @@
 // Package assets keeps the Pokemon files the poke UI shows in
-// $HERDR_APP_HOME/poke-assets: sprites, cries, a name table, and a copy of the
+// $HERDR_APP_HOME/poke-assets: sprites, a name table, and a copy of the
 // active pokeTokenBar companion's sprite.
 //
 // The folder is deliberately outside mods/poke: Herdr reloads a mod on any file
@@ -27,7 +27,6 @@ const (
 	dirName = "poke-assets"
 
 	defaultSpriteBase  = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon"
-	defaultCryBase     = "https://play.pokemonshowdown.com/audio/cries"
 	defaultSpeciesBase = "https://pokeapi.co/api/v2/pokemon-species"
 
 	maxAnimatedID = 649   // Black/White animated sprites stop at Genesect
@@ -41,13 +40,12 @@ type Config struct {
 	Home        string // Herdr app home; assets go in Home/poke-assets
 	PTBDir      string // pokeTokenBar's Application Support folder (read only)
 	SpriteBase  string // <base>/versions/generation-v/black-white/animated/<id>.gif and <base>/<id>.png
-	CryBase     string // <base>/<slug>.mp3
 	SpeciesBase string // <base>/<id>
 	Client      *http.Client
 }
 
 // ConfigFromEnv reads HERDR_APP_HOME (default ~/.config/herdr-app) and, for
-// tests, HERDR_POKE_SPRITE_BASE, HERDR_POKE_CRY_BASE, HERDR_POKE_SPECIES_BASE
+// tests, HERDR_POKE_SPRITE_BASE, HERDR_POKE_SPECIES_BASE
 // and HERDR_POKE_PTB_DIR.
 func ConfigFromEnv() Config {
 	home, err := os.UserHomeDir()
@@ -64,7 +62,6 @@ func ConfigFromEnv() Config {
 		Home:        env("HERDR_APP_HOME", filepath.Join(home, ".config", "herdr-app")),
 		PTBDir:      env("HERDR_POKE_PTB_DIR", filepath.Join(home, "Library", "Application Support", "PokeTokenBar")),
 		SpriteBase:  env("HERDR_POKE_SPRITE_BASE", defaultSpriteBase),
-		CryBase:     env("HERDR_POKE_CRY_BASE", defaultCryBase),
 		SpeciesBase: env("HERDR_POKE_SPECIES_BASE", defaultSpeciesBase),
 	}
 }
@@ -88,9 +85,9 @@ func (c Config) rel(path string) string {
 	return path
 }
 
-// Ensure makes sure the sprite, cry and name of Pokemon id are on disk, and
+// Ensure makes sure the sprite and name of Pokemon id are on disk, and
 // returns the sprite path relative to the app home. Files already there are
-// neither fetched nor rewritten. If only the cry or the name fails, the sprite
+// neither fetched nor rewritten. If only the name fails, the sprite
 // path is still returned, together with the error.
 func Ensure(c Config, id int) (string, error) {
 	if id < 1 || id > maxID {
@@ -104,7 +101,7 @@ func Ensure(c Config, id int) (string, error) {
 	if err != nil {
 		errs = append(errs, err)
 	}
-	if err := ensureCryAndName(c, id); err != nil {
+	if err := ensureName(c, id); err != nil {
 		errs = append(errs, err)
 	}
 	if sprite != "" {
@@ -167,32 +164,19 @@ func (s species) english() string {
 	return strings.Join(words, " ")
 }
 
-func ensureCryAndName(c Config, id int) error {
+func ensureName(c Config, id int) error {
 	key := strconv.Itoa(id)
-	cry := key + ".mp3"
-	needCry := !has(c.Dir(), cry)
-	needName := readNames(c)[key] == ""
-	if !needCry && !needName {
+	if readNames(c)[key] != "" {
 		return nil
 	}
-
 	sp, err := fetchSpecies(c, id)
 	if err != nil {
-		return fmt.Errorf("species lookup #%d (for the cry and the name): %w", id, err)
+		return fmt.Errorf("species lookup #%d (for the name): %w", id, err)
 	}
-	var errs []error
-	if needName {
-		if err := setName(c, key, sp.english()); err != nil {
-			errs = append(errs, fmt.Errorf("name #%d: %w", id, err))
-		}
+	if err := setName(c, key, sp.english()); err != nil {
+		return fmt.Errorf("name #%d: %w", id, err)
 	}
-	if needCry {
-		slug := strings.ReplaceAll(sp.Name, "-", "")
-		if err := download(c, c.CryBase+"/"+slug+".mp3", filepath.Join(c.Dir(), cry), notText); err != nil {
-			errs = append(errs, fmt.Errorf("cry #%d (%s): %w", id, slug, err))
-		}
-	}
-	return errors.Join(errs...)
+	return nil
 }
 
 func fetchSpecies(c Config, id int) (species, error) {
@@ -342,7 +326,7 @@ const usageText = "usage: herdr-poke assets <pokemon id> | --companion | --list 
 
 // Run is `herdr-poke assets ...`.
 //
-//	assets <id>        fetch sprite, cry and name; print the sprite path
+//	assets <id>        fetch sprite and name; print the sprite path
 //	assets --companion copy the active companion's sprite; print its path
 //	assets --list      print the asset file names as a JSON array
 //	assets --normalize square every GIF in the folder; print how many changed
@@ -484,9 +468,6 @@ func download(c Config, url, dest string, ok func([]byte) bool) error {
 func isGIF(b []byte) bool { return bytes.HasPrefix(b, []byte("GIF8")) }
 
 func isPNG(b []byte) bool { return bytes.HasPrefix(b, []byte("\x89PNG")) }
-
-// notText accepts anything that is not an HTML or JSON error page.
-func notText(b []byte) bool { return b[0] != '<' && b[0] != '{' }
 
 // Dex copies each caught variant once, normalizing only newly copied GIFs.
 // Missing source art is retried on the next sync; existing variants are immutable.

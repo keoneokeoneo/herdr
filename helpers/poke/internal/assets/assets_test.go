@@ -19,7 +19,6 @@ import (
 const (
 	gifBytes = "GIF89a\x01\x00\x01\x00\x00\x00\x00;"
 	pngBytes = "\x89PNG\r\n\x1a\n\x00\x00"
-	mp3Bytes = "ID3\x03\x00\x00\x00\x00\x00\x00cry"
 )
 
 // fakeHost serves the three hosts under one httptest server and counts requests.
@@ -61,8 +60,6 @@ func newFakeHost(t *testing.T) *fakeHost {
 			fmt.Fprint(w, gifBytes)
 		case strings.HasPrefix(r.URL.Path, "/sprites/") && strings.HasSuffix(r.URL.Path, ".png"):
 			fmt.Fprint(w, pngBytes)
-		case strings.HasPrefix(r.URL.Path, "/cries/") && strings.HasSuffix(r.URL.Path, ".mp3"):
-			fmt.Fprint(w, mp3Bytes)
 		case strings.HasPrefix(r.URL.Path, "/species/"):
 			body, ok := h.species[strings.TrimPrefix(r.URL.Path, "/species/")]
 			if !ok {
@@ -90,7 +87,6 @@ func (h *fakeHost) config(t *testing.T) Config {
 		Home:        t.TempDir(),
 		PTBDir:      t.TempDir(),
 		SpriteBase:  h.srv.URL + "/sprites",
-		CryBase:     h.srv.URL + "/cries",
 		SpeciesBase: h.srv.URL + "/species",
 	}
 }
@@ -122,13 +118,13 @@ func TestAssetsGifUnder650(t *testing.T) {
 	if b, _ := os.ReadFile(filepath.Join(c.Home, rel)); string(b) != gifBytes {
 		t.Errorf("sprite content = %q", b)
 	}
-	if b, _ := os.ReadFile(filepath.Join(c.Dir(), "25.mp3")); string(b) != mp3Bytes {
-		t.Errorf("cry content = %q", b)
+	if _, err := os.Stat(filepath.Join(c.Dir(), "25.mp3")); err == nil {
+		t.Error("a cry was saved; Poke no longer has cries")
 	}
 	if got := namesJSON(t, c); !reflect.DeepEqual(got, map[string]string{"25": "Pikachu"}) {
 		t.Errorf("names.json = %v", got)
 	}
-	want := []string{"/sprites/versions/generation-v/black-white/animated/25.gif", "/species/25", "/cries/pikachu.mp3"}
+	want := []string{"/sprites/versions/generation-v/black-white/animated/25.gif", "/species/25"}
 	got := h.requests()
 	sort.Strings(want)
 	sort.Strings(got)
@@ -207,8 +203,8 @@ func TestAssetsIdempotent(t *testing.T) {
 	}
 }
 
-func TestAssetsCryNeededOnlyAfterSpriteExists(t *testing.T) {
-	// A half-finished earlier run left the sprite: only the missing parts are fetched.
+func TestAssetsNameNeededOnlyAfterSpriteExists(t *testing.T) {
+	// A half-finished earlier run left the sprite: only the missing name is fetched.
 	h := newFakeHost(t)
 	c := h.config(t)
 	os.MkdirAll(c.Dir(), 0o755)
@@ -216,28 +212,16 @@ func TestAssetsCryNeededOnlyAfterSpriteExists(t *testing.T) {
 	if _, err := Ensure(c, 25); err != nil {
 		t.Fatal(err)
 	}
-	for _, r := range h.requests() {
-		if strings.Contains(r, ".gif") {
-			t.Errorf("fetched the sprite again: %s", r)
-		}
-	}
-	if _, err := os.Stat(filepath.Join(c.Dir(), "25.mp3")); err != nil {
-		t.Error("cry not fetched")
+	if got := h.requests(); !reflect.DeepEqual(got, []string{"/species/25"}) {
+		t.Errorf("requests = %v, want only the species lookup", got)
 	}
 }
 
-func TestAssetsCrySlugDropsDashes(t *testing.T) {
+func TestAssetsNameUsesEnglishSpeciesName(t *testing.T) {
 	h := newFakeHost(t)
 	c := h.config(t)
 	if _, err := Ensure(c, 122); err != nil {
 		t.Fatal(err)
-	}
-	found := false
-	for _, r := range h.requests() {
-		found = found || r == "/cries/mrmime.mp3"
-	}
-	if !found {
-		t.Errorf("no request for /cries/mrmime.mp3: %v", h.requests())
 	}
 	if got := namesJSON(t, c)["122"]; got != "Mr. Mime" {
 		t.Errorf("name = %q", got)
@@ -299,22 +283,16 @@ func TestAssetsRejectsNonImageBody(t *testing.T) {
 	}
 }
 
-func TestAssetsCryFailureKeepsSprite(t *testing.T) {
+func TestAssetsNameFailureKeepsSprite(t *testing.T) {
 	h := newFakeHost(t)
-	h.missing["/cries/pikachu.mp3"] = true
+	h.missing["/species/25"] = true
 	c := h.config(t)
 	rel, err := Ensure(c, 25)
-	if err == nil || !strings.Contains(err.Error(), "cry") {
-		t.Errorf("err = %v, want one about the cry", err)
+	if err == nil || !strings.Contains(err.Error(), "name") {
+		t.Errorf("err = %v, want one about the name", err)
 	}
 	if rel != "poke-assets/25.gif" {
 		t.Errorf("path = %q: the sprite is there, so it must still be reported", rel)
-	}
-	if _, statErr := os.Stat(filepath.Join(c.Dir(), "25.gif")); statErr != nil {
-		t.Error("sprite missing")
-	}
-	if got := namesJSON(t, c)["25"]; got != "Pikachu" {
-		t.Errorf("name = %q: it comes from the species lookup, which worked", got)
 	}
 }
 
@@ -511,12 +489,11 @@ func mustJSON(t *testing.T, v any) []byte {
 func TestConfigFromEnv(t *testing.T) {
 	t.Setenv("HERDR_APP_HOME", "/custom/home")
 	t.Setenv("HERDR_POKE_SPRITE_BASE", "http://sprites.test")
-	t.Setenv("HERDR_POKE_CRY_BASE", "http://cries.test")
 	t.Setenv("HERDR_POKE_SPECIES_BASE", "http://species.test")
 	t.Setenv("HERDR_POKE_PTB_DIR", "/custom/ptb")
 	c := ConfigFromEnv()
 	if c.Home != "/custom/home" || c.Dir() != "/custom/home/poke-assets" || c.PTBDir != "/custom/ptb" ||
-		c.SpriteBase != "http://sprites.test" || c.CryBase != "http://cries.test" || c.SpeciesBase != "http://species.test" {
+		c.SpriteBase != "http://sprites.test" || c.SpeciesBase != "http://species.test" {
 		t.Errorf("config = %+v", c)
 	}
 
@@ -530,8 +507,8 @@ func TestConfigFromEnv(t *testing.T) {
 		c.PTBDir != filepath.Join(home, "Library", "Application Support", "PokeTokenBar") {
 		t.Errorf("default config = %+v", c)
 	}
-	if c.CryBase != "http://cries.test" { // only the ones that were emptied fall back
-		t.Errorf("CryBase = %q", c.CryBase)
+	if c.SpeciesBase != "http://species.test" { // only the ones that were emptied fall back
+		t.Errorf("SpeciesBase = %q", c.SpeciesBase)
 	}
 }
 
@@ -549,7 +526,7 @@ func TestRunCLI(t *testing.T) {
 		t.Errorf("--list code %d: %s", code, errOut.String())
 	}
 	var names []string
-	if err := json.Unmarshal(out.Bytes(), &names); err != nil || !reflect.DeepEqual(names, []string{"25.gif", "25.mp3", "names.json"}) {
+	if err := json.Unmarshal(out.Bytes(), &names); err != nil || !reflect.DeepEqual(names, []string{"25.gif", "names.json"}) {
 		t.Errorf("--list out %q (%v)", out.String(), err)
 	}
 
@@ -570,12 +547,12 @@ func TestRunCLI(t *testing.T) {
 
 func TestRunCLIFailureExitsNonZeroButPrintsSprite(t *testing.T) {
 	h := newFakeHost(t)
-	h.missing["/cries/pikachu.mp3"] = true
+	h.missing["/species/25"] = true
 	var out, errOut bytes.Buffer
 	if code := Run([]string{"25"}, h.config(t), &out, &errOut); code != 1 {
 		t.Errorf("code %d, want 1", code)
 	}
-	if strings.TrimSpace(out.String()) != "poke-assets/25.gif" || !strings.Contains(errOut.String(), "cry") {
+	if strings.TrimSpace(out.String()) != "poke-assets/25.gif" || !strings.Contains(errOut.String(), "name") {
 		t.Errorf("out %q err %q", out.String(), errOut.String())
 	}
 }

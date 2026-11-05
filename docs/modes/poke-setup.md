@@ -38,8 +38,9 @@ Poke 탭에는 세션별 포켓몬이 함께 있는 정원 미니맵도 포함�
    - `base`와 `poke` 모드, 레이아웃, 테마, `layout:` 키 바인딩을 설치한다
      (`scripts/setup.py`; 저장소가 이미 `~/.config/herdr-app`이면 아무것도 복사하지 않음).
    - `~/.local/bin/herdr-poke`를 빌드한다.
-   - `~/.zshrc`(`codex`가 `herdr-poke codex -- codex --yolo --no-daemon`을 거쳐 실행됨)와 Herdr의
-     `settings.json`(Herdr 자체의 주의 알림 사운드를 끔; 파트너의 울음소리가 대신함)을 백업하고 수정한다.
+   - `~/.zshrc`(`codex`가 `herdr-poke codex -- codex --yolo --no-daemon`을 거쳐 실행됨)를 백업하고 수정한다.
+     Herdr의 `settings.json`은 수정하지 않는다. 예전 설치가 울음소리 때문에 꺼 둔 앱 사운드가 그대로 꺼져
+     있으면 원래 값으로 되돌린다.
      `~/.claude/settings.json`은 절대 수정하지 않는다. Claude의 한도는 전역 statusline에서 오며,
      [Base](base.md)를 참고한다.
    - companion 스프라이트를 복사하고, 14일치 사용량을 수집하고, launchd 작업

@@ -1,11 +1,11 @@
 // Poke's behaviours: partner assignment, cries, pokeTokenBar sync, evening flag, level/evolution toasts.
 // Things that happen, not things drawn. Runs once, in the persona host's copy.
-import { hc, exec, home, appHome, shared, setShared, playSound, notify, watchFolder } from "herdr";
+import { hc, exec, home, appHome, shared, setShared, notify, watchFolder } from "herdr";
 import { personaRows } from "./views/rows.js";
 import { readJSON, PTB_DIR } from "./views/store.js";
 import { typeModeInit } from "./lib/defaults.js";
 import { excluded, pickPartner, activePartners } from "./lib/partner.js";
-import { cryFor, retryDue, assetsMissing } from "./lib/cry.js";
+import { retryDue, assetsMissing } from "./lib/assets.js";
 import { say } from "./lib/voice.js";
 import { ptbChanged, coalesce } from "./lib/sync.js";
 
@@ -34,7 +34,6 @@ async function speciesName(id) {
 }
 
 export function start(s, cx) {
-  s.prev = new Map();      // address → last status
   s.pending = new Set();   // addresses being labelled
   s.tried = new Map();     // partner id → asset retry backoff
 
@@ -72,16 +71,12 @@ async function step(s) {
   const sprites = shared("poke.sprites") ?? [];
   for (const r of all) {
     if (!r.partnerSet && !s.pending.has(r.address)) assign(s, r);
-    const was = s.prev.get(r.address);
-    if (r.status === "blocked" && was && was !== "blocked") playSound(cryFor(r.partnerSet ? r.partner : null, sprites));
-    // A partner whose sprite or cry never arrived (offline, API hiccup) is fetched again, with backoff.
+    // A partner whose sprite or name never arrived (offline, API hiccup) is fetched again, with backoff.
     if (r.partnerSet && assetsMissing(r.partner, sprites, shared("poke.names")) && retryDue(s.tried, r.partner, Date.now())) {
       exec(HP(), ["assets", String(r.partner)]).then(refreshAssets, () => null);
     }
-    s.prev.set(r.address, r.status);
   }
   const live = new Set(all.map((r) => r.address));
-  for (const k of s.prev.keys()) if (!live.has(k)) s.prev.delete(k);
   for (const k of s.pending) if (!live.has(k)) s.pending.delete(k);
 }
 

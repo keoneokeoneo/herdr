@@ -67,28 +67,45 @@ class SettingsTests(unittest.TestCase):
         self.m.uninstall()
         self.assertEqual(json.loads(p.read_text())['statusLine'], original)
 
-    def test_invalid_json_preflight(self):
-        Path(self.m.HERDR).parent.mkdir(parents=True)
-        Path(self.m.HERDR).write_text('{broken')
-        with self.assertRaises((SystemExit, ValueError)):
-            self.m.install(self.binary)
-        self.assertFalse(Path(self.m.ZSHRC).exists())
+    def herdr(self, data):
+        p = Path(self.m.HERDR)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(data if isinstance(data, str) else json.dumps(data))
+        return p
 
-    def test_failure_after_first_write_keeps_original(self):
-        herdr = Path(self.m.HERDR)
-        herdr.parent.mkdir(parents=True)
-        herdr.write_text(json.dumps({'sounds': {'enabled': True}}))
-        real = self.m.write_atomic
-        def fail(path, text, expect):
-            if path == self.m.HERDR:
-                raise OSError('injected interruption')
-            return real(path, text, expect)
-        with patch.object(self.m, 'write_atomic', side_effect=fail):
-            with self.assertRaises(OSError):
-                self.m.install(self.binary)
+    def test_install_leaves_herdr_sounds_alone(self):
+        p = self.herdr({'sounds': {'enabled': True}, 'zoom': 1})
+        before = p.read_bytes()
         self.m.install(self.binary)
+        self.assertEqual(p.read_bytes(), before)
+        self.assertNotIn('herdr_sounds_enabled', self.m.manifest())
+
+    def test_install_ignores_broken_herdr_settings(self):
+        p = self.herdr('{broken')
+        self.m.install(self.binary)
+        self.assertEqual(p.read_text(), '{broken')
+
+    def test_install_undoes_a_legacy_mute(self):
+        # Older installs muted Herdr for the partner cries, which are gone.
+        p = self.herdr({'sounds': {'enabled': False}})
+        self.m.save_manifest({'herdr_sounds_enabled': True})
+        self.m.install(self.binary)
+        self.assertEqual(json.loads(p.read_text())['sounds']['enabled'], True)
+        self.assertNotIn('herdr_sounds_enabled', self.m.manifest())
+
+    def test_legacy_mute_with_no_prior_value_drops_the_key(self):
+        p = self.herdr({'sounds': {'enabled': False, 'done': 'x.mp3'}})
+        self.m.save_manifest({'herdr_sounds_enabled': None})
+        self.m.install(self.binary)
+        self.assertEqual(json.loads(p.read_text())['sounds'], {'done': 'x.mp3'})
+
+    def test_legacy_mute_the_user_changed_is_left_alone(self):
+        p = self.herdr({'sounds': {'enabled': True, 'blocked': 'mine.mp3'}})
+        before = p.read_bytes()
+        self.m.save_manifest({'herdr_sounds_enabled': False})
         self.m.uninstall()
-        self.assertEqual(json.loads(herdr.read_text())['sounds']['enabled'], True)
+        self.assertEqual(p.read_bytes(), before)
+        self.assertNotIn('herdr_sounds_enabled', self.m.manifest())
 
     def test_custom_alias_is_not_overwritten(self):
         Path(self.m.ZSHRC).write_text("alias codex='custom-codex'\n")

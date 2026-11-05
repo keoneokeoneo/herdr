@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Surgical, reversible edits for install.sh / uninstall.sh (the codex alias, PATH line and Herdr's sounds setting).
+"""Surgical, reversible edits for install.sh / uninstall.sh (the codex alias and PATH line; older installs also muted Herdr's sounds).
 
 install:   apply each edit only if needed; record the value it replaced in the manifest.
 uninstall: put back only what the manifest says this project changed, leaving every
@@ -71,10 +71,7 @@ def save_manifest(m):
 def install(binary):
     m = manifest()
     # Validate every input before writing any configuration.
-    raw_h, h = load_json(HERDR) if os.path.exists(HERDR) else (None, {})
     raw_z = read(ZSHRC) if os.path.exists(ZSHRC) else None
-    if not isinstance(h, dict) or (h.get("sounds") is not None and not isinstance(h["sounds"], dict)):
-        sys.exit("abort: invalid sounds settings")
     z = raw_z or ""
     aliases = re.findall(r"^[ \t]*alias[ \t]+codex=.*$", z, re.M)
     if any(a not in (OLD_ALIAS, NEW_ALIAS) for a in aliases) or len(aliases) > 1:
@@ -94,16 +91,35 @@ def install(binary):
         z = PATH_LINE + "\n" + z
         edits = [e for e in edits if e[0] != ZSHRC]
         edits.append((ZSHRC, z, raw_z))
-    cur = (h.get("sounds") or {}).get("enabled")
-    if cur is not False:
-        m.setdefault("herdr_sounds_enabled", cur)
-        h["sounds"] = {**(h.get("sounds") or {}), "enabled": False}
-        edits.append((HERDR, dump(h), raw_h))
     # Write-ahead recovery: a crash after any edit still retains the original values.
     save_manifest(m)
     for path, text, expected in edits:
         write_atomic(path, text, expected)
         print(f"edited  {path}")
+    restore_sounds(m)
+    save_manifest(m)
+
+
+def restore_sounds(m):
+    """Undo the mute older installs applied for the partner cries (now removed), if it is still ours."""
+    if "herdr_sounds_enabled" not in m:
+        return
+    if os.path.exists(HERDR):
+        try:
+            raw, s = load_json(HERDR)
+        except (ValueError, SystemExit):
+            print(f"skipped {HERDR}: not valid JSON; sounds left as they are")
+            return
+        sounds = s.get("sounds") if isinstance(s, dict) else None
+        if isinstance(sounds, dict) and sounds.get("enabled") is False:
+            before = m["herdr_sounds_enabled"]
+            if before is None:
+                sounds.pop("enabled", None)
+            else:
+                sounds["enabled"] = before
+            write_atomic(HERDR, dump(s), raw)
+            print(f"restored {HERDR} sounds")
+    del m["herdr_sounds_enabled"]
 
 
 def uninstall():
@@ -131,17 +147,7 @@ def uninstall():
         raw = read(ZSHRC)
         write_atomic(ZSHRC, raw.replace(PATH_LINE + "\n", "", 1), raw)
         del m["zshrc_path"]
-    if "herdr_sounds_enabled" in m and os.path.exists(HERDR):
-        raw, s = load_json(HERDR)
-        before = m["herdr_sounds_enabled"]
-        if (s.get("sounds") or {}).get("enabled") is False:
-            if before is None:
-                s["sounds"].pop("enabled", None)
-            else:
-                s["sounds"]["enabled"] = before
-        write_atomic(HERDR, dump(s), raw)
-        print(f"restored {HERDR} sounds")
-        del m["herdr_sounds_enabled"]
+    restore_sounds(m)
     save_manifest(m)
 
 

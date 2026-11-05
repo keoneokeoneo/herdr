@@ -1,7 +1,3 @@
-// The sound for a session that starts waiting: its partner's cry, else Herdr's own.
-export const cryFor = (partner, sprites) =>
-  partner != null && (sprites || []).includes(`${partner}.mp3`) ? `poke-assets/${partner}.mp3` : 'blocked';
-
 // Per-id retry with doubling backoff (1 min → 30 min). Records the attempt when due.
 export function retryDue(tried, id, nowMs) {
   const t = tried.get(id);
@@ -10,5 +6,6 @@ export function retryDue(tried, id, nowMs) {
   return true;
 }
 
+// A partner is complete with a sprite (animated or still) and a name.
 export const assetsMissing = (id, files, names) =>
-  !(files.includes(`${id}.gif`) || files.includes(`${id}.png`)) || !files.includes(`${id}.mp3`) || !names?.[id];
+  !(files.includes(`${id}.gif`) || files.includes(`${id}.png`)) || !names?.[id];
