@@ -50,6 +50,20 @@ Poke 레이아웃 하단에는 세션별 파트너가 걸어 다니는 띠가 �
 키(레이아웃 `poke`, `base`와 동일): `⌘J` 나를 기다리는 다음 세션(오래된 순), `⌘K` 오른쪽 패널 표시/숨김,
 `⌘⇧O` Obsidian 탭, `⌃1–9` space.
 
+## 업데이트
+
+`git pull` 뒤 `npm run setup:update`로 모드와 레이아웃을 다시 복사하고, 헬퍼를 바꾼 변경이면
+`cd helpers/poke && go build -o ~/.local/bin/herdr-poke .`로 다시 빌드한다. 이미 실행 중인 Codex 래퍼는 세션이
+끝난 뒤 새 바이너리를 쓴다.
+
+- `setup:update`는 저장소에서 지운 파일을 설치된 홈에서 지우지 않는다. 정원 제거 이전 설치에서 올라왔다면
+  설치된 홈의 mods/poke 아래 views/camp.js, lib/camp.js, lib/cry.js를 지워도 된다(아무도 import하지 않음).
+- 울음소리 제거 이전에 받은 `poke-assets/*.mp3`는 더 쓰이지 않으므로 지워도 된다.
+- 파트너 띠의 걷기 그림은 파트너가 배정될 때 헬퍼가 raw.githubusercontent.com(PMDCollab SpriteCollab)에서
+  받아 `poke-assets/walk-<id>-*.gif`로 만든다. 따로 설치할 것은 없다(ImageMagick 불필요).
+- 예전 설치가 꺼 둔 Herdr 앱 사운드는 `install.sh`를 다시 실행하면 journal 기록이 있을 때 되돌아간다. journal이
+  없는 오래된 설치는 Herdr 설정의 Alerts에서 직접 켠다.
+
 ## 되돌리기
 
 `scripts/poke/uninstall.sh`는 가장 최근의 전체 파일 백업이 아니라 설정 journal과 설치 파일 journal을 사용한다.

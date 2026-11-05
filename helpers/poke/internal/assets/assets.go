@@ -329,7 +329,7 @@ const usageText = "usage: herdr-poke assets <pokemon id> | --walk <pokemon id> |
 // Run is `herdr-poke assets ...`.
 //
 //	assets <id>        fetch sprite and name; print the sprite path
-//	assets --walk <id> cut the Garden's walking art (or mark the species as having none)
+//	assets --walk <id> cut the partner strip's walking art (or mark the species as having none)
 //	assets --companion copy the active companion's sprite; print its path
 //	assets --list      print the asset file names as a JSON array
 //	assets --normalize square every GIF in the folder; print how many changed

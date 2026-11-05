@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-// Walking art for the Poké Garden, cut from PMDCollab's SpriteCollab sheets.
+// Walking art for the partner strip, cut from PMDCollab's SpriteCollab sheets.
 //
 // A species gets four looping GIFs in the asset folder: walk-<id>-r.gif and
 // walk-<id>-l.gif (walking right / left), walk-<id>-idle.gif (standing, facing

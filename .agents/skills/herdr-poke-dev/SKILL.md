@@ -6,7 +6,7 @@ description: Change or check the Herdr setups in ~/.config/herdr-app — the neu
 # base / poke / herdr-poke: change → check → look → commit
 
 1. Read `docs/guide.md`, then the setup guide: `docs/modes/base.md` for the sidebar, tab bar, usage bar, panel and
-   the usage data contract; `docs/modes/poke.md` for the companion, Dex, cries and the helper; `docs/modes/obsidian.md` for the vault reader
+   the usage data contract; `docs/modes/poke.md` for the companion, Dex, the partner strip and the helper; `docs/modes/obsidian.md` for the vault reader
    (it must stay free of Poke references: `tests/obsidian/mod-lib/no-poke.test.mjs` checks). Use its "What lives
    where" table to pick the files, and open only those. Product intent and earlier decisions are in
    `docs/specs/2026-11-03-herdr-poke-design.md` and the layer split in `docs/specs/2026-11-04-layer-separation-design.md`. Herdr's API: search the generated
